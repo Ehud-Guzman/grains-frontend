@@ -30,7 +30,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import OrderListPage from './pages/admin/orders/OrderListPage'
 import AdminOrderDetailPage from './pages/admin/orders/OrderDetailPage'
 import ProductListPage from './pages/admin/products/ProductListPage'
-import ProductFormPage from './pages/admin/products/ProductFormPage'
+
 import StockPage from './pages/admin/stock/StockPage'
 import CustomerListPage from './pages/admin/customers/CustomerListPage'
 import AdminCustomerProfilePage from './pages/admin/customers/CustomerProfilePage'
