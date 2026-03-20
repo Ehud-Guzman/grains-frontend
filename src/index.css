@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #FAF7F2;
+    color: #1C1410;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F0E8D8;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #C8912A;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply bg-brand-500 text-white font-body font-medium px-6 py-3 rounded-lg
+           hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed
+           min-h-[44px] inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-earth-100 text-earth-800 font-body font-medium px-6 py-3 rounded-lg
+           hover:bg-earth-200 active:bg-earth-300 transition-colors duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed
+           min-h-[44px] inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-outline {
+    @apply border-2 border-brand-500 text-brand-600 font-body font-medium px-6 py-3 rounded-lg
+           hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed
+           min-h-[44px] inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-ghost {
+    @apply text-earth-700 font-body font-medium px-4 py-2 rounded-lg
+           hover:bg-earth-100 transition-colors duration-200
+           min-h-[44px] inline-flex items-center justify-center gap-2;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl shadow-warm border border-earth-100;
+  }
+
+  /* Form inputs */
+  .input {
+    @apply w-full bg-white border border-earth-200 rounded-lg px-4 py-3
+           font-body text-earth-900 placeholder-earth-400
+           focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent
+           transition-all duration-200 min-h-[44px];
+  }
+
+  .label {
+    @apply block font-body font-medium text-earth-700 mb-1.5 text-sm;
+  }
+
+  /* Status badges */
+  .badge-pending   { @apply bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-1 rounded-full; }
+  .badge-approved  { @apply bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full; }
+  .badge-preparing { @apply bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full; }
+  .badge-delivery  { @apply bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-1 rounded-full; }
+  .badge-completed { @apply bg-teal-100 text-teal-800 text-xs font-medium px-2.5 py-1 rounded-full; }
+  .badge-rejected  { @apply bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full; }
+  .badge-cancelled { @apply bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full; }
+
+  /* Stock badges */
+  .stock-in    { @apply bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full; }
+  .stock-low   { @apply bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full; }
+  .stock-out   { @apply bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded-full; }
+
+  /* Section container */
+  .container-page {
+    @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Page title */
+  .page-title {
+    @apply font-display text-3xl sm:text-4xl text-earth-900 font-semibold;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Page transition */
+.page-enter {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #F0E8D8 25%, #FAF7F2 50%, #F0E8D8 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── PRINT STYLES ─────────────────────────────────────────────────────────────
+   Hides all admin chrome (sidebar, topbar, action buttons) when printing.
+   Only the main content area prints.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the printable content area and all its children */
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  /* Position print area to fill the page */
+  .print-area {
+    position: absolute;
+    inset: 0;
+    padding: 24px;
+  }
+
+  /* Hide UI chrome that should never print */
+  aside,
+  header,
+  nav,
+  .no-print,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Clean up shadows and borders for print */
+  .print-area * {
+    box-shadow: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 16mm;
+    size: A4;
+  }
+}
