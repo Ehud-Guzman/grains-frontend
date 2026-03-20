@@ -110,12 +110,12 @@ export default function App() {
 
               <Route path="products/new" element={
                 <ProtectedRoute requireRole={['admin', 'superadmin']}>
-                  <ProductFormPage />
+                
                 </ProtectedRoute>
               } />
               <Route path="products/:id/edit" element={
                 <ProtectedRoute requireRole={['admin', 'superadmin']}>
-                  <ProductFormPage />
+                 
                 </ProtectedRoute>
               } />
               <Route path="products" element={
