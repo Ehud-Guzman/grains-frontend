@@ -30,7 +30,7 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import OrderListPage from "./pages/admin/orders/OrderListPage";
 import AdminOrderDetailPage from "./pages/admin/orders/OrderDetailPage";
 import ProductListPage from "./pages/admin/products/ProductListPage";
-
+import ProductFormPage from "./pages/admin/products/ProductFormPage";
 import StockPage from "./pages/admin/stock/StockPage";
 import CustomerListPage from "./pages/admin/customers/CustomerListPage";
 import AdminCustomerProfilePage from "./pages/admin/customers/CustomerProfilePage";
@@ -38,9 +38,14 @@ import ReportsPage from "./pages/admin/reports/ReportsPage";
 import SettingsPage from "./pages/admin/settings/SettingsPage";
 import ActivityLogPage from "./pages/admin/logs/ActivityLogPage";
 import UserManagementPage from "./pages/admin/users/UserManagementPage";
-import ProductFormPage from "./pages/admin/products/ProductFormPage";
 
-const ADMIN_ROLES = ["staff", "supervisor", "admin", "superadmin"];
+const ADMIN_ROLES   = ["staff", "supervisor", "admin", "superadmin"];
+
+// Business roles — superadmin excluded
+const BUSINESS_ROLES     = ["staff", "supervisor", "admin"];
+const SUPERVISOR_ROLES   = ["supervisor", "admin"];
+const ADMIN_ONLY_ROLES   = ["admin"];
+const SUPERADMIN_ROLES   = ["superadmin"];
 
 export default function App() {
   return (
@@ -59,160 +64,126 @@ export default function App() {
                 borderRadius: "10px",
                 padding: "12px 16px",
               },
-              success: {
-                iconTheme: { primary: "#C8912A", secondary: "#F8FAFC" },
-              },
-              error: {
-                iconTheme: { primary: "#EF4444", secondary: "#F8FAFC" },
-              },
+              success: { iconTheme: { primary: "#C8912A", secondary: "#F8FAFC" } },
+              error:   { iconTheme: { primary: "#EF4444", secondary: "#F8FAFC" } },
             }}
           />
           <ScrollToTop />
 
           <Routes>
-            {/* ── PUBLIC WITH LAYOUT ────────────────────────────────── */}
+            {/* ── PUBLIC ───────────────────────────────────────────── */}
             <Route element={<PublicLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/shop" element={<CataloguePage />} />
-              <Route path="/shop/:id" element={<ProductPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/"                element={<HomePage />} />
+              <Route path="/shop"            element={<CataloguePage />} />
+              <Route path="/shop/:id"        element={<ProductPage />} />
+              <Route path="/cart"            element={<CartPage />} />
+              <Route path="/checkout"        element={<CheckoutPage />} />
               <Route path="/order-confirmed" element={<OrderConfirmPage />} />
-              <Route path="/track" element={<TrackOrderPage />} />
+              <Route path="/track"           element={<TrackOrderPage />} />
 
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute requireRole={["customer"]}>
-                    <CustomerDashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders/:id"
-                element={
-                  <ProtectedRoute requireRole={["customer"]}>
-                    <CustomerOrderDetailPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute requireRole={["customer"]}>
-                    <CustomerProfilePage />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/dashboard" element={
+                <ProtectedRoute requireRole={["customer"]}>
+                  <CustomerDashboardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/orders/:id" element={
+                <ProtectedRoute requireRole={["customer"]}>
+                  <CustomerOrderDetailPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute requireRole={["customer"]}>
+                  <CustomerProfilePage />
+                </ProtectedRoute>
+              } />
             </Route>
 
-            {/* ── AUTH PAGES ────────────────────────────────────────── */}
-            <Route path="/login" element={<LoginPage />} />
+            {/* ── AUTH ─────────────────────────────────────────────── */}
+            <Route path="/login"    element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* ── ADMIN WITH ADMIN LAYOUT ───────────────────────────── */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requireRole={ADMIN_ROLES}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                index
-                element={<Navigate to="/admin/dashboard" replace />}
-              />
+            {/* ── ADMIN ────────────────────────────────────────────── */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireRole={ADMIN_ROLES}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+
+              {/* Dashboard — all admin roles including superadmin */}
               <Route path="dashboard" element={<AdminDashboardPage />} />
 
-              <Route path="orders" element={<OrderListPage />} />
-              <Route path="orders/:id" element={<AdminOrderDetailPage />} />
+              {/* Business operations — superadmin blocked */}
+              <Route path="orders" element={
+                <ProtectedRoute requireRole={BUSINESS_ROLES}>
+                  <OrderListPage />
+                </ProtectedRoute>
+              } />
+              <Route path="orders/:id" element={
+                <ProtectedRoute requireRole={BUSINESS_ROLES}>
+                  <AdminOrderDetailPage />
+                </ProtectedRoute>
+              } />
 
-              <Route
-                path="products/new"
-                element={
-                  <ProtectedRoute requireRole={["admin", "superadmin"]}>
-                    <ProductFormPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="products/:id/edit"
-                element={
-                  <ProtectedRoute requireRole={["admin", "superadmin"]}>
-                    <ProductFormPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="products"
-                element={
-                  <ProtectedRoute requireRole={["admin", "superadmin"]}>
-                    <ProductListPage />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="products" element={
+                <ProtectedRoute requireRole={ADMIN_ONLY_ROLES}>
+                  <ProductListPage />
+                </ProtectedRoute>
+              } />
+              <Route path="products/new" element={
+                <ProtectedRoute requireRole={ADMIN_ONLY_ROLES}>
+                  <ProductFormPage />
+                </ProtectedRoute>
+              } />
+              <Route path="products/:id/edit" element={
+                <ProtectedRoute requireRole={ADMIN_ONLY_ROLES}>
+                  <ProductFormPage />
+                </ProtectedRoute>
+              } />
 
-              <Route path="stock" element={<StockPage />} />
+              <Route path="stock" element={
+                <ProtectedRoute requireRole={BUSINESS_ROLES}>
+                  <StockPage />
+                </ProtectedRoute>
+              } />
 
-              <Route
-                path="customers"
-                element={
-                  <ProtectedRoute
-                    requireRole={["supervisor", "admin", "superadmin"]}
-                  >
-                    <CustomerListPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="customers/:id"
-                element={
-                  <ProtectedRoute
-                    requireRole={["supervisor", "admin", "superadmin"]}
-                  >
-                    <AdminCustomerProfilePage />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="customers" element={
+                <ProtectedRoute requireRole={SUPERVISOR_ROLES}>
+                  <CustomerListPage />
+                </ProtectedRoute>
+              } />
+              <Route path="customers/:id" element={
+                <ProtectedRoute requireRole={SUPERVISOR_ROLES}>
+                  <AdminCustomerProfilePage />
+                </ProtectedRoute>
+              } />
 
-              <Route
-                path="reports"
-                element={
-                  <ProtectedRoute
-                    requireRole={["supervisor", "admin", "superadmin"]}
-                  >
-                    <ReportsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <ProtectedRoute requireRole={["admin", "superadmin"]}>
-                    <SettingsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="logs"
-                element={
-                  <ProtectedRoute requireRole={["superadmin"]}>
-                    <ActivityLogPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="users"
-                element={
-                  <ProtectedRoute requireRole={["superadmin"]}>
-                    <UserManagementPage />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="reports" element={
+                <ProtectedRoute requireRole={SUPERVISOR_ROLES}>
+                  <ReportsPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="settings" element={
+                <ProtectedRoute requireRole={ADMIN_ONLY_ROLES}>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } />
+
+              {/* System — superadmin only */}
+              <Route path="logs" element={
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                  <ActivityLogPage />
+                </ProtectedRoute>
+              } />
+              <Route path="users" element={
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                  <UserManagementPage />
+                </ProtectedRoute>
+              } />
             </Route>
 
-            {/* ── FALLBACK ──────────────────────────────────────────── */}
+            {/* ── FALLBACK ─────────────────────────────────────────── */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </CartProvider>
