@@ -123,18 +123,18 @@ export default function CataloguePage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Hero bar ───────────────────────────────────────────────────────── */}
-      <div className="bg-earth-900 text-cream py-8">
-        <div className="container-page">
-          <h1 className="font-display text-3xl sm:text-4xl font-semibold mb-1">
-            Our Products
-          </h1>
-          <p className="text-earth-400 font-body text-sm">
-            {pagination
-              ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
-              : 'Premium grains, cereals and flour products'}
-          </p>
-        </div>
-      </div>
+ <div className="bg-earth-900 text-cream py-8">
+  <div className="container-page text-center">
+    <h1 className="font-display text-3xl sm:text-4xl font-semibold mb-1">
+      Our Products
+    </h1>
+    <p className="text-earth-400 font-body text-sm">
+      {pagination
+        ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
+        : 'Premium grains, cereals and flour products'}
+    </p>
+  </div>
+</div>
 
       <div className="container-page py-6">
 
