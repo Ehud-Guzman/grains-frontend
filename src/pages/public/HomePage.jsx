@@ -6,6 +6,7 @@ import ProductCard from '../../components/products/ProductCard'
 import ProductSpotlight from '../../components/ui/ProductSpotlight'
 import Spinner from '../../components/ui/Spinner'
 import { SHOP_INFO } from '../../utils/constants'
+import CTABanner from '../../components/ui/CTABanner'
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([])
@@ -145,23 +146,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="py-12 bg-brand-500">
-        <div className="container-page text-center">
-          <h2 className="font-display text-2xl sm:text-3xl text-white font-semibold mb-3">
-            Need a bulk order or custom quote?
-          </h2>
-          <p className="text-brand-100 mb-6 font-body">
-            Call us directly for bulk pricing, delivery schedules and special arrangements.
-          </p>
-          <a
-            href={`tel:${SHOP_INFO.phone}`}
-            className="inline-flex items-center gap-2 bg-white text-brand-700 font-body font-semibold px-8 py-3 rounded-lg hover:bg-brand-50 transition-colors"
-          >
-            {SHOP_INFO.phone}
-          </a>
-        </div>
-      </section>
+<CTABanner />
 
       {/* Floating product spotlight */}
       <ProductSpotlight products={spotlight} />

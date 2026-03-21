@@ -1,59 +1,79 @@
-import { Link } from "react-router-dom";
-import { Phone, Mail, Clock, MapPin } from "lucide-react";
-import { SHOP_INFO } from "../../utils/constants";
+import { Link } from 'react-router-dom'
+import { Phone, Mail, Clock, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
+import { SHOP_INFO } from '../../utils/constants'
+
+const quickLinks = [
+  { to: '/shop',     label: 'Shop All Products' },
+  { to: '/track',    label: 'Track Your Order'  },
+  { to: '/login',    label: 'Sign In'           },
+  { to: '/register', label: 'Create Account'    },
+]
 
 export default function Footer() {
   return (
-    <footer className="bg-earth-900 text-earth-300 mt-16">
-      <div className="container-page py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              {" "}
-              {/* ↑ gap a bit bigger for breathing room */}
-              <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden border border-earth-200">
-                {" "}
-                {/* ↑ logo size */}
-                <img
-                  src="/Vittorios-logo.jpeg"
-                  alt="Vittorios Logo"
-                  className="w-full h-full object-cover"
-                />
+    <footer className="bg-earth-900 mt-16 relative overflow-hidden">
+
+      {/* Subtle grain texture overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)',
+          backgroundSize: '24px 24px'
+        }} />
+
+      {/* Top accent line */}
+      <div className="h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+
+      <div className="container-page py-14 relative">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+
+          {/* ── Brand ──────────────────────────────────────────────── */}
+          <div className="lg:col-span-1">
+            <Link to="/" className="flex items-center gap-3 mb-5 group w-fit">
+              <div className="w-11 h-11 flex-shrink-0 rounded-xl overflow-hidden
+                border border-earth-700 group-hover:border-brand-500 transition-colors shadow-sm">
+                <img src="/Vittorios-logo.jpeg" alt="Vittorios"
+                  className="w-full h-full object-cover" />
               </div>
               <div>
-                <div className="font-display font-semibold text-cream text-base">
+                <p className="font-display font-bold text-cream text-base leading-tight
+                  group-hover:text-brand-300 transition-colors">
                   Vittorios
-                </div>{" "}
-                {/* ↑ text-sm → text-base */}
-                <div className="text-earth-400 text-sm">
-                  Grains & Cereals
-                </div>{" "}
-                {/* ↑ text-xs → text-sm */}
+                </p>
+                <p className="text-earth-500 text-xs leading-tight">Grains & Cereals</p>
               </div>
-            </div>
-            <p className="text-sm leading-relaxed text-earth-400">
-              Quality grains and cereals delivered fresh. Serving Nairobi and
-              surrounding areas.
+            </Link>
+
+            <p className="text-earth-400 text-sm leading-relaxed mb-5">
+              Quality grains and cereals sourced directly and delivered fresh.
+              Serving Nairobi and surrounding areas since 2020.
             </p>
+
+            {/* WhatsApp CTA */}
+            {SHOP_INFO.whatsapp && (
+              <a href={`https://wa.me/${SHOP_INFO.whatsapp}`}
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600/20
+                  border border-green-600/30 text-green-400 rounded-xl text-xs font-body
+                  font-semibold hover:bg-green-600/30 transition-all group">
+                <MessageCircle size={14} className="group-hover:scale-110 transition-transform" />
+                Chat on WhatsApp
+              </a>
+            )}
           </div>
-          {/* Quick links */}
+
+          {/* ── Quick links ─────────────────────────────────────────── */}
           <div>
-            <h4 className="font-display font-semibold text-cream mb-4">
+            <h4 className="font-body font-bold text-cream text-sm uppercase tracking-widest mb-5">
               Quick Links
             </h4>
-            <ul className="space-y-2 text-sm">
-              {[
-                { to: "/shop", label: "Shop All Products" },
-                { to: "/track", label: "Track Your Order" },
-                { to: "/login", label: "Sign In" },
-                { to: "/register", label: "Create Account" },
-              ].map((link) => (
+            <ul className="space-y-2.5">
+              {quickLinks.map(link => (
                 <li key={link.to}>
-                  <Link
-                    to={link.to}
-                    className="text-earth-400 hover:text-brand-400 transition-colors"
-                  >
+                  <Link to={link.to}
+                    className="flex items-center gap-1.5 text-earth-400 hover:text-brand-300
+                      text-sm font-body transition-colors group">
+                    <span className="w-1 h-1 rounded-full bg-earth-600 group-hover:bg-brand-400
+                      transition-colors flex-shrink-0" />
                     {link.label}
                   </Link>
                 </li>
@@ -61,61 +81,109 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* ── Contact ─────────────────────────────────────────────── */}
           <div>
-            <h4 className="font-display font-semibold text-cream mb-4">
+            <h4 className="font-body font-bold text-cream text-sm uppercase tracking-widest mb-5">
               Contact Us
             </h4>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-center gap-2 text-earth-400">
-                <Phone size={15} className="text-brand-400 flex-shrink-0" />
-                <a
-                  href={`tel:${SHOP_INFO.phone}`}
-                  className="hover:text-brand-400 transition-colors"
-                >
-                  {SHOP_INFO.phone}
+            <ul className="space-y-4">
+              <li>
+                <a href={`tel:${SHOP_INFO.phone}`}
+                  className="flex items-start gap-3 group">
+                  <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
+                    flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/20
+                    transition-colors mt-0.5">
+                    <Phone size={13} className="text-brand-400" />
+                  </div>
+                  <div>
+                    <p className="text-earth-500 text-xs font-body uppercase tracking-wide mb-0.5">
+                      Phone
+                    </p>
+                    <p className="text-earth-300 text-sm font-body group-hover:text-brand-300
+                      transition-colors">
+                      {SHOP_INFO.phone}
+                    </p>
+                  </div>
                 </a>
               </li>
-              <li className="flex items-center gap-2 text-earth-400">
-                <Mail size={15} className="text-brand-400 flex-shrink-0" />
-                <a
-                  href={`mailto:${SHOP_INFO.email}`}
-                  className="hover:text-brand-400 transition-colors"
-                >
-                  {SHOP_INFO.email}
+
+              <li>
+                <a href={`mailto:${SHOP_INFO.email}`}
+                  className="flex items-start gap-3 group">
+                  <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
+                    flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/20
+                    transition-colors mt-0.5">
+                    <Mail size={13} className="text-brand-400" />
+                  </div>
+                  <div>
+                    <p className="text-earth-500 text-xs font-body uppercase tracking-wide mb-0.5">
+                      Email
+                    </p>
+                    <p className="text-earth-300 text-sm font-body group-hover:text-brand-300
+                      transition-colors truncate max-w-[160px]">
+                      {SHOP_INFO.email}
+                    </p>
+                  </div>
                 </a>
               </li>
-              <li className="flex items-center gap-2 text-earth-400">
-                <Clock size={15} className="text-brand-400 flex-shrink-0" />
-                <span>{SHOP_INFO.hours}</span>
-              </li>
-              <li className="flex items-center gap-2 text-earth-400">
-                <MapPin size={15} className="text-brand-400 flex-shrink-0" />
-                <span>{SHOP_INFO.location}</span>
+
+              <li className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
+                  flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Clock size={13} className="text-brand-400" />
+                </div>
+                <div>
+                  <p className="text-earth-500 text-xs font-body uppercase tracking-wide mb-0.5">
+                    Hours
+                  </p>
+                  <p className="text-earth-300 text-sm font-body">{SHOP_INFO.hours}</p>
+                </div>
               </li>
             </ul>
           </div>
+
+          {/* ── Location ────────────────────────────────────────────── */}
+          <div>
+            <h4 className="font-body font-bold text-cream text-sm uppercase tracking-widest mb-5">
+              Find Us
+            </h4>
+            <div className="flex items-start gap-3 mb-5">
+              <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
+                flex items-center justify-center flex-shrink-0 mt-0.5">
+                <MapPin size={13} className="text-brand-400" />
+              </div>
+              <p className="text-earth-400 text-sm font-body leading-relaxed">
+                {SHOP_INFO.location}
+              </p>
+            </div>
+
+            {/* Shop now CTA */}
+            <Link to="/shop"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white
+                rounded-xl text-xs font-body font-semibold hover:bg-brand-600 transition-all
+                active:scale-[0.97] shadow-sm group">
+              Browse Products
+              <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5
+                transition-transform" />
+            </Link>
+          </div>
         </div>
 
-        <div className="border-t border-earth-700 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-earth-500">
-          <span>
-            © {new Date().getFullYear()} Vittorios Grains & Cereals. All rights
-            reserved.
-          </span>
-
-          <span className="text-center">
-            Designed & maintained by{" "}
-            <a
-              href="https://glimmerink.co.ke/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-400 hover:text-brand-300 transition-colors"
-            >
+        {/* ── Bottom bar ──────────────────────────────────────────── */}
+        <div className="mt-12 pt-6 border-t border-earth-800 flex flex-col sm:flex-row
+          items-center justify-between gap-3">
+          <p className="text-earth-500 text-xs font-body">
+            © {new Date().getFullYear()} Vittorios Grains & Cereals. All rights reserved.
+          </p>
+          <p className="text-earth-600 text-xs font-body">
+            Designed & maintained by{' '}
+            <a href="https://glimmerink.co.ke/" target="_blank" rel="noopener noreferrer"
+              className="text-brand-500 hover:text-brand-400 transition-colors font-semibold">
               GlimmerInk Creations
             </a>
-          </span>
+          </p>
         </div>
       </div>
     </footer>
-  );
+  )
 }
