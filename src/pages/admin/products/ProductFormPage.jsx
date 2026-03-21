@@ -86,12 +86,12 @@ function ImageUploader({ images = [], onChange, label = 'Images' }) {
           {images.map((url, i) => (
             <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-admin-200 group shadow-sm">
               <img src={url} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all" />
-              <button type="button" onClick={() => onChange(images.filter((_, j) => j !== i))}
-                className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full
-                  flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
-                <X size={10} />
-              </button>
+             
+           <button type="button" onClick={() => onChange(images.filter((_, j) => j !== i))}
+  className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full
+    flex items-center justify-center shadow-sm">
+  <X size={10} />
+</button>
             </div>
           ))}
         </div>
