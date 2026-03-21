@@ -27,11 +27,12 @@ export default function Navbar() {
   return (
     <header className="bg-earth-900 text-cream sticky top-0 z-40 shadow-warm-lg">
       <div className="container-page">
-        <div className="flex items-center justify-between h-16">
+        {/* Taller navbar on mobile for easier tapping */}
+        <div className="flex items-center justify-between h-16 sm:h-16">
 
-          {/* Logo */}
+          {/* Logo — bigger on mobile */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 flex-shrink-0">
+            <div className="w-10 h-10 flex-shrink-0">
               <img src="/Vittorios-logo.jpeg" alt="Vittorios"
                 className="w-full h-full object-cover rounded-lg border border-earth-700" />
             </div>
@@ -58,16 +59,16 @@ export default function Navbar() {
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
 
-            {/* Cart */}
+            {/* Cart — bigger tap target */}
             <button onClick={() => openCart?.()}
-              className="relative p-2.5 rounded-lg text-earth-200 hover:text-cream
+              className="relative p-3 rounded-xl text-earth-200 hover:text-cream
                 hover:bg-earth-700 transition-colors"
               aria-label="Open cart">
-              <ShoppingCart size={20} />
+              <ShoppingCart size={24} />
               {itemCount > 0 && (
-                <span className="absolute top-1 right-1 bg-brand-500 text-white text-xs
+                <span className="absolute top-1.5 right-1.5 bg-brand-500 text-white text-xs
                   w-4 h-4 rounded-full flex items-center justify-center font-bold leading-none">
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
@@ -79,15 +80,15 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(o => !o)}
-                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-earth-200
+                  className="flex items-center gap-2 px-2 py-2 rounded-xl text-earth-200
                     hover:text-cream hover:bg-earth-700 transition-colors">
-                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-brand-500
+                  <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-brand-500
                     flex items-center justify-center border border-earth-600">
                     {user?.avatarURL ? (
                       <img src={user.avatarURL} alt={user.name}
                         className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-xs font-bold font-body">
+                      <span className="text-white text-sm font-bold font-body">
                         {user?.name?.charAt(0).toUpperCase()}
                       </span>
                     )}
@@ -99,41 +100,34 @@ export default function Navbar() {
 
                 {userMenuOpen && (
                   <>
-                    {/* Backdrop */}
                     <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-
-                    {/* Dropdown */}
                     <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-warm-lg
                       border border-earth-100 overflow-hidden z-50">
-
-                      {/* User info header */}
                       <div className="px-4 py-3 bg-earth-50 border-b border-earth-100">
                         <p className="text-sm font-body font-semibold text-earth-800 truncate">
                           {user?.name}
                         </p>
                         <p className="text-xs text-earth-400 font-body capitalize mt-0.5">
-                          {user?.role === 'customer' ? 'Customer account' : user?.role}
+                          Customer account
                         </p>
                       </div>
-
                       <div className="py-1">
                         <Link to="/dashboard" onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-earth-700
+                          className="flex items-center gap-2.5 px-4 py-3 text-sm text-earth-700
                             hover:bg-earth-50 font-body transition-colors">
                           <Package size={15} className="text-earth-400" />
                           My Orders
                         </Link>
                         <Link to="/profile" onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-earth-700
+                          className="flex items-center gap-2.5 px-4 py-3 text-sm text-earth-700
                             hover:bg-earth-50 font-body transition-colors">
                           <UserCircle size={15} className="text-earth-400" />
                           My Profile
                         </Link>
                       </div>
-
                       <div className="border-t border-earth-100 py-1">
                         <button onClick={handleLogout}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600
+                          className="flex items-center gap-2.5 px-4 py-3 text-sm text-red-600
                             hover:bg-red-50 w-full font-body transition-colors">
                           <LogOut size={15} />
                           Sign Out
@@ -151,12 +145,12 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Mobile menu toggle */}
+            {/* Mobile hamburger — bigger */}
             <button
               onClick={() => setMenuOpen(o => !o)}
-              className="md:hidden p-2.5 rounded-lg text-earth-200 hover:text-cream
+              className="md:hidden p-3 rounded-xl text-earth-200 hover:text-cream
                 hover:bg-earth-700 transition-colors">
-              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
@@ -168,7 +162,7 @@ export default function Navbar() {
               <NavLink key={link.to} to={link.to} end={link.to === '/'}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `block px-4 py-3 rounded-lg text-sm font-body font-medium transition-colors ${
+                  `block px-4 py-3.5 rounded-lg text-sm font-body font-medium transition-colors ${
                     isActive
                       ? 'bg-brand-500 text-white'
                       : 'text-earth-200 hover:text-cream hover:bg-earth-700'
@@ -180,19 +174,19 @@ export default function Navbar() {
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 text-sm font-body text-earth-200
+                  className="flex items-center gap-2 px-4 py-3.5 text-sm font-body text-earth-200
                     hover:text-cream hover:bg-earth-700 rounded-lg transition-colors">
                   <Package size={15} /> My Orders
                 </Link>
                 <Link to="/profile" onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 text-sm font-body text-earth-200
+                  className="flex items-center gap-2 px-4 py-3.5 text-sm font-body text-earth-200
                     hover:text-cream hover:bg-earth-700 rounded-lg transition-colors">
                   <UserCircle size={15} /> My Profile
                 </Link>
               </>
             ) : (
               <Link to="/login" onClick={() => setMenuOpen(false)}
-                className="block px-4 py-3 text-sm font-body font-medium text-brand-300
+                className="block px-4 py-3.5 text-sm font-body font-medium text-brand-300
                   hover:text-cream">
                 Sign In / Register
               </Link>
