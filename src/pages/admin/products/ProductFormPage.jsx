@@ -369,7 +369,7 @@ export default function ProductFormPage() {
           varieties: (p.varieties || []).map(v => ({
             ...v,
             _id: v._id || Math.random().toString(36).slice(2),
-            collapsed: true,
+            collapsed: false,
             packaging: (v.packaging || []).map(pkg => ({
               ...pkg,
               _id: pkg._id || Math.random().toString(36).slice(2),
