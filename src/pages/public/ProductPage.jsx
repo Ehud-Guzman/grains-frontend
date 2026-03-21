@@ -1,26 +1,99 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, Package } from 'lucide-react'
+import { ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight } from 'lucide-react'
 import { productService } from '../../services/product.service'
 import { useCart } from '../../context/CartContext'
 import { formatKES } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 import { SHOP_INFO } from '../../utils/constants'
 
+// ── SUGGESTED PRODUCT CARD ────────────────────────────────────────────────────
+function SuggestedCard({ product }) {
+  const firstVariety  = product.varieties?.[0]
+  const firstPkg      = firstVariety?.packaging?.find(p => !p.quoteOnly && p.priceKES)
+  const image         = firstVariety?.imageURLs?.[0] || product.imageURLs?.[0]
+  const lowestPrice   = product.varieties
+    ?.flatMap(v => v.packaging?.filter(p => !p.quoteOnly && p.priceKES) || [])
+    .map(p => p.priceKES)
+    .sort((a, b) => a - b)[0]
+
+  return (
+    <Link to={`/shop/${product._id}`}
+      className="flex-shrink-0 w-36 sm:w-44 group">
+      {/* Image */}
+      <div className="w-full aspect-square rounded-2xl overflow-hidden bg-earth-100 mb-2.5
+        border border-earth-100 relative">
+        {image ? (
+          <img src={image} alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-4xl opacity-20">🌾</span>
+          </div>
+        )}
+        {/* Category pill */}
+        <div className="absolute bottom-2 left-2">
+          <span className="text-xs font-body font-medium text-earth-600 bg-white/90
+            backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/50">
+            {product.category}
+          </span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="px-0.5">
+        <p className="font-body font-bold text-earth-800 text-sm leading-tight
+          group-hover:text-brand-600 transition-colors line-clamp-1">
+          {product.name}
+        </p>
+        {firstVariety?.varietyName !== product.name && (
+          <p className="text-earth-400 text-xs font-body mt-0.5 line-clamp-1">
+            {firstVariety?.varietyName}
+          </p>
+        )}
+        <p className="text-brand-600 font-display font-bold text-sm mt-1">
+          {lowestPrice ? `From ${formatKES(lowestPrice)}` : 'Quote only'}
+        </p>
+      </div>
+    </Link>
+  )
+}
+
+// ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ProductPage() {
   const { id } = useParams()
   const { addItem } = useCart()
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const scrollRef = useRef()
+
+  const [product, setProduct]           = useState(null)
+  const [suggested, setSuggested]       = useState([])
+  const [loading, setLoading]           = useState(true)
   const [selectedVariety, setSelectedVariety] = useState(0)
-  const [selectedPkg, setSelectedPkg] = useState(0)
-  const [quantity, setQuantity] = useState(1)
-  const [activeImage, setActiveImage] = useState(0)
-  const [added, setAdded] = useState(false)
+  const [selectedPkg, setSelectedPkg]   = useState(0)
+  const [quantity, setQuantity]         = useState(1)
+  const [activeImage, setActiveImage]   = useState(0)
+  const [added, setAdded]               = useState(false)
 
   useEffect(() => {
+    setLoading(true)
+    setSelectedVariety(0)
+    setSelectedPkg(0)
+    setQuantity(1)
+    setActiveImage(0)
+    setAdded(false)
+
     productService.getById(id)
-      .then(res => setProduct(res.data.data))
+      .then(res => {
+        const p = res.data.data
+        setProduct(p)
+        // Fetch suggested from same category
+        return productService.getAll({ category: p.category, limit: 8, isActive: true })
+          .then(r => {
+            const others = (r.data.data || []).filter(x => x._id !== id)
+            setSuggested(others.slice(0, 6))
+          })
+          .catch(() => {})
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
@@ -33,18 +106,17 @@ export default function ProductPage() {
 
   if (!product) return (
     <div className="container-page py-16 text-center">
-      <Package size={40} className="text-earth-300 mx-auto mb-4" />
       <p className="text-earth-500 font-body mb-4">Product not found.</p>
       <Link to="/shop" className="btn-primary">Back to Shop</Link>
     </div>
   )
 
-  const variety = product.varieties?.[selectedVariety]
-  const packaging = variety?.packaging?.[selectedPkg]
-  const images = [...(variety?.imageURLs || []), ...(product.imageURLs || [])].filter(Boolean)
+  const variety    = product.varieties?.[selectedVariety]
+  const packaging  = variety?.packaging?.[selectedPkg]
+  const images     = [...(variety?.imageURLs || []), ...(product.imageURLs || [])].filter(Boolean)
   const isQuoteOnly = packaging?.quoteOnly
-  const inStock = packaging?.stock > 0 && !isQuoteOnly
-  const maxQty = packaging?.stock || 0
+  const inStock    = packaging?.stock > 0 && !isQuoteOnly
+  const maxQty     = packaging?.stock || 0
 
   const stockStatus = !packaging ? null
     : packaging.stock === 0 ? 'out'
@@ -52,9 +124,9 @@ export default function ProductPage() {
     : 'in'
 
   const stockConfig = {
-    in:  { label: 'In Stock',      dot: 'bg-green-400', text: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-    low: { label: 'Low Stock',     dot: 'bg-amber-400', text: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-    out: { label: 'Out of Stock',  dot: 'bg-red-400',   text: 'text-red-700',   bg: 'bg-red-50 border-red-200'     },
+    in:  { label: 'In Stock',     dot: 'bg-green-400', text: 'text-green-700', bg: 'bg-green-50 border-green-200' },
+    low: { label: 'Low Stock',    dot: 'bg-amber-400', text: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+    out: { label: 'Out of Stock', dot: 'bg-red-400',   text: 'text-red-700',   bg: 'bg-red-50 border-red-200'   },
   }[stockStatus] || {}
 
   const handleAddToCart = () => {
@@ -74,21 +146,25 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-cream">
 
-      {/* ── Breadcrumb ────────────────────────────────────────────────── */}
+      {/* ── Breadcrumb ────────────────────────────────────────────── */}
       <div className="border-b border-earth-100 bg-white">
         <div className="container-page py-3">
-          <Link to="/shop"
-            className="inline-flex items-center gap-1.5 text-sm text-earth-500
-              hover:text-brand-600 font-body transition-colors">
-            <ArrowLeft size={15} /> Back to Shop
-          </Link>
+          <div className="flex items-center gap-2 text-sm font-body text-earth-400">
+            <Link to="/shop" className="hover:text-brand-600 transition-colors flex items-center gap-1">
+              <ArrowLeft size={14} /> Shop
+            </Link>
+            <span>/</span>
+            <span className="text-earth-600">{product.category}</span>
+            <span>/</span>
+            <span className="text-earth-800 font-medium truncate">{product.name}</span>
+          </div>
         </div>
       </div>
 
       <div className="container-page py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
-          {/* ── Images ───────────────────────────────────────────────── */}
+          {/* ── Images ─────────────────────────────────────────────── */}
           <div className="space-y-3">
             <div className="aspect-square bg-earth-50 rounded-2xl overflow-hidden relative group">
               {images.length > 0 ? (
@@ -100,10 +176,9 @@ export default function ProductPage() {
                   <span className="text-8xl opacity-10">🌾</span>
                 </div>
               )}
-              {/* Category pill */}
               <div className="absolute top-4 left-4">
-                <span className="bg-white/90 backdrop-blur-sm text-earth-600 text-xs
-                  font-body font-medium px-3 py-1.5 rounded-full border border-white/50 shadow-sm">
+                <span className="bg-white/90 backdrop-blur-sm text-earth-600 text-xs font-body
+                  font-medium px-3 py-1.5 rounded-full border border-white/50 shadow-sm">
                   {product.category}
                 </span>
               </div>
@@ -113,11 +188,9 @@ export default function ProductPage() {
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setActiveImage(i)}
                     className={`w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2
-                      transition-all ${
-                        i === activeImage
-                          ? 'border-brand-500 shadow-sm scale-105'
-                          : 'border-transparent hover:border-earth-300 opacity-70 hover:opacity-100'
-                      }`}>
+                      transition-all ${i === activeImage
+                        ? 'border-brand-500 scale-105'
+                        : 'border-transparent opacity-70 hover:opacity-100'}`}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -125,7 +198,7 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* ── Details ──────────────────────────────────────────────── */}
+          {/* ── Details ─────────────────────────────────────────────── */}
           <div className="space-y-5">
             <div>
               <p className="text-earth-400 text-xs font-body uppercase tracking-widest mb-1.5">
@@ -148,11 +221,9 @@ export default function ProductPage() {
                   {product.varieties.map((v, i) => (
                     <button key={v.varietyName} onClick={() => switchVariety(i)}
                       className={`px-4 py-2 rounded-xl border text-sm font-body font-medium
-                        transition-all ${
-                          i === selectedVariety
-                            ? 'bg-earth-900 text-white border-earth-900 shadow-sm'
-                            : 'bg-white text-earth-700 border-earth-200 hover:border-earth-400'
-                        }`}>
+                        transition-all ${i === selectedVariety
+                          ? 'bg-earth-900 text-white border-earth-900 shadow-sm'
+                          : 'bg-white text-earth-700 border-earth-200 hover:border-earth-400'}`}>
                       {v.varietyName}
                     </button>
                   ))}
@@ -167,14 +238,11 @@ export default function ProductPage() {
                   tracking-wide mb-2">Packaging Size</p>
                 <div className="flex flex-wrap gap-2">
                   {variety.packaging.map((pkg, i) => (
-                    <button key={pkg.size}
-                      onClick={() => { setSelectedPkg(i); setQuantity(1) }}
-                      className={`px-4 py-3 rounded-xl border text-sm font-body transition-all
-                        text-left ${
-                          i === selectedPkg
-                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                            : 'bg-white text-earth-700 border-earth-200 hover:border-brand-300'
-                        }`}>
+                    <button key={pkg.size} onClick={() => { setSelectedPkg(i); setQuantity(1) }}
+                      className={`px-4 py-3 rounded-xl border text-sm font-body transition-all text-left ${
+                        i === selectedPkg
+                          ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                          : 'bg-white text-earth-700 border-earth-200 hover:border-brand-300'}`}>
                       <span className="font-semibold block">{pkg.size}</span>
                       <span className={`text-xs ${i === selectedPkg ? 'text-white/80' : 'text-earth-400'}`}>
                         {pkg.quoteOnly ? 'Quote only' : formatKES(pkg.priceKES)}
@@ -195,8 +263,8 @@ export default function ProductPage() {
                   </span>
                 </div>
                 {stockStatus && (
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-body
-                    font-semibold px-2.5 py-1 rounded-full border ${stockConfig.bg} ${stockConfig.text}`}>
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-body font-semibold
+                    px-2.5 py-1 rounded-full border ${stockConfig.bg} ${stockConfig.text}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${stockConfig.dot}`} />
                     {stockConfig.label}
                   </span>
@@ -241,7 +309,6 @@ export default function ProductPage() {
                   )}
                 </div>
 
-                {/* Total */}
                 {inStock && packaging?.priceKES && (
                   <p className="text-sm font-body text-earth-500">
                     Total: <span className="font-display font-bold text-earth-900 text-base">
@@ -250,21 +317,16 @@ export default function ProductPage() {
                   </p>
                 )}
 
-                {/* Add to cart */}
                 <button onClick={handleAddToCart} disabled={!inStock || added}
                   className={`flex items-center justify-center gap-2 w-full py-4 rounded-xl
                     font-body font-semibold text-base transition-all active:scale-[0.98] ${
-                      added
-                        ? 'bg-green-500 text-white'
-                        : inStock
-                        ? 'bg-earth-900 text-cream hover:bg-earth-800'
-                        : 'bg-earth-100 text-earth-400 cursor-not-allowed'
-                    }`}>
-                  {added ? (
-                    <><Check size={18} /> Added to Cart!</>
-                  ) : (
-                    <><ShoppingCart size={18} /> {inStock ? 'Add to Cart' : 'Out of Stock'}</>
-                  )}
+                      added ? 'bg-green-500 text-white'
+                      : inStock ? 'bg-earth-900 text-cream hover:bg-earth-800'
+                      : 'bg-earth-100 text-earth-400 cursor-not-allowed'}`}>
+                  {added
+                    ? <><Check size={18} /> Added to Cart!</>
+                    : <><ShoppingCart size={18} /> {inStock ? 'Add to Cart' : 'Out of Stock'}</>
+                  }
                 </button>
               </>
             )}
@@ -281,6 +343,54 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
+
+      {/* ── SUGGESTED PRODUCTS ────────────────────────────────────── */}
+      {suggested.length > 0 && (
+        <div className="border-t border-earth-100 bg-white py-10 mt-4">
+          <div className="container-page">
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-xs font-body font-semibold text-earth-400 uppercase
+                  tracking-widest mb-0.5">More from</p>
+                <h2 className="font-display text-xl font-bold text-earth-900">
+                  {product.category}
+                </h2>
+              </div>
+              <Link to={`/shop?category=${encodeURIComponent(product.category)}`}
+                className="flex items-center gap-1 text-sm font-body font-semibold text-brand-600
+                  hover:text-brand-700 transition-colors">
+                See all <ChevronRight size={15} />
+              </Link>
+            </div>
+
+            {/* Horizontal scroll strip */}
+            <div ref={scrollRef}
+              className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide
+                -mx-4 px-4 sm:mx-0 sm:px-0">
+              {suggested.map(p => (
+                <SuggestedCard key={p._id} product={p} />
+              ))}
+
+              {/* See all card at the end */}
+              <Link to={`/shop?category=${encodeURIComponent(product.category)}`}
+                className="flex-shrink-0 w-36 sm:w-44 flex flex-col items-center justify-center
+                  aspect-square rounded-2xl border-2 border-dashed border-earth-200
+                  hover:border-brand-300 hover:bg-brand-50 transition-all group">
+                <div className="w-10 h-10 bg-earth-100 group-hover:bg-brand-100 rounded-full
+                  flex items-center justify-center mb-2 transition-colors">
+                  <ChevronRight size={18} className="text-earth-400 group-hover:text-brand-600 transition-colors" />
+                </div>
+                <p className="text-xs font-body font-semibold text-earth-500
+                  group-hover:text-brand-600 transition-colors text-center px-2">
+                  View all {product.category}
+                </p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
