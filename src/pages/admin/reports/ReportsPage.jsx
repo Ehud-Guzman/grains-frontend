@@ -56,11 +56,22 @@ const PrintHeader = ({ tab, period }) => {
   return (
     <div className="print-only mb-8 pb-6 border-b-2 border-admin-200">
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-admin-900" style={{ fontFamily: 'Georgia, serif' }}>
-            {SHOP_INFO.name}
-          </h1>
-          <p className="text-admin-500 text-sm mt-0.5">{SHOP_INFO.tagline}</p>
+        <div className="flex items-center gap-3">
+          <img
+            src="/Vittorios-logo.jpeg"
+            alt="Vittorios"
+            style={{ width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover' }}
+          />
+          <div>
+            <h1 className="text-xl font-bold text-admin-900" style={{ fontFamily: 'Georgia, serif' }}>
+              {SHOP_INFO.name}
+            </h1>
+            <p className="text-admin-500 text-xs mt-0.5">{SHOP_INFO.tagline}</p>
+            <div className="flex items-center gap-4 mt-1 text-xs text-admin-400">
+              <span>📞 {SHOP_INFO.phone}</span>
+              <span>✉ {SHOP_INFO.email}</span>
+            </div>
+          </div>
         </div>
         <div className="text-right text-sm text-admin-500 space-y-0.5">
           <p className="font-semibold text-admin-800 capitalize text-base">{tab} Report</p>

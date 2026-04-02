@@ -26,10 +26,10 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
         {/* Sheet */}
-      <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-          <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl
-            shadow-2xl flex flex-col max-h-[96vh] sm:max-h-[88vh] pointer-events-auto
-            overflow-hidden">
+    <div className="absolute inset-0 flex items-start justify-center p-4 pointer-events-none">
+  <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl
+    shadow-2xl flex flex-col max-h-[96vh] sm:max-h-[88vh] pointer-events-auto
+    overflow-hidden">
 
             {/* Toolbar */}
             <div className="flex items-center justify-between px-6 py-4
