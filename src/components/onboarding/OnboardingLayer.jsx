@@ -51,7 +51,7 @@ function WelcomeModal() {
 
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-8">
-      <div className="absolute inset-0 bg-[#05070c]/58 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-[#05070c]/58 backdrop-blur-none sm:backdrop-blur-[2px]" />
       <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#101826] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
         <div className="absolute inset-0 opacity-70 pointer-events-none">
           <div className="absolute -top-20 -right-12 w-56 h-56 rounded-full bg-brand-500/20 blur-3xl" />
@@ -176,7 +176,7 @@ function TourOverlay() {
 
   return createPortal(
     <div className="fixed inset-0 z-[130] pointer-events-none">
-      <div className="absolute inset-0 bg-[#05070c]/48 backdrop-blur-[1.5px]" />
+      <div className="absolute inset-0 bg-[#05070c]/48 backdrop-blur-none sm:backdrop-blur-[1.5px]" />
 
       {rect && (
         <div
@@ -271,7 +271,7 @@ function HelpCenter() {
         <div className="fixed inset-0 z-[140] flex justify-end">
           <button
             onClick={closeHelpCenter}
-            className="absolute inset-0 bg-[#05070c]/55 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#05070c]/55 backdrop-blur-none sm:backdrop-blur-sm"
           />
 
           <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#0f1725] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
