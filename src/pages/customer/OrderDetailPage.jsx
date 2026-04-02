@@ -3,8 +3,9 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Phone, XCircle, Package, Truck, Store, CreditCard, Receipt as ReceiptIcon } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES, formatDate, getStatusLabel } from '../../utils/helpers'
-import { PAYMENT_LABELS, SHOP_INFO } from '../../utils/constants'
+import { PAYMENT_LABELS } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import Receipt from '../../components/orders/Receipt'
 
@@ -26,6 +27,7 @@ const STATUS_CONFIG = {
 }
 
 export default function CustomerOrderDetailPage() {
+  const shopInfo = useShopInfo()
   const { id } = useParams()
   const [order, setOrder]         = useState(null)
   const [loading, setLoading]     = useState(true)
@@ -267,11 +269,11 @@ export default function CustomerOrderDetailPage() {
               {cancelling ? 'Cancelling…' : 'Cancel Order'}
             </button>
           )}
-          <a href={`tel:${SHOP_INFO.phone}`}
+          <a href={`tel:${shopInfo.phone}`}
             className="flex items-center justify-center gap-2 w-full py-3.5 bg-earth-900
               text-cream rounded-xl text-sm font-body font-semibold hover:bg-earth-800
               transition-colors">
-            <Phone size={16} /> Call Us — {SHOP_INFO.phone}
+            <Phone size={16} /> Call Us — {shopInfo.phone}
           </a>
         </div>
       </div>

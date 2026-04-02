@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, Lock, ArrowLeft, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
-import { SHOP_INFO } from '../../utils/constants'
 
 const ADMIN_ROLES = ['admin', 'superadmin', 'supervisor', 'staff']
 
@@ -209,8 +209,8 @@ function ChangePasswordModal({ onClose }) {
   )
 }
 
-// ── MAIN LOGIN PAGE ───────────────────────────────────────────────────────────
 export default function LoginPage() {
+  const shopInfo = useShopInfo()
   const { login } = useAuth()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
@@ -251,7 +251,7 @@ export default function LoginPage() {
         {/* ── Top brand strip ──────────────────────────────────────────── */}
         <div className="bg-earth-900 py-3 px-4 text-center">
           <Link to="/" className="text-earth-400 text-xs font-body hover:text-cream transition-colors">
-            ← Back to {SHOP_INFO.name}
+            ← Back to {shopInfo.name}
           </Link>
         </div>
 
@@ -274,7 +274,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <h1 className="font-display text-2xl font-bold text-earth-900">Welcome back</h1>
-              <p className="text-earth-500 text-sm mt-1 font-body">{SHOP_INFO.name}</p>
+              <p className="text-earth-500 text-sm mt-1 font-body">{shopInfo.name}</p>
             </div>
 
             {/* Card */}

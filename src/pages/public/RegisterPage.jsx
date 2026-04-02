@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, UserPlus, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import toast from 'react-hot-toast'
 import { isValidKenyanPhone } from '../../utils/helpers'
-import { SHOP_INFO } from '../../utils/constants'
 
 const getStrength = (pw) => {
   if (!pw) return { score: 0, label: '', color: '' }
@@ -21,6 +21,7 @@ const getStrength = (pw) => {
 
 export default function RegisterPage() {
   const { register } = useAuth()
+  const shopInfo = useShopInfo()
   const navigate = useNavigate()
 
   const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' })
@@ -70,7 +71,7 @@ export default function RegisterPage() {
       {/* Top brand strip */}
       <div className="bg-earth-900 py-3 px-4 text-center">
         <Link to="/" className="text-earth-400 text-xs font-body hover:text-cream transition-colors">
-          ← Back to {SHOP_INFO.name}
+          ← Back to {shopInfo.name}
         </Link>
       </div>
 
@@ -89,7 +90,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <h1 className="font-display text-2xl font-bold text-earth-900">Create an account</h1>
-            <p className="text-earth-500 text-sm mt-1 font-body">Join {SHOP_INFO.name}</p>
+            <p className="text-earth-500 text-sm mt-1 font-body">Join {shopInfo.name}</p>
           </div>
 
           {/* Card */}

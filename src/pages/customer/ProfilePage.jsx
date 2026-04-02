@@ -5,9 +5,9 @@ import {
   Save, Lock, Edit2, CheckCircle, Package, ArrowLeft, Camera
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
 import { formatDate, isValidKenyanPhone } from '../../utils/helpers'
-import { SHOP_INFO } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
@@ -150,6 +150,7 @@ function AddressCard({ address, onRemove, onSetDefault }) {
 
 export default function CustomerProfilePage() {
   const { user, updateUser } = useAuth()
+  const shopInfo = useShopInfo()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -459,8 +460,8 @@ export default function CustomerProfilePage() {
 
         <p className="text-center text-xs text-earth-400 font-body">
           Need help? Call us at{' '}
-          <a href={`tel:${SHOP_INFO.phone}`} className="text-brand-600 hover:underline font-semibold">
-            {SHOP_INFO.phone}
+          <a href={`tel:${shopInfo.phone}`} className="text-brand-600 hover:underline font-semibold">
+            {shopInfo.phone}
           </a>
         </p>
       </div>

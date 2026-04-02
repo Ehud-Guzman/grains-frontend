@@ -47,11 +47,14 @@ export const PAYMENT_LABELS = {
   delivery: 'Pay on Delivery'
 }
 
-export const SHOP_INFO = {
+export const DEFAULT_SHOP_INFO = {
   name: 'Vittorios Grains & Cereals',
   tagline: 'Quality grains, delivered fresh',
   phone: '+254 799 031 449',
   email: 'vittoriostrades@gmail.com',
   hours: 'Mon – Sat: 7:00 AM – 7:00 PM',
-  location: 'Bungoma, Kenya'
+  location: 'Bungoma, Kenya',
+  whatsapp: ''
 }
+
+export const SHOP_INFO = DEFAULT_SHOP_INFO

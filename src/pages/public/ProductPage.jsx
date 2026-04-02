@@ -3,9 +3,9 @@ import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight } from 'lucide-react'
 import { productService } from '../../services/product.service'
 import { useCart } from '../../context/CartContext'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
-import { SHOP_INFO } from '../../utils/constants'
 
 // ── SUGGESTED PRODUCT CARD ────────────────────────────────────────────────────
 function SuggestedCard({ product }) {
@@ -61,6 +61,7 @@ function SuggestedCard({ product }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ProductPage() {
+  const shopInfo = useShopInfo()
   const { id } = useParams()
   const { addItem } = useCart()
   const scrollRef = useRef()
@@ -274,7 +275,7 @@ export default function ProductPage() {
 
             {/* Quote only CTA */}
             {isQuoteOnly ? (
-              <a href={`tel:${SHOP_INFO.phone}`}
+              <a href={`tel:${shopInfo.phone}`}
                 className="flex items-center justify-center gap-2 w-full py-4 bg-earth-900
                   text-cream rounded-xl font-body font-semibold hover:bg-earth-800 transition-all
                   active:scale-[0.98] text-base">
@@ -334,7 +335,7 @@ export default function ProductPage() {
             {/* Contact strip */}
             <div className="flex items-center justify-between p-4 bg-earth-50 rounded-xl border border-earth-100">
               <p className="text-sm text-earth-600 font-body">Questions about this product?</p>
-              <a href={`tel:${SHOP_INFO.phone}`}
+              <a href={`tel:${shopInfo.phone}`}
                 className="flex items-center gap-1.5 text-sm text-brand-600 font-body
                   font-semibold hover:text-brand-700 transition-colors">
                 <Phone size={14} /> Call Us

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, Check, MapPin, CreditCard,
@@ -6,11 +6,13 @@ import {
 } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
+import { useAppSettings } from '../../context/AppSettingsContext'
 import { orderService } from '../../services/order.service'
 import { paymentService } from '../../services/payment.service'
 import { formatKES, isValidKenyanPhone } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
+import Spinner from '../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
 const STEPS = [
@@ -89,6 +91,7 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge }) => (
 export default function CheckoutPage() {
   const { items, subtotal: total, clearCart } = useCart()
   const { user, isAuthenticated } = useAuth()
+  const { orderSettings, isLoading: settingsLoading, hasLoaded } = useAppSettings()
   const navigate = useNavigate()
 
   const [step, setStep]       = useState(0)
@@ -109,6 +112,45 @@ export default function CheckoutPage() {
     mpesaPhone:          user?.phone || '', // can differ from contact phone
     specialInstructions: ''
   })
+
+  const deliveryFee = form.deliveryMethod === 'delivery' ? orderSettings.deliveryFee : 0
+  const orderTotal = total + deliveryFee
+  const belowMinimum = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
+  const availablePaymentOptions = [
+    orderSettings.allowMpesa && {
+      value: 'mpesa',
+      icon: Smartphone,
+      label: 'M-Pesa',
+      desc: 'Pay instantly via M-Pesa STK push — you\'ll get a prompt on your phone',
+      badge: 'Recommended',
+    },
+    form.deliveryMethod === 'pickup' && orderSettings.allowPayOnPickup && {
+      value: 'pickup',
+      icon: Store,
+      label: 'Pay on Pickup',
+      desc: 'Pay cash or M-Pesa when you collect your order',
+    },
+    form.deliveryMethod === 'delivery' && orderSettings.allowCashOnDelivery && {
+      value: 'delivery',
+      icon: Truck,
+      label: 'Pay on Delivery',
+      desc: 'Pay when your order arrives at your door',
+    },
+  ].filter(Boolean)
+
+  useEffect(() => {
+    if (!availablePaymentOptions.some(option => option.value === form.paymentMethod) && availablePaymentOptions[0]) {
+      setForm(current => ({ ...current, paymentMethod: availablePaymentOptions[0].value }))
+    }
+  }, [availablePaymentOptions, form.paymentMethod])
+
+  if (settingsLoading && !hasLoaded) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
 
   if (items.length === 0) {
     return (
@@ -133,6 +175,30 @@ export default function CheckoutPage() {
     setErrors(e => ({ ...e, [field]: '' }))
   }
 
+  if (!isAuthenticated && !orderSettings.allowGuestOrders) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-earth-100 shadow-warm p-7 text-center">
+          <div className="w-16 h-16 bg-earth-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <User size={28} className="text-earth-500" />
+          </div>
+          <h2 className="font-display text-2xl text-earth-900 mb-2">Sign In Required</h2>
+          <p className="text-earth-500 text-sm font-body leading-relaxed mb-6">
+            Guest checkout is currently disabled. Please sign in or create an account to place your order.
+          </p>
+          <div className="space-y-3">
+            <Link to="/login" className="btn-primary w-full justify-center">
+              Sign In
+            </Link>
+            <Link to="/register" className="btn-outline w-full justify-center">
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const validate = () => {
     const e = {}
     if (step === 0) {
@@ -151,11 +217,27 @@ export default function CheckoutPage() {
     return Object.keys(e).length === 0
   }
 
-  const next = () => { if (validate()) setStep(s => Math.min(s + 1, 4)) }
+  const next = () => {
+    if (!validate()) return
+    if (step === 3 && belowMinimum) {
+      toast.error(`Minimum order value is ${formatKES(orderSettings.minimumOrderValue)}`)
+      return
+    }
+    if (step === 2 && availablePaymentOptions.length === 0) {
+      toast.error('No payment methods are available for this order right now.')
+      return
+    }
+    setStep(s => Math.min(s + 1, 4))
+  }
   const back = () => setStep(s => Math.max(s - 1, 0))
 
   // ── PLACE ORDER ────────────────────────────────────────────────────────────
   const submit = async () => {
+    if (belowMinimum) {
+      toast.error(`Minimum order value is ${formatKES(orderSettings.minimumOrderValue)}`)
+      return
+    }
+
     setLoading(true)
     try {
       const orderData = {
@@ -455,24 +537,29 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                   <div className="space-y-3">
-                    <OptionCard icon={Smartphone} label="M-Pesa"
-                      desc="Pay instantly via M-Pesa STK push — you'll get a prompt on your phone"
-                      badge="Recommended"
-                      checked={form.paymentMethod === 'mpesa'}
-                      onChange={() => {
-                        set('paymentMethod', 'mpesa')
-                        // Pre-fill M-Pesa phone with contact phone
-                        if (!form.mpesaPhone && form.phone)
-                          set('mpesaPhone', form.phone)
-                      }} />
-                    <OptionCard icon={Store} label="Pay on Pickup"
-                      desc="Pay cash or M-Pesa when you collect your order"
-                      checked={form.paymentMethod === 'pickup'}
-                      onChange={() => set('paymentMethod', 'pickup')} />
-                    <OptionCard icon={Truck} label="Pay on Delivery"
-                      desc="Pay when your order arrives at your door"
-                      checked={form.paymentMethod === 'delivery'}
-                      onChange={() => set('paymentMethod', 'delivery')} />
+                    {availablePaymentOptions.map(option => (
+                      <OptionCard
+                        key={option.value}
+                        icon={option.icon}
+                        label={option.label}
+                        desc={option.desc}
+                        badge={option.badge}
+                        checked={form.paymentMethod === option.value}
+                        onChange={() => {
+                          set('paymentMethod', option.value)
+                          if (option.value === 'mpesa' && !form.mpesaPhone && form.phone) {
+                            set('mpesaPhone', form.phone)
+                          }
+                        }}
+                      />
+                    ))}
+                    {availablePaymentOptions.length === 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <p className="text-sm text-red-700 font-body">
+                          No payment methods are currently available for this order type.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* M-Pesa phone input */}
@@ -615,6 +702,12 @@ export default function CheckoutPage() {
                       <span className="text-earth-500">Subtotal</span>
                       <span className="text-earth-700">{formatKES(total)}</span>
                     </div>
+                    {form.deliveryMethod === 'delivery' && (
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-earth-500">Delivery Fee</span>
+                        <span className="text-earth-700">{formatKES(deliveryFee)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm font-body">
                       <span className="text-earth-500">Payment</span>
                       <span className="text-earth-700">{PAYMENT_LABELS[form.paymentMethod]}</span>
@@ -623,10 +716,18 @@ export default function CheckoutPage() {
                       border-earth-100 pt-2 mt-2">
                       <span className="font-semibold text-earth-800">Total</span>
                       <span className="font-display font-bold text-brand-600 text-lg">
-                        {formatKES(total)}
+                        {formatKES(orderTotal)}
                       </span>
                     </div>
                   </div>
+
+                  {belowMinimum && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                      <p className="text-xs text-red-700 font-body text-center">
+                        Minimum order value is <strong>{formatKES(orderSettings.minimumOrderValue)}</strong>.
+                      </p>
+                    </div>
+                  )}
 
                   {/* M-Pesa notice */}
                   {form.paymentMethod === 'mpesa' && (
@@ -673,20 +774,20 @@ export default function CheckoutPage() {
                       rounded-xl text-sm font-body font-bold hover:bg-brand-600 transition-all
                       active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed
                       shadow-warm">
-                    {loading ? (
+                        {loading ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent
                           rounded-full animate-spin" />
                         {form.paymentMethod === 'mpesa' ? 'Processing…' : 'Placing Order…'}
                       </>
-                    ) : (
-                      <>
-                        {form.paymentMethod === 'mpesa'
-                          ? `Pay ${formatKES(total)} via M-Pesa`
-                          : `Place Order · ${formatKES(total)}`
+                        ) : (
+                          <>
+                            {form.paymentMethod === 'mpesa'
+                          ? `Pay ${formatKES(orderTotal)} via M-Pesa`
+                          : `Place Order · ${formatKES(orderTotal)}`
                         }
-                      </>
-                    )}
+                          </>
+                        )}
                   </button>
                 )}
               </div>
@@ -728,10 +829,20 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <div className="border-t border-earth-100 mt-4 pt-4">
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span className="font-body text-earth-600">Subtotal</span>
+                  <span className="font-body text-earth-700">{formatKES(total)}</span>
+                </div>
+                {form.deliveryMethod === 'delivery' && (
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-body text-earth-600">Delivery Fee</span>
+                    <span className="font-body text-earth-700">{formatKES(deliveryFee)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="font-body text-earth-600 text-sm">Total</span>
                   <span className="font-display font-bold text-brand-600 text-lg">
-                    {formatKES(total)}
+                    {formatKES(orderTotal)}
                   </span>
                 </div>
               </div>

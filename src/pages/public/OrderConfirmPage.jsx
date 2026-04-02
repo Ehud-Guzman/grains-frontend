@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useSearchParams, useLocation, Link } from 'react-router-dom'
 import { CheckCircle, Package, Phone, Copy, Check, ArrowRight } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
-import { SHOP_INFO } from '../../utils/constants'
+import { PAYMENT_LABELS } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 
 export function OrderConfirmPage() {
+  const shopInfo = useShopInfo()
   const [searchParams] = useSearchParams()
   const { state } = useLocation()
   const [copied, setCopied] = useState(false)
@@ -103,7 +105,7 @@ export function OrderConfirmPage() {
               <div className="flex justify-between text-sm font-body">
                 <span className="text-earth-600">Payment</span>
                 <span className="text-earth-800 font-medium capitalize">
-                  {paymentMethod === 'pickup' ? 'Pay on Pickup' : 'Pay on Delivery'}
+                  {PAYMENT_LABELS[paymentMethod] || paymentMethod}
                 </span>
               </div>
             )}
@@ -166,11 +168,11 @@ export function OrderConfirmPage() {
             Continue Shopping
           </Link>
 
-          <a href={`tel:${SHOP_INFO.phone}`}
+          <a href={`tel:${shopInfo.phone}`}
             className="flex items-center justify-center gap-2 w-full py-3 text-earth-500
               text-sm font-body hover:text-earth-700 transition-colors">
             <Phone size={15} />
-            {SHOP_INFO.phone}
+            {shopInfo.phone}
           </a>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../context/AuthContext'
+import { useAppSettings } from '../../../context/AppSettingsContext'
 import { adminSettingsService } from '../../../services/admin/settings.service'
 import {
   Store, ShoppingCart, Bell, Shield, Save, AlertTriangle
@@ -71,6 +72,7 @@ const Toggle = ({ label, desc, checked, onChange, disabled }) => (
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { applySettings } = useAppSettings()
   const isSuperAdmin = user?.role === 'superadmin'
 
   const [form, setForm] = useState(null)
@@ -95,6 +97,7 @@ export default function SettingsPage() {
     try {
       const res = await adminSettingsService.update(form)
       setForm(res.data.data)
+      applySettings(res.data.data)
       setDirty(false)
       toast.success('Settings saved')
     } catch (err) {

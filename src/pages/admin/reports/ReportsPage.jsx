@@ -8,7 +8,7 @@ import {
 } from 'recharts'
 import { adminReportService } from '../../../services/admin/report.service'
 import { formatKES } from '../../../utils/helpers'
-import { SHOP_INFO } from '../../../utils/constants'
+import { useShopInfo } from '../../../context/AppSettingsContext'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
@@ -46,7 +46,7 @@ const PRINT_STYLES = `
 `
 
 // ── PRINT HEADER ──────────────────────────────────────────────────────────────
-const PrintHeader = ({ tab, period }) => {
+const PrintHeader = ({ shopInfo, tab, period }) => {
   const periodLabel = PERIODS.find(p => p.value === period)?.label ?? ''
   const periodText  = tab !== 'stock' && tab !== 'customers' ? `Period: ${periodLabel}` : 'All time'
   const today       = new Date().toLocaleDateString('en-KE', {
@@ -64,12 +64,12 @@ const PrintHeader = ({ tab, period }) => {
           />
           <div>
             <h1 className="text-xl font-bold text-admin-900" style={{ fontFamily: 'Georgia, serif' }}>
-              {SHOP_INFO.name}
+              {shopInfo.name}
             </h1>
-            <p className="text-admin-500 text-xs mt-0.5">{SHOP_INFO.tagline}</p>
+            <p className="text-admin-500 text-xs mt-0.5">{shopInfo.tagline}</p>
             <div className="flex items-center gap-4 mt-1 text-xs text-admin-400">
-              <span>📞 {SHOP_INFO.phone}</span>
-              <span>✉ {SHOP_INFO.email}</span>
+              <span>📞 {shopInfo.phone}</span>
+              <span>✉ {shopInfo.email}</span>
             </div>
           </div>
         </div>
@@ -84,15 +84,15 @@ const PrintHeader = ({ tab, period }) => {
 }
 
 // ── PRINT FOOTER ──────────────────────────────────────────────────────────────
-const PrintFooter = () => (
+const PrintFooter = ({ shopInfo }) => (
   <div className="print-only mt-10 pt-5 border-t border-admin-200">
     <div className="flex items-center justify-between text-xs text-admin-500">
       <div className="flex items-center gap-5">
-        <span>📞 {SHOP_INFO.phone}</span>
-        <span>✉ {SHOP_INFO.email}</span>
-        <span>🕐 {SHOP_INFO.hours}</span>
+        <span>📞 {shopInfo.phone}</span>
+        <span>✉ {shopInfo.email}</span>
+        <span>🕐 {shopInfo.hours}</span>
       </div>
-      <span>📍 {SHOP_INFO.location}</span>
+      <span>📍 {shopInfo.location}</span>
     </div>
   </div>
 )
@@ -271,6 +271,7 @@ const DataTable = ({ title, headers, rows, renderRow, emptyMessage = 'No data fo
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ReportsPage() {
+  const shopInfo = useShopInfo()
   const [tab,       setTab]       = useState('sales')
   const [period,    setPeriod]    = useState('month')
   const [data,      setData]      = useState(null)
@@ -382,7 +383,7 @@ export default function ReportsPage() {
         {/* ── Print area (wraps all reportable content) ─────────────── */}
         <div className="print-area">
 
-          <PrintHeader tab={tab} period={period} />
+          <PrintHeader shopInfo={shopInfo} tab={tab} period={period} />
 
           {loading ? (
             <div className="flex justify-center py-16"><Spinner size="lg" /></div>
@@ -624,7 +625,7 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {data && <PrintFooter />}
+          {data && <PrintFooter shopInfo={shopInfo} />}
 
         </div>{/* end .print-area */}
       </div>

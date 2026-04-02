@@ -1,6 +1,7 @@
 import { X, Printer, CheckCircle, Phone, Mail, Clock, MapPin } from 'lucide-react'
 import { formatKES, formatDate } from '../../utils/helpers'
-import { PAYMENT_LABELS, SHOP_INFO } from '../../utils/constants'
+import { PAYMENT_LABELS } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 
 const STATUS_CFG = {
   pending:          { label: 'Pending',          cls: 'bg-amber-50  text-amber-700  border-amber-200'  },
@@ -13,6 +14,7 @@ const STATUS_CFG = {
 }
 
 export default function Receipt({ order, variant = 'customer', onClose }) {
+  const shopInfo = useShopInfo()
   const isAdmin       = variant === 'admin'
   const customerName  = order.userId?.name  || order.guestId?.name  || order.name  || '—'
   const customerPhone = order.userId?.phone || order.guestId?.phone || order.phone || '—'
@@ -349,10 +351,10 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone })
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {[
-              { icon: '📞', text: SHOP_INFO.phone },
-              { icon: '✉',  text: SHOP_INFO.email },
-              { icon: '🕐', text: SHOP_INFO.hours },
-              { icon: '📍', text: SHOP_INFO.location },
+              { icon: '📞', text: shopInfo.phone },
+              { icon: '✉',  text: shopInfo.email },
+              { icon: '🕐', text: shopInfo.hours },
+              { icon: '📍', text: shopInfo.location },
             ].map(item => (
               <div key={item.text} style={{ display: 'flex', alignItems: 'center',
                 gap: '6px' }}>

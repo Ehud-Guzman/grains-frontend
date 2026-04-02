@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { Search, Phone, Package, CheckCircle, Clock, XCircle, Truck, ChevronRight } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES, formatDate, getStatusLabel } from '../../utils/helpers'
-import { SHOP_INFO } from '../../utils/constants'
 
 // ── STATUS CONFIG ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -74,6 +74,7 @@ function OrderProgress({ status }) {
 }
 
 export default function TrackOrderPage() {
+  const shopInfo = useShopInfo()
   const [phone, setPhone] = useState('')
   const [ref, setRef] = useState('')
   const [order, setOrder] = useState(null)
@@ -266,9 +267,9 @@ export default function TrackOrderPage() {
               <div className="bg-earth-50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div>
                   <p className="font-body font-medium text-earth-700 text-sm">Questions about your order?</p>
-                  <p className="text-earth-400 text-xs mt-0.5">Our team is available {SHOP_INFO.hours}</p>
+                  <p className="text-earth-400 text-xs mt-0.5">Our team is available {shopInfo.hours}</p>
                 </div>
-                <a href={`tel:${SHOP_INFO.phone}`}
+                <a href={`tel:${shopInfo.phone}`}
                   className="flex items-center gap-2 px-5 py-2.5 bg-earth-900 text-cream
                     rounded-xl text-sm font-body font-semibold hover:bg-earth-800 transition-colors
                     whitespace-nowrap flex-shrink-0">

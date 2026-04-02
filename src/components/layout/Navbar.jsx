@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
-import { SHOP_INFO } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 
 const navLinks = [
   { to: '/',      label: 'Home',        icon: Home       },
@@ -17,6 +17,7 @@ const navLinks = [
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
   const { itemCount, openCart } = useCart()
+  const shopInfo = useShopInfo()
   const [menuOpen, setMenuOpen]       = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [scrolled, setScrolled]       = useState(false)
@@ -67,9 +68,9 @@ export default function Navbar() {
               <div className="hidden sm:block">
                 <p className="font-display font-bold text-cream text-sm leading-tight
                   group-hover:text-brand-300 transition-colors">
-                  Vittorios
+                  {shopInfo.name}
                 </p>
-                <p className="text-earth-500 text-xs leading-tight">Grains & Cereals</p>
+                <p className="text-earth-500 text-xs leading-tight">{shopInfo.tagline}</p>
               </div>
             </Link>
 

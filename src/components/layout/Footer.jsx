@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Phone, Mail, Clock, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
-import { SHOP_INFO } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 
 const quickLinks = [
   { to: '/shop',     label: 'Shop All Products' },
@@ -10,6 +10,8 @@ const quickLinks = [
 ]
 
 export default function Footer() {
+  const shopInfo = useShopInfo()
+
   return (
     <footer className="bg-earth-900 mt-16 relative overflow-hidden">
 
@@ -49,8 +51,8 @@ export default function Footer() {
             </p>
 
             {/* WhatsApp CTA */}
-            {SHOP_INFO.whatsapp && (
-              <a href={`https://wa.me/${SHOP_INFO.whatsapp}`}
+            {shopInfo.whatsapp && (
+              <a href={`https://wa.me/${shopInfo.whatsapp}`}
                 target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600/20
                   border border-green-600/30 text-green-400 rounded-xl text-xs font-body
@@ -88,7 +90,7 @@ export default function Footer() {
             </h4>
             <ul className="space-y-4">
               <li>
-                <a href={`tel:${SHOP_INFO.phone}`}
+                <a href={`tel:${shopInfo.phone}`}
                   className="flex items-start gap-3 group">
                   <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
                     flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/20
@@ -101,14 +103,14 @@ export default function Footer() {
                     </p>
                     <p className="text-earth-300 text-sm font-body group-hover:text-brand-300
                       transition-colors">
-                      {SHOP_INFO.phone}
+                      {shopInfo.phone}
                     </p>
                   </div>
                 </a>
               </li>
 
               <li>
-                <a href={`mailto:${SHOP_INFO.email}`}
+                <a href={`mailto:${shopInfo.email}`}
                   className="flex items-start gap-3 group">
                   <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
                     flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/20
@@ -121,7 +123,7 @@ export default function Footer() {
                     </p>
                     <p className="text-earth-300 text-sm font-body group-hover:text-brand-300
                       transition-colors truncate max-w-[160px]">
-                      {SHOP_INFO.email}
+                      {shopInfo.email}
                     </p>
                   </div>
                 </a>
@@ -136,7 +138,7 @@ export default function Footer() {
                   <p className="text-earth-500 text-xs font-body uppercase tracking-wide mb-0.5">
                     Hours
                   </p>
-                  <p className="text-earth-300 text-sm font-body">{SHOP_INFO.hours}</p>
+                  <p className="text-earth-300 text-sm font-body">{shopInfo.hours}</p>
                 </div>
               </li>
             </ul>
@@ -153,7 +155,7 @@ export default function Footer() {
                 <MapPin size={13} className="text-brand-400" />
               </div>
               <p className="text-earth-400 text-sm font-body leading-relaxed">
-                {SHOP_INFO.location}
+                {shopInfo.location}
               </p>
             </div>
 

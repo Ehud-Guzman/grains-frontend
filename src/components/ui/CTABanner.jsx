@@ -1,7 +1,9 @@
 import { Phone, MessageCircle, ArrowRight } from 'lucide-react'
-import { SHOP_INFO } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 
 export default function CTABanner() {
+  const shopInfo = useShopInfo()
+
   return (
     <section className="relative overflow-hidden bg-earth-900 py-16">
 
@@ -42,17 +44,17 @@ export default function CTABanner() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href={`tel:${SHOP_INFO.phone}`}
+            <a href={`tel:${shopInfo.phone}`}
               className="flex items-center gap-2.5 px-7 py-3.5 bg-brand-500 text-white
                 rounded-xl font-body font-semibold hover:bg-brand-600 transition-all
                 active:scale-[0.97] shadow-lg shadow-brand-900/40 group w-full sm:w-auto
                 justify-center">
               <Phone size={17} className="group-hover:scale-110 transition-transform" />
-              {SHOP_INFO.phone}
+              {shopInfo.phone}
             </a>
 
-            {SHOP_INFO.whatsapp && (
-              <a href={`https://wa.me/${SHOP_INFO.whatsapp}`}
+            {shopInfo.whatsapp && (
+              <a href={`https://wa.me/${shopInfo.whatsapp}`}
                 target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-2.5 px-7 py-3.5 bg-white/8 border
                   border-white/15 text-cream rounded-xl font-body font-semibold

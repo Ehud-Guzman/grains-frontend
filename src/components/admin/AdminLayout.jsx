@@ -6,7 +6,7 @@ import {
   Bell, ChevronRight
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { SHOP_INFO } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import api from '../../services/api'
 
 // ── NAV DEFINITION ────────────────────────────────────────────────────────────
@@ -67,6 +67,7 @@ const PAGE_TITLES = {
 
 export default function AdminLayout() {
   const { user, logout } = useAuth()
+  const shopInfo = useShopInfo()
   const navigate  = useNavigate()
   const location  = useLocation()
   const [sidebarOpen, setSidebarOpen]       = useState(false)
@@ -380,7 +381,7 @@ export default function AdminLayout() {
                   {pageTitle}
                 </p>
                 <p className="text-xs text-admin-400 font-admin leading-tight">
-                  {SHOP_INFO.name}
+                  {shopInfo.name}
                 </p>
               </div>
             </div>

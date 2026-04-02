@@ -6,7 +6,7 @@ import ProductCard from '../../components/products/ProductCard'
 import ProductSpotlight from '../../components/ui/ProductSpotlight'
 import CTABanner from '../../components/ui/CTABanner'
 import Spinner from '../../components/ui/Spinner'
-import { SHOP_INFO } from '../../utils/constants'
+import { useShopInfo } from '../../context/AppSettingsContext'
 
 // ── GRID TOGGLE ───────────────────────────────────────────────────────────────
 function GridToggle({ compact, onChange }) {
@@ -52,6 +52,7 @@ function SkeletonCard({ compact }) {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  const shopInfo = useShopInfo()
   const [featured, setFeatured]     = useState([])
   const [spotlight, setSpotlight]   = useState([])
   const [categories, setCategories] = useState([])
@@ -107,8 +108,8 @@ export default function HomePage() {
               <span className="text-brand-400 block">Delivered Fresh</span>
             </h1>
             <p className="font-body text-earth-300 text-lg mb-8 leading-relaxed max-w-xl">
-              Premium maize, beans, rice and more — sourced directly and delivered to you
-              across Nairobi. Order online and pick up or get it delivered to your door.
+              {shopInfo.tagline}. Premium maize, beans, rice and more are available for pickup
+              or delivery from {shopInfo.location}.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/shop"
