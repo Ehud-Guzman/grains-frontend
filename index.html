@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- ── PRIMARY META ──────────────────────────────────────────────────── -->
-    <title>Vittorios Grains & Cereals</title>
-    <meta name="description" content="Quality grains and cereals — maize, beans, rice, flour and more. Order online for pickup or delivery across Nairobi and Bungoma." />
-    <meta name="keywords" content="grains, cereals, maize, beans, rice, flour, Nairobi, Bungoma, Kenya, wholesale, retail" />
+    <title>Vittorios Grains & Cereals — Order Online</title>
+    <meta name="description" content="Order quality grains and cereals online — maize, beans, rice, flour and more. Browse our catalogue, place orders, and track delivery across Nairobi and Bungoma." />
+    <meta name="keywords" content="order grains online, cereals delivery Nairobi, buy maize Kenya, beans wholesale Bungoma, rice flour online shop, Vittorios grains" />
     <meta name="author" content="Vittorios Grains & Cereals" />
     <meta name="theme-color" content="#C8912A" />
+    <meta name="application-name" content="Vittorios Shop" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -24,22 +25,49 @@
     <!-- ── PWA MANIFEST ──────────────────────────────────────────────────── -->
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- ── OPEN GRAPH (Facebook, WhatsApp, LinkedIn) ─────────────────────── -->
-    <meta property="og:type"        content="website" />
-    <meta property="og:site_name"   content="Vittorios Grains & Cereals" />
-    <meta property="og:title"       content="Vittorios Grains & Cereals — Quality Grains Delivered" />
-    <meta property="og:description" content="Premium maize, beans, rice, flour and more. Order online for pickup or delivery." />
-    <meta property="og:image"       content="/og-image.jpeg" />
+    <!-- ── OPEN GRAPH ────────────────────────────────────────────────────── -->
+    <meta property="og:type"         content="website" />
+    <meta property="og:site_name"    content="Vittorios Grains & Cereals" />
+    <meta property="og:title"        content="Vittorios Grains & Cereals — Order Online" />
+    <meta property="og:description"  content="Browse our full catalogue of maize, beans, rice, flour and more. Place your order online and choose pickup or delivery across Nairobi and Bungoma." />
+    <meta property="og:image"        content="/og-image.jpeg" />
     <meta property="og:image:width"  content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:url"         content="https://grains-fronten.netlify.app/" />
-    <meta property="og:locale"      content="en_KE" />
+    <meta property="og:image:alt"    content="Vittorios Grains & Cereals — Online Shop" />
+    <meta property="og:url"          content="https://grains-fronten.netlify.app/" />
+    <meta property="og:locale"       content="en_KE" />
 
     <!-- ── TWITTER CARD ──────────────────────────────────────────────────── -->
     <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Vittorios Grains & Cereals" />
-    <meta name="twitter:description" content="Premium maize, beans, rice, flour and more. Order online." />
+    <meta name="twitter:title"       content="Vittorios Grains & Cereals — Order Online" />
+    <meta name="twitter:description" content="Browse, order and track delivery of quality grains and cereals across Kenya." />
     <meta name="twitter:image"       content="/og-image.jpeg" />
+
+    <!-- ── STRUCTURED DATA (Google rich results) ─────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      "name": "Vittorios Grains & Cereals",
+      "description": "Online shop for quality grains and cereals — maize, beans, rice, flour and more.",
+      "url": "https://grains-fronten.netlify.app/",
+      "logo": "https://grains-fronten.netlify.app/Vittorios-logo.jpeg",
+      "image": "https://grains-fronten.netlify.app/og-image.jpeg",
+      "telephone": "+254700000000",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Nairobi",
+        "addressCountry": "KE"
+      },
+      "areaServed": ["Nairobi", "Bungoma"],
+      "currenciesAccepted": "KES",
+      "paymentAccepted": "M-Pesa, Cash",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Grains & Cereals Catalogue"
+      }
+    }
+    </script>
 
     <!-- ── FONTS ─────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
