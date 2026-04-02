@@ -8,6 +8,7 @@ export const adminReportService = {
   getStockMovement: (params) => api.get('/admin/reports/stock-movement', { params }),
   getCustomers: () => api.get('/admin/reports/customers'),
   getOrders: (params) => api.get('/admin/reports/orders', { params }),
+  getOnboarding: () => api.get('/admin/reports/onboarding'),
   exportCSV: (type, params) => api.get(`/admin/reports/export/${type}`, {
     params,
     responseType: 'blob'

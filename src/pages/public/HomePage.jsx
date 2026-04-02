@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Package, Shield, Truck, Star, LayoutGrid, Rows } from 'lucide-react'
+import { ArrowRight, Package, Shield, Truck, Star, LayoutGrid, Rows, Sparkles } from 'lucide-react'
+import { useOnboarding } from '../../context/OnboardingContext'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductSpotlight from '../../components/ui/ProductSpotlight'
@@ -53,6 +54,7 @@ function SkeletonCard({ compact }) {
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const shopInfo = useShopInfo()
+  const { startTour } = useOnboarding()
   const [featured, setFeatured]     = useState([])
   const [spotlight, setSpotlight]   = useState([])
   const [categories, setCategories] = useState([])
@@ -96,7 +98,7 @@ export default function HomePage() {
           blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
 
         <div className="container-page py-16 sm:py-24 relative">
-          <div className="max-w-2xl">
+          <div className="max-w-2xl" data-tour="public-home-hero">
             <div className="inline-flex items-center gap-2 bg-brand-500/20 text-brand-300
               text-sm px-3 py-1.5 rounded-full mb-6 font-body border border-brand-500/20">
               <span className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
@@ -113,6 +115,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link to="/shop"
+                data-tour="public-shop-cta"
                 className="btn-primary text-base px-8 py-4 group">
                 Shop Now
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -122,6 +125,14 @@ export default function HomePage() {
                   hover:border-earth-500 text-base px-8 py-4">
                 Track Order
               </Link>
+              <button
+                onClick={() => startTour('public', { force: true })}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8
+                  px-6 py-4 text-base font-body font-semibold text-cream transition-all hover:bg-white/12"
+              >
+                <Sparkles size={17} className="text-brand-300" />
+                Take Tour
+              </button>
             </div>
           </div>
         </div>

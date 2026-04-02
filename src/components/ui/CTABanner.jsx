@@ -3,6 +3,7 @@ import { useShopInfo } from '../../context/AppSettingsContext'
 
 export default function CTABanner() {
   const shopInfo = useShopInfo()
+  const wholesaleWhatsapp = '254799031449'
 
   return (
     <section className="relative overflow-hidden bg-earth-900 py-16">
@@ -24,13 +25,19 @@ export default function CTABanner() {
         <div className="max-w-2xl mx-auto text-center">
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500/15
-            border border-brand-500/30 rounded-full mb-6">
+          <a
+            href={`https://wa.me/${wholesaleWhatsapp}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500/15
+            border border-brand-500/30 rounded-full mb-6 hover:bg-brand-500/20
+            transition-colors"
+          >
             <span className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
             <span className="text-brand-300 text-xs font-body font-semibold uppercase tracking-widest">
               Bulk & Wholesale Orders
             </span>
-          </div>
+          </a>
 
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-bold mb-4 leading-tight">
             Need a bulk order or{' '}

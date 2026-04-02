@@ -213,7 +213,7 @@ export default function LoginPage() {
   const shopInfo = useShopInfo()
   const { login } = useAuth()
   const location = useLocation()
-  const from = location.state?.from?.pathname || '/'
+  const from = location.state?.from?.pathname || '/dashboard'
 
   const [form, setForm] = useState({ phone: '', password: '' })
   const [showPass, setShowPass] = useState(false)
@@ -230,7 +230,8 @@ export default function LoginPage() {
       if (ADMIN_ROLES.includes(userData.role)) {
         window.location.replace('/admin/dashboard')
       } else {
-        window.location.replace(from === '/login' ? '/' : from)
+        const customerTarget = ['/login', '/register', '/'].includes(from) ? '/dashboard' : from
+        window.location.replace(customerTarget)
       }
     } catch (err) {
       setLoading(false)

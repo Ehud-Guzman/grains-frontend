@@ -17,6 +17,10 @@ export const authService = {
 
   updateProfile: (data) => api.put('/auth/me', data),
 
+  getOnboarding: () => api.get('/auth/onboarding'),
+
+  updateOnboarding: (data) => api.patch('/auth/onboarding', data),
+
   uploadAvatar: (formData) => api.post('/auth/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),

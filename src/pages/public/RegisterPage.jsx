@@ -48,7 +48,7 @@ export default function RegisterPage() {
     try {
       const user = await register(form)
       toast.success(`Welcome, ${user.name.split(' ')[0]}!`)
-      navigate('/')
+      navigate('/dashboard', { replace: true })
     } catch (err) {
       const code = err.response?.data?.error
       if (code === 'PHONE_TAKEN') setErrors(p => ({ ...p, phone: 'This phone number is already registered' }))

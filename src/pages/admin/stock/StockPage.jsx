@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Package, AlertTriangle, Plus, Edit3, Search, X, RefreshCw } from 'lucide-react'
 import { adminStockService } from '../../../services/admin/stock.service'
+import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
@@ -91,6 +92,9 @@ export default function StockPage() {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between mb-6">
         <div>
+          <div className="mb-3">
+            <OnboardingReturnLink />
+          </div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Stock Management</h1>
           <p className="text-admin-400 text-xs font-admin mt-0.5">
             {rows.length} items

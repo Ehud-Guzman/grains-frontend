@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
+import { useOnboarding } from '../../context/OnboardingContext'
+import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES } from '../../utils/helpers'
 
 export default function CartPage() {
   const { items, subtotal: total, removeItem, updateQuantity } = useCart()
+  const { dismissedTips, dismissTip } = useOnboarding()
+  const showCartTip = !dismissedTips['customer-cart-tip']
 
   if (items.length === 0) return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4">
@@ -110,7 +114,17 @@ export default function CartPage() {
 
           {/* ── Summary ──────────────────────────────────────────────── */}
           <div className="lg:w-72">
-            <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-5 sticky top-6">
+            <div className="space-y-4 sticky top-6">
+              {showCartTip && (
+                <ContextualTip
+                  tipId="customer-cart-tip"
+                  onDismiss={dismissTip}
+                  title="A smooth first checkout starts here"
+                  body="Use the cart to confirm quantities before you move on. Customers usually have the easiest first order when they tidy this page first, then continue to checkout."
+                />
+              )}
+
+              <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-5">
               <h2 className="font-display font-bold text-earth-900 text-lg mb-4">
                 Order Summary
               </h2>
@@ -150,6 +164,7 @@ export default function CartPage() {
                   text-earth-500 hover:text-earth-700 transition-colors mt-2">
                 ← Continue Shopping
               </Link>
+            </div>
             </div>
           </div>
         </div>

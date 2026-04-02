@@ -78,6 +78,7 @@ export default function Navbar() {
             <nav className="hidden md:flex items-center gap-0.5">
               {navLinks.map(link => (
                 <NavLink key={link.to} to={link.to} end={link.to === '/'}
+                  data-tour={link.to === '/track' ? 'public-track-link' : undefined}
                   className={({ isActive }) =>
                     `px-4 py-2 rounded-xl text-sm font-body font-medium transition-all ${
                       isActive
@@ -111,6 +112,7 @@ export default function Navbar() {
               {/* Sign In (mobile — always visible when logged out) */}
               {!isAuthenticated && (
                 <Link to="/login"
+                  data-tour="public-signin-link"
                   className="md:hidden flex items-center gap-1.5 px-3 py-2 bg-brand-500 text-white
                     rounded-xl text-sm font-body font-semibold hover:bg-brand-600 transition-all
                     active:scale-[0.97]">
@@ -121,6 +123,7 @@ export default function Navbar() {
               {/* Sign In (desktop) */}
               {!isAuthenticated && (
                 <Link to="/login"
+                  data-tour="public-signin-link"
                   className="hidden md:flex items-center gap-1.5 px-4 py-2.5 bg-brand-500 text-white
                     rounded-xl text-sm font-body font-semibold hover:bg-brand-600 transition-all
                     active:scale-[0.97]">

@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ShoppingCart, TrendingUp, DollarSign, Package, AlertTriangle,
-  Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight
+  Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight, Sparkles
 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { useOnboarding } from '../../context/OnboardingContext'
 import { adminReportService } from '../../services/admin/report.service'
 import { adminStockService } from '../../services/admin/stock.service'
+import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 
@@ -77,11 +80,19 @@ function KpiSkeleton() {
 }
 
 export default function AdminDashboardPage() {
+  const { user } = useAuth()
+  const { startTour, getChecklist } = useOnboarding()
   const [kpis, setKpis]         = useState(null)
   const [lowStock, setLowStock]   = useState([])
   const [loading, setLoading]     = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
+  const adminChecklist = getChecklist('admin').filter(item => {
+    if (item.id === 'reports') return ['supervisor', 'admin'].includes(user?.role)
+    if (item.id === 'settings') return user?.role === 'admin'
+    return user?.role !== 'superadmin'
+  })
+  const showAdminChecklist = adminChecklist.length > 0 && adminChecklist.some(item => !item.done)
 
   const fetchData = async (silent = false) => {
     if (!silent) setLoading(true)
@@ -108,23 +119,47 @@ export default function AdminDashboardPage() {
     <div className="p-6 max-w-7xl mx-auto">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-4 mb-6" data-tour="admin-dashboard-header">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Dashboard</h1>
           <p className="text-admin-400 text-xs font-admin mt-0.5">
             Updated {timeAgo(lastRefreshed)}
           </p>
         </div>
-        <button onClick={() => fetchData(true)} disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
-            text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
-          <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-          <span className="hidden sm:inline">Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => startTour('admin', { force: true })}
+            className="flex items-center gap-2 px-3 py-2 bg-brand-500/10 border border-brand-500/20 rounded-lg
+              text-sm font-admin font-semibold text-brand-700 hover:bg-brand-500/15 transition-colors shadow-admin"
+          >
+            <Sparkles size={14} />
+            <span className="hidden sm:inline">Tour</span>
+          </button>
+          <button onClick={() => fetchData(true)} disabled={refreshing}
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
+              text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
+      {showAdminChecklist && (
+        <div className="mb-6">
+          <OnboardingChecklistCard
+            eyebrow="Operational Readiness"
+            title="Bring new staff up to speed fast"
+            description="This admin checklist keeps the first session focused on the pages that matter most, while still fitting the premium feel of your workspace."
+            items={adminChecklist}
+            actionLabel="Replay Tour"
+            onAction={() => startTour('admin', { force: true })}
+            theme="admin"
+          />
+        </div>
+      )}
+
       {/* ── KPI Grid ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6" data-tour="admin-kpis">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <KpiSkeleton key={i} />)
         ) : (
@@ -152,7 +187,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden" data-tour="admin-recent-orders">
           <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
             <div>
               <h2 className="font-admin font-bold text-admin-900">Recent Orders</h2>
@@ -231,7 +266,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Low Stock */}
-        <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
+        <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden" data-tour="admin-low-stock">
           <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
             <div>
               <h2 className="font-admin font-bold text-admin-900">Low Stock</h2>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ChevronRight, XCircle, ShoppingBag, Clock, UserCircle } from 'lucide-react'
+import { Package, ChevronRight, XCircle, ShoppingBag, Clock, UserCircle, Sparkles } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useOnboarding } from '../../context/OnboardingContext'
 import { orderService } from '../../services/order.service'
+import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 
@@ -45,18 +47,24 @@ function SkeletonCard() {
 
 export default function CustomerDashboardPage() {
   const { user } = useAuth()
+  const { startTour, getChecklist, markChecklistItem } = useOnboarding()
   const [orders, setOrders] = useState([])
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(null)
   const [page, setPage] = useState(1)
+  const checklistItems = getChecklist('customer')
 
   const fetchOrders = async (p = 1) => {
     setLoading(true)
     try {
       const res = await orderService.getMyOrders({ page: p, limit: 10 })
-      setOrders(res.data.data.orders || [])
+      const fetchedOrders = res.data.data.orders || []
+      setOrders(fetchedOrders)
       setPagination(res.data.data.pagination || { page: 1, pages: 1, total: 0 })
+      if (fetchedOrders.length > 0) {
+        markChecklistItem('customer', 'first_order')
+      }
     } catch {}
     finally { setLoading(false) }
   }
@@ -83,8 +91,8 @@ export default function CustomerDashboardPage() {
       {/* ── Hero ─────────────────────────────────────────────────────── */}
      <div className="bg-earth-900 pt-8 pb-20 px-4">
         <div className="container-page max-w-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-4" data-tour="customer-hero">
+            <div className="flex items-center gap-4 min-w-0">
               <div className="w-12 h-12 bg-brand-500/20 border border-brand-500/30 rounded-2xl
                 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {user?.avatarURL ? (
@@ -104,16 +112,37 @@ export default function CustomerDashboardPage() {
                 </p>
               </div>
             </div>
-            <Link to="/profile"
-              className="flex items-center gap-1.5 text-earth-400 hover:text-cream
-                text-xs font-body transition-colors px-3 py-2 rounded-lg hover:bg-earth-800">
-              <UserCircle size={15} /> Profile
-            </Link>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => startTour('customer', { force: true })}
+                className="flex items-center gap-1.5 text-brand-200 hover:text-white text-xs font-body
+                  transition-colors px-3 py-2 rounded-lg border border-brand-400/20 bg-brand-500/10 hover:bg-brand-500/20"
+              >
+                <Sparkles size={14} />
+                Tour
+              </button>
+              <Link to="/profile"
+                data-tour="customer-profile-link"
+                className="flex items-center gap-1.5 text-earth-400 hover:text-cream
+                  text-xs font-body transition-colors px-3 py-2 rounded-lg hover:bg-earth-800">
+                <UserCircle size={15} /> Profile
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="container-page max-w-2xl -mt-0 pb-12">
+        <div className="mb-6">
+          <OnboardingChecklistCard
+            eyebrow="Phase 3 Onboarding"
+            title="Build your customer flow with confidence"
+            description="This checklist helps first-time customers settle in quickly without getting lost. Each milestone unlocks naturally as they move through the app."
+            items={checklistItems}
+            actionLabel="Replay Tour"
+            onAction={() => startTour('customer', { force: true })}
+          />
+        </div>
 
         {loading ? (
           <div className="space-y-3">
@@ -131,7 +160,7 @@ export default function CustomerDashboardPage() {
             <Link to="/shop" className="btn-primary">Browse Products</Link>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6" data-tour="customer-orders-area">
 
             {/* Active orders */}
             {activeOrders.length > 0 && (
@@ -263,11 +292,13 @@ export default function CustomerDashboardPage() {
             {/* Quick links */}
             <div className="flex gap-3">
               <Link to="/shop"
+                data-tour="customer-browse-link"
                 className="flex-1 text-center py-3 bg-earth-900 text-cream rounded-xl
                   text-sm font-body font-medium hover:bg-earth-800 transition-colors">
                 Browse Shop
               </Link>
               <Link to="/track"
+                data-tour="customer-track-link"
                 className="flex-1 text-center py-3 bg-white border border-earth-200 rounded-xl
                   text-sm font-body font-medium text-earth-600 hover:bg-earth-50 transition-colors">
                 Track an Order

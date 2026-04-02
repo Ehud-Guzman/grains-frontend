@@ -4,7 +4,10 @@ import {
   Search, ChevronRight, Check, X, RefreshCw,
   Package, XCircle, Filter, ArrowUpDown
 } from 'lucide-react'
+import { useOnboarding } from '../../../context/OnboardingContext'
 import { adminOrderService } from '../../../services/admin/order.service'
+import { ContextualTip } from '../../../components/onboarding/OnboardingEnhancements'
+import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo } from '../../../utils/helpers'
 import toast from 'react-hot-toast'
 
@@ -116,6 +119,7 @@ function SkeletonCard() {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function OrderListPage() {
+  const { dismissedTips, dismissTip, markChecklistItem, markMilestone } = useOnboarding()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [orders, setOrders]         = useState([])
@@ -203,6 +207,8 @@ export default function OrderListPage() {
     setBulkLoading(true)
     try {
       const res = await adminOrderService.bulkApprove(selected)
+      markChecklistItem('admin', 'orders')
+      markMilestone('admin-first-approval')
       toast.success(`${res.data.data.approved.length} order(s) approved`)
       fetchOrders(); fetchPendingTotal()
     } catch (err) {
@@ -224,6 +230,7 @@ export default function OrderListPage() {
   }
 
   const hasFilters = statusFilter || searchQuery
+  const showOrdersTip = !dismissedTips['admin-orders-tip']
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -231,6 +238,9 @@ export default function OrderListPage() {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-5">
         <div>
+          <div className="mb-3">
+            <OnboardingReturnLink />
+          </div>
           <h1 className="text-xl sm:text-2xl font-admin font-bold text-admin-900">Orders</h1>
           <div className="flex items-center gap-2 mt-0.5">
             <p className="text-admin-400 text-xs font-admin">
@@ -254,6 +264,18 @@ export default function OrderListPage() {
           <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
+
+      {showOrdersTip && (
+        <div className="mb-4">
+          <ContextualTip
+            tipId="admin-orders-tip"
+            onDismiss={dismissTip}
+            theme="admin"
+            title="This queue is built for fast triage"
+            body="Use the pending filter for urgent approvals, then select multiple orders when the same decision applies to several customers. Search, filters, and bulk actions are meant to work together."
+          />
+        </div>
+      )}
 
       {/* ── Search ──────────────────────────────────────────────────── */}
       <div className="relative mb-4">

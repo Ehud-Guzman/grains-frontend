@@ -7,8 +7,10 @@ import {
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { useAppSettings } from '../../context/AppSettingsContext'
+import { useOnboarding } from '../../context/OnboardingContext'
 import { orderService } from '../../services/order.service'
 import { paymentService } from '../../services/payment.service'
+import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, isValidKenyanPhone } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
@@ -92,6 +94,7 @@ export default function CheckoutPage() {
   const { items, subtotal: total, clearCart } = useCart()
   const { user, isAuthenticated } = useAuth()
   const { orderSettings, isLoading: settingsLoading, hasLoaded } = useAppSettings()
+  const { dismissedTips, dismissTip, markChecklistItem, markMilestone } = useOnboarding()
   const navigate = useNavigate()
 
   const [step, setStep]       = useState(0)
@@ -137,6 +140,7 @@ export default function CheckoutPage() {
       desc: 'Pay when your order arrives at your door',
     },
   ].filter(Boolean)
+  const showCheckoutTip = !dismissedTips['customer-checkout-tip']
 
   useEffect(() => {
     if (!availablePaymentOptions.some(option => option.value === form.paymentMethod) && availablePaymentOptions[0]) {
@@ -261,6 +265,10 @@ export default function CheckoutPage() {
         : await orderService.placeGuestOrder(orderData)
 
       const { orderRef, orderId, total: orderTotal } = res.data.data
+      if (isAuthenticated && user?.role === 'customer') {
+        markChecklistItem('customer', 'first_order')
+        markMilestone('customer:first_order')
+      }
       clearCart()
 
       // ── M-PESA FLOW ───────────────────────────────────────────────────────
@@ -441,6 +449,18 @@ export default function CheckoutPage() {
           {/* ── Form ──────────────────────────────────────────────────── */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-2xl border border-earth-100 shadow-sm p-6">
+              {showCheckoutTip && (step === 1 || step === 2) && (
+                <div className="mb-5">
+                  <ContextualTip
+                    tipId="customer-checkout-tip"
+                    onDismiss={dismissTip}
+                    title={step === 1 ? 'Delivery choice shapes the rest of checkout' : 'Payment options adapt to the order'}
+                    body={step === 1
+                      ? 'Pickup and delivery each unlock different payment flows and final totals. That keeps the checkout honest and prevents dead-end payment choices later.'
+                      : 'Only payment methods allowed for this order type appear here, so customers can move forward without second-guessing what will work.'}
+                  />
+                </div>
+              )}
 
               {/* Step 0 — Contact */}
               {step === 0 && (

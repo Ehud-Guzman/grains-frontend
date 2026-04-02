@@ -2,9 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { AppSettingsProvider } from "./context/AppSettingsContext";
+import { OnboardingProvider } from "./context/OnboardingContext";
 import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import OnboardingLayer from "./components/onboarding/OnboardingLayer";
 
 // Layouts
 import PublicLayout from "./components/layout/PublicLayout";
@@ -53,26 +55,28 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppSettingsProvider>
-          <CartProvider>
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                duration: 3500,
-                style: {
-                  background: "#1E293B",
-                  color: "#F8FAFC",
-                  fontFamily: "'Outfit', system-ui, sans-serif",
-                  fontSize: "14px",
-                  borderRadius: "10px",
-                  padding: "12px 16px",
-                },
-                success: { iconTheme: { primary: "#C8912A", secondary: "#F8FAFC" } },
-                error:   { iconTheme: { primary: "#EF4444", secondary: "#F8FAFC" } },
-              }}
-            />
-            <ScrollToTop />
+          <OnboardingProvider>
+            <CartProvider>
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 3500,
+                  style: {
+                    background: "#1E293B",
+                    color: "#F8FAFC",
+                    fontFamily: "'Outfit', system-ui, sans-serif",
+                    fontSize: "14px",
+                    borderRadius: "10px",
+                    padding: "12px 16px",
+                  },
+                  success: { iconTheme: { primary: "#C8912A", secondary: "#F8FAFC" } },
+                  error:   { iconTheme: { primary: "#EF4444", secondary: "#F8FAFC" } },
+                }}
+              />
+              <ScrollToTop />
+              <OnboardingLayer />
 
-            <Routes>
+              <Routes>
             {/* ── PUBLIC ───────────────────────────────────────────── */}
             <Route element={<PublicLayout />}>
               <Route path="/"                element={<HomePage />} />
@@ -187,8 +191,9 @@ export default function App() {
 
             {/* ── FALLBACK ─────────────────────────────────────────── */}
             <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </CartProvider>
+              </Routes>
+            </CartProvider>
+          </OnboardingProvider>
         </AppSettingsProvider>
       </AuthProvider>
     </BrowserRouter>

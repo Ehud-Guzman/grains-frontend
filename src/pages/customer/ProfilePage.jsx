@@ -5,6 +5,7 @@ import {
   Save, Lock, Edit2, CheckCircle, Package, ArrowLeft, Camera
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useOnboarding } from '../../context/OnboardingContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
 import { formatDate, isValidKenyanPhone } from '../../utils/helpers'
@@ -150,6 +151,7 @@ function AddressCard({ address, onRemove, onSetDefault }) {
 
 export default function CustomerProfilePage() {
   const { user, updateUser } = useAuth()
+  const { markMilestone, markChecklistItem } = useOnboarding()
   const shopInfo = useShopInfo()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -193,6 +195,8 @@ export default function CustomerProfilePage() {
         addresses
       })
       updateUser({ name: form.name.trim(), email: form.email.trim() || null })
+      markChecklistItem('customer', 'profile')
+      markMilestone('customer-profile-complete')
       toast.success('Profile updated')
       setEditing(false)
       const res = await authService.getProfile()

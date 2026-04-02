@@ -63,6 +63,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
                 <ReceiptBody
                   order={order} isAdmin={isAdmin} statusCfg={statusCfg}
                   customerName={customerName} customerPhone={customerPhone}
+                  shopInfo={shopInfo}
                 />
               </div>
             </div>
@@ -75,6 +76,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
         <ReceiptBody
           order={order} isAdmin={isAdmin} statusCfg={statusCfg}
           customerName={customerName} customerPhone={customerPhone}
+          shopInfo={shopInfo}
         />
       </div>
     </>
@@ -82,7 +84,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
 }
 
 // ── RECEIPT BODY ──────────────────────────────────────────────────────────────
-function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone }) {
+function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, shopInfo }) {
   const itemCount  = order.orderItems?.length || 0
   const hasDelivery = order.deliveryFee > 0
 

@@ -7,6 +7,7 @@ import {
   AlertTriangle, Clock, BadgeCheck, Ban
 } from 'lucide-react'
 import { adminOrderService } from '../../../services/admin/order.service'
+import { useOnboarding } from '../../../context/OnboardingContext'
 import { OrderStatusTimeline } from '../../../components/orders/OrderStatusTimeline'
 import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../../utils/helpers'
 import { PAYMENT_LABELS } from '../../../utils/constants'
@@ -61,6 +62,7 @@ function DetailRow({ icon: Icon, label, children }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function AdminOrderDetailPage() {
+  const { markChecklistItem, markMilestone } = useOnboarding()
   const { id } = useParams()
   const [order, setOrder]               = useState(null)
   const [loading, setLoading]           = useState(true)
@@ -83,6 +85,8 @@ export default function AdminOrderDetailPage() {
     setActionLoading(true)
     try {
       await adminOrderService.approve(id)
+      markChecklistItem('admin', 'orders')
+      markMilestone('admin-first-approval')
       toast.success('Order approved — stock deducted')
       fetchOrder()
     } catch (err) {

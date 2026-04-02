@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../../context/AuthContext'
 import { useAppSettings } from '../../../context/AppSettingsContext'
 import { adminSettingsService } from '../../../services/admin/settings.service'
+import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import {
   Store, ShoppingCart, Bell, Shield, Save, AlertTriangle
 } from 'lucide-react'
@@ -115,6 +116,9 @@ export default function SettingsPage() {
     <div className="p-6 max-w-3xl mx-auto pb-28">
       <div className="flex items-center justify-between mb-6">
         <div>
+          <div className="mb-3">
+            <OnboardingReturnLink />
+          </div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Settings</h1>
           <p className="text-admin-400 text-sm mt-0.5">Manage shop configuration and preferences</p>
         </div>

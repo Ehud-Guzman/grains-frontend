@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
-  Download, TrendingUp, Package, Users, ShoppingCart, BarChart3, Printer
+  Download, TrendingUp, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -9,6 +9,7 @@ import {
 import { adminReportService } from '../../../services/admin/report.service'
 import { formatKES } from '../../../utils/helpers'
 import { useShopInfo } from '../../../context/AppSettingsContext'
+import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
@@ -18,6 +19,7 @@ const TABS = [
   { key: 'stock',     label: 'Stock',     icon: BarChart3    },
   { key: 'customers', label: 'Customers', icon: Users        },
   { key: 'orders',    label: 'Orders',    icon: ShoppingCart },
+  { key: 'onboarding', label: 'Onboarding', icon: LifeBuoy   },
 ]
 
 const PERIODS = [
@@ -102,6 +104,20 @@ const KpiTile = ({ label, value }) => (
   <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
     <p className="text-admin-400 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
     <p className="text-2xl font-admin font-bold text-admin-900 leading-tight">{value ?? '—'}</p>
+  </div>
+)
+
+const OnboardingSummaryCard = ({ label, value, accent = 'brand' }) => (
+  <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
+    <p className="text-admin-400 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
+    <p className={`text-2xl font-admin font-bold leading-tight ${
+      accent === 'brand' ? 'text-brand-700' :
+      accent === 'blue' ? 'text-blue-700' :
+      accent === 'green' ? 'text-green-700' :
+      'text-admin-900'
+    }`}>
+      {value ?? '—'}
+    </p>
   </div>
 )
 
@@ -289,6 +305,7 @@ export default function ReportsPage() {
       else if (tab === 'stock')     res = await adminReportService.getStockValuation()
       else if (tab === 'customers') res = await adminReportService.getCustomers()
       else if (tab === 'orders')    res = await adminReportService.getOrders(params)
+      else if (tab === 'onboarding') res = await adminReportService.getOnboarding()
       setData(res.data.data)
     } catch { /* errors handled by api interceptor */ }
     finally { setLoading(false) }
@@ -301,7 +318,7 @@ export default function ReportsPage() {
     try {
       const typeMap = {
         sales: 'sales', products: 'best-sellers',
-        stock: 'stock-valuation', customers: 'customers', orders: 'orders'
+        stock: 'stock-valuation', customers: 'customers', orders: 'orders', onboarding: 'onboarding'
       }
       const res = await adminReportService.exportCSV(typeMap[tab], { period })
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }))
@@ -326,6 +343,9 @@ export default function ReportsPage() {
         {/* ── Page header ─────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-6" data-no-print>
           <div>
+            <div className="mb-3">
+              <OnboardingReturnLink />
+            </div>
             <h1 className="text-2xl font-admin font-bold text-admin-900">Reports</h1>
             <p className="text-admin-400 text-xs font-admin mt-0.5">Analytics and data exports</p>
           </div>
@@ -364,7 +384,7 @@ export default function ReportsPage() {
         </div>
 
         {/* ── Period filter ────────────────────────────────────────── */}
-        {tab !== 'stock' && tab !== 'customers' && (
+        {tab !== 'stock' && tab !== 'customers' && tab !== 'onboarding' && (
           <div className="flex gap-2 mb-5" data-no-print>
             {PERIODS.map(p => (
               <button key={p.value} onClick={() => setPeriod(p.value)}
@@ -616,6 +636,42 @@ export default function ReportsPage() {
                         <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
                           {formatKES(s.totalValue)}
                         </td>
+                      </tr>
+                    )}
+                  />
+                </>
+              )}
+
+              {tab === 'onboarding' && (
+                <>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <OnboardingSummaryCard label="Tracked Users" value={data.totals?.users || 0} />
+                    <OnboardingSummaryCard label="Completed Tours" value={data.totals?.completedTours || 0} accent="brand" />
+                    <OnboardingSummaryCard label="Help Center Opens" value={data.totals?.helpCenterOpens || 0} accent="blue" />
+                    <OnboardingSummaryCard label="Milestones Reached" value={data.totals?.milestonesReached || 0} accent="green" />
+                  </div>
+
+                  <DataTable
+                    title="Onboarding Adoption by Role"
+                    headers={[
+                      { label: 'Role' },
+                      { label: 'Users', right: true },
+                      { label: 'Completed Tours', right: true },
+                      { label: 'Avg Checklist %', right: true },
+                      { label: 'Help Opens', right: true },
+                      { label: 'Milestones', right: true },
+                    ]}
+                    rows={data.rows || []}
+                    renderRow={(row, i) => (
+                      <tr key={i} className="hover:bg-admin-50 transition-colors">
+                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800 capitalize">
+                          {row.role}
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.userCount}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.completedTours}</td>
+                        <td className="px-5 py-3.5 text-right font-admin font-bold text-brand-700">{row.avgChecklistCompletion}%</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.helpCenterOpens}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.milestonesReached}</td>
                       </tr>
                     )}
                   />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, X, SlidersHorizontal, LayoutGrid, Rows } from 'lucide-react'
+import { Search, X, SlidersHorizontal, LayoutGrid, Rows, Sparkles } from 'lucide-react'
+import { useOnboarding } from '../../context/OnboardingContext'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductFilters from '../../components/products/ProductFilters'
@@ -56,6 +57,7 @@ function GridToggle({ compact, onChange }) {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function CataloguePage() {
+  const { startTour } = useOnboarding()
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts]         = useState([])
   const [pagination, setPagination]     = useState(null)
@@ -154,21 +156,31 @@ export default function CataloguePage() {
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
         <div className="container-page relative">
-          <h1 className="font-display text-3xl sm:text-4xl font-bold mb-1 text-center">
-            Our Products
-          </h1>
-          <p className="text-earth-400 font-body text-sm text-center">
-            {pagination
-              ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
-              : 'Premium grains, cereals and flour products'}
-          </p>
+          <div className="flex flex-col items-center gap-3">
+            <h1 className="font-display text-3xl sm:text-4xl font-bold mb-1 text-center">
+              Our Products
+            </h1>
+            <p className="text-earth-400 font-body text-sm text-center">
+              {pagination
+                ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
+                : 'Premium grains, cereals and flour products'}
+            </p>
+            <button
+              onClick={() => startTour('public', { force: true })}
+              className="inline-flex items-center gap-2 rounded-full border border-brand-500/20 bg-brand-500/10 px-4 py-2
+                text-xs font-body font-semibold uppercase tracking-[0.18em] text-brand-200 transition-colors hover:bg-brand-500/15"
+            >
+              <Sparkles size={13} />
+              Replay Tour
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="container-page py-6">
 
         {/* ── Search + controls ──────────────────────────────────── */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4" data-tour="public-shop-search">
           {/* Search */}
           <div className="relative flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2
