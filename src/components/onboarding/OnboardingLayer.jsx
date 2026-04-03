@@ -4,55 +4,109 @@ import { Link } from 'react-router-dom'
 import { Compass, Sparkles, ArrowRight, X, LifeBuoy, CheckCircle2 } from 'lucide-react'
 import { useOnboarding } from '../../context/OnboardingContext'
 
+// ─── Shared primitives ──────────────────────────────────────────────────────
+
+/**
+ * Structural wrapper for dark-themed overlay cards.
+ * Each consumer can place its own glow divs inside `children` as needed.
+ */
+function DarkShell({ className = '', children }) {
+  return (
+    <div className={`relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#101826] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+/** Eyebrow badge used consistently across tour overlays and panels. */
+function TourBadge({ icon: Icon = Sparkles, children }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1 text-[11px] font-body font-semibold uppercase tracking-[0.2em] text-brand-200">
+      <Icon size={12} />
+      {children}
+    </div>
+  )
+}
+
+// ─── useTargetRect ──────────────────────────────────────────────────────────
+/**
+ * Tracks the bounding rect of `[data-tour="${targetId}"]`.
+ *
+ * Strategy:
+ *  - If the element already exists, measure it immediately and attach a
+ *    ResizeObserver to track size/position changes.
+ *  - If the element doesn't exist yet (e.g. the tour just navigated to a new
+ *    page), a MutationObserver watches for it to appear, then hands off to
+ *    ResizeObserver once it does.
+ *  - scroll/resize events keep the rect in sync during scrolling.
+ *
+ * Replaces a 250 ms setInterval — no constant polling.
+ */
 function useTargetRect(targetId, enabled) {
   const [rect, setRect] = useState(null)
 
   useEffect(() => {
-    if (!enabled || !targetId) return
-
-    const update = () => {
-      const element = document.querySelector(`[data-tour="${targetId}"]`)
-      if (!element) {
-        setRect(null)
-        return
-      }
-
-      const bounds = element.getBoundingClientRect()
-      setRect({
-        top: bounds.top,
-        left: bounds.left,
-        width: bounds.width,
-        height: bounds.height,
-      })
+    if (!enabled || !targetId) {
+      setRect(null)
+      return
     }
 
-    update()
-    window.addEventListener('resize', update)
-    window.addEventListener('scroll', update, true)
+    let ro = null
+    let mo = null
 
-    const interval = window.setInterval(update, 250)
+    const measure = () => {
+      const el = document.querySelector(`[data-tour="${targetId}"]`)
+      if (!el) return
+      const b = el.getBoundingClientRect()
+      setRect({ top: b.top, left: b.left, width: b.width, height: b.height })
+    }
+
+    const connect = () => {
+      const el = document.querySelector(`[data-tour="${targetId}"]`)
+      if (!el) return false
+      measure()
+      ro = new ResizeObserver(measure)
+      ro.observe(el)
+      return true
+    }
+
+    if (!connect()) {
+      // Element not in DOM yet — watch for it
+      mo = new MutationObserver(() => {
+        if (connect()) mo.disconnect()
+      })
+      mo.observe(document.body, { childList: true, subtree: true })
+    }
+
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, { passive: true, capture: true })
+
     return () => {
-      window.removeEventListener('resize', update)
-      window.removeEventListener('scroll', update, true)
-      window.clearInterval(interval)
+      ro?.disconnect()
+      mo?.disconnect()
+      setRect(null)
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, { capture: true })
     }
   }, [targetId, enabled])
 
   return rect
 }
 
+// ─── WelcomeModal ───────────────────────────────────────────────────────────
+
 function WelcomeModal() {
   const { welcomeTour, tours, startTour, dismissWelcome } = useOnboarding()
 
   if (!welcomeTour) return null
-
   const config = tours[welcomeTour]?.welcome
   if (!config) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-8">
       <div className="absolute inset-0 bg-[#05070c]/58 backdrop-blur-none sm:backdrop-blur-[2px]" />
-      <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#101826] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+      <DarkShell className="relative w-full max-w-xl">
+        {/* Glows */}
         <div className="absolute inset-0 opacity-70 pointer-events-none">
           <div className="absolute -top-20 -right-12 w-56 h-56 rounded-full bg-brand-500/20 blur-3xl" />
           <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-amber-300/10 blur-3xl" />
@@ -60,10 +114,7 @@ function WelcomeModal() {
 
         <div className="relative p-8 sm:p-10">
           <div className="flex items-start justify-between gap-4 mb-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-4 py-1.5 text-xs font-body font-semibold uppercase tracking-[0.22em] text-brand-200">
-              <Sparkles size={13} />
-              {config.eyebrow}
-            </div>
+            <TourBadge>{config.eyebrow}</TourBadge>
             <button
               onClick={() => dismissWelcome(welcomeTour)}
               className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
@@ -72,11 +123,11 @@ function WelcomeModal() {
             </button>
           </div>
 
-          <div className="max-w-lg">
+          <div className="max-w-lg mb-8">
             <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight text-white mb-4">
               {config.title}
             </h2>
-            <p className="text-sm sm:text-base font-body leading-relaxed text-white/70 mb-8">
+            <p className="text-sm sm:text-base font-body leading-relaxed text-white/70">
               {config.body}
             </p>
           </div>
@@ -97,11 +148,13 @@ function WelcomeModal() {
             </button>
           </div>
         </div>
-      </div>
+      </DarkShell>
     </div>,
     document.body
   )
 }
+
+// ─── TourOverlay ────────────────────────────────────────────────────────────
 
 function TourOverlay() {
   const { activeTour, currentStep, tours, nextStep, prevStep, skipTour } = useOnboarding()
@@ -109,65 +162,52 @@ function TourOverlay() {
   const step = definition?.steps?.[currentStep]
   const rect = useTargetRect(step?.target, !!step)
 
+  // Scroll the target element into view when the step changes.
+  // Uses a `cancelled` flag to prevent stale async callbacks from firing
+  // after the effect has been cleaned up.
   useEffect(() => {
     if (!step?.target) return
 
+    let cancelled = false
     let attempts = 0
-    const maxAttempts = 12
 
     const ensureVisible = () => {
-      const element = document.querySelector(`[data-tour="${step.target}"]`)
-      if (!element) {
-        attempts += 1
-        if (attempts < maxAttempts) {
-          window.setTimeout(ensureVisible, 160)
-        }
+      if (cancelled) return
+      const el = document.querySelector(`[data-tour="${step.target}"]`)
+      if (!el) {
+        if (++attempts < 12) window.setTimeout(ensureVisible, 160)
         return
       }
-
-      const bounds = element.getBoundingClientRect()
+      const bounds = el.getBoundingClientRect()
       const margin = 96
-      const isAboveViewport = bounds.top < margin
-      const isBelowViewport = bounds.bottom > window.innerHeight - margin
-
-      if (isAboveViewport || isBelowViewport) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest',
-        })
+      if (bounds.top < margin || bounds.bottom > window.innerHeight - margin) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
       }
     }
 
     const timer = window.setTimeout(ensureVisible, 120)
-    return () => window.clearTimeout(timer)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
   }, [step?.target, activeTour, currentStep])
 
   const tooltipStyle = useMemo(() => {
     if (!rect) {
-      return {
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-      }
+      return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
     }
 
     const tooltipWidth = 360
     const margin = 24
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
+    const vw = window.innerWidth
+    const vh = window.innerHeight
 
     let top = rect.top + rect.height + 20
     let left = rect.left
 
-    if (left + tooltipWidth > viewportWidth - margin) {
-      left = viewportWidth - tooltipWidth - margin
-    }
+    if (left + tooltipWidth > vw - margin) left = vw - tooltipWidth - margin
     if (left < margin) left = margin
-
-    if (top > viewportHeight - 240) {
-      top = Math.max(margin, rect.top - 220)
-    }
+    if (top > vh - 240) top = Math.max(margin, rect.top - 220)
 
     return { top, left, transform: 'none' }
   }, [rect])
@@ -178,9 +218,10 @@ function TourOverlay() {
     <div className="fixed inset-0 z-[130] pointer-events-none">
       <div className="absolute inset-0 bg-[#05070c]/48 backdrop-blur-none sm:backdrop-blur-[1.5px]" />
 
+      {/* Spotlight cutout — only the inline boxShadow is used; no duplicate className shadow */}
       {rect && (
         <div
-          className="absolute rounded-[1.4rem] border border-brand-300/60 bg-white/5 shadow-[0_0_0_9999px_rgba(5,7,12,0.08)] transition-all duration-300"
+          className="absolute rounded-[1.4rem] border border-brand-300/60 bg-white/5 transition-all duration-300"
           style={{
             top: rect.top - 10,
             left: rect.left - 10,
@@ -191,10 +232,11 @@ function TourOverlay() {
         />
       )}
 
-      <div
-        className="absolute w-[min(92vw,360px)] rounded-[1.75rem] border border-white/10 bg-[#101826] text-white shadow-[0_25px_70px_rgba(0,0,0,0.45)] pointer-events-auto"
+      <DarkShell
+        className="absolute w-[min(92vw,360px)] pointer-events-auto"
         style={tooltipStyle}
       >
+        {/* Glows */}
         <div className="absolute inset-0 pointer-events-none opacity-70">
           <div className="absolute -top-10 -right-8 w-32 h-32 rounded-full bg-brand-500/15 blur-3xl" />
           <div className="absolute -bottom-8 -left-6 w-28 h-28 rounded-full bg-amber-300/10 blur-3xl" />
@@ -202,10 +244,9 @@ function TourOverlay() {
 
         <div className="relative p-6">
           <div className="flex items-center justify-between gap-3 mb-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1 text-[11px] font-body font-semibold uppercase tracking-[0.2em] text-brand-200">
-              <Compass size={12} />
+            <TourBadge icon={Compass}>
               Step {currentStep + 1} of {definition.steps.length}
-            </div>
+            </TourBadge>
             <button
               onClick={skipTour}
               className="text-xs font-body font-semibold text-white/55 transition-colors hover:text-white"
@@ -238,11 +279,13 @@ function TourOverlay() {
             </button>
           </div>
         </div>
-      </div>
+      </DarkShell>
     </div>,
     document.body
   )
 }
+
+// ─── HelpCenter ─────────────────────────────────────────────────────────────
 
 function HelpCenter() {
   const {
@@ -256,6 +299,7 @@ function HelpCenter() {
 
   const items = getChecklist(currentExperience)
   const doneCount = items.filter(item => item.done).length
+  const progress = items.length ? Math.round((doneCount / items.length) * 100) : 0
 
   return createPortal(
     <>
@@ -269,11 +313,13 @@ function HelpCenter() {
 
       {helpCenterOpen && (
         <div className="fixed inset-0 z-[140] flex justify-end">
+          {/* Backdrop */}
           <button
             onClick={closeHelpCenter}
             className="absolute inset-0 bg-[#05070c]/55 backdrop-blur-none sm:backdrop-blur-sm"
           />
 
+          {/* Panel */}
           <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#0f1725] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
             <div className="absolute inset-0 pointer-events-none opacity-70">
               <div className="absolute -top-16 right-0 h-44 w-44 rounded-full bg-brand-500/15 blur-3xl" />
@@ -281,12 +327,10 @@ function HelpCenter() {
             </div>
 
             <div className="relative p-6">
+              {/* Header */}
               <div className="flex items-start justify-between gap-3 mb-6">
                 <div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1 text-[11px] font-body font-semibold uppercase tracking-[0.18em] text-brand-200">
-                    <Sparkles size={12} />
-                    Help Center
-                  </div>
+                  <TourBadge>Help Center</TourBadge>
                   <h3 className="font-display text-3xl font-bold text-white mt-4 mb-2">
                     Replay tours and keep moving
                   </h3>
@@ -294,7 +338,6 @@ function HelpCenter() {
                     Your onboarding progress is saved for signed-in users, so you can pick back up from any device.
                   </p>
                 </div>
-
                 <button
                   onClick={closeHelpCenter}
                   className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
@@ -303,6 +346,7 @@ function HelpCenter() {
                 </button>
               </div>
 
+              {/* Progress summary */}
               <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 mb-5">
                 <div className="flex items-center justify-between gap-4 mb-3">
                   <div>
@@ -314,15 +358,10 @@ function HelpCenter() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-3xl font-bold text-white">
-                      {items.length ? Math.round((doneCount / items.length) * 100) : 0}%
-                    </p>
-                    <p className="text-xs font-body text-white/50">
-                      progress
-                    </p>
+                    <p className="font-display text-3xl font-bold text-white">{progress}%</p>
+                    <p className="text-xs font-body text-white/50">progress</p>
                   </div>
                 </div>
-
                 <button
                   onClick={() => startTour(currentExperience, { force: true })}
                   className="inline-flex items-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 text-sm font-body font-semibold text-white transition-all hover:bg-brand-600"
@@ -332,26 +371,23 @@ function HelpCenter() {
                 </button>
               </div>
 
+              {/* Checklist */}
               <div className="space-y-3">
                 {items.map(item => (
                   <div key={item.id} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-white/10 text-white'}`}>
+                      <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-white/10 text-white'}`}>
                         <CheckCircle2 size={18} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-body font-semibold text-white">
-                          {item.label}
-                        </p>
-                        <p className="text-xs font-body text-white/55 mt-1">
-                          {item.helper}
-                        </p>
+                        <p className="text-sm font-body font-semibold text-white">{item.label}</p>
+                        <p className="text-xs font-body text-white/55 mt-1">{item.helper}</p>
                       </div>
                       {!item.done && item.href && (
                         <Link
                           to={item.href}
                           onClick={closeHelpCenter}
-                          className="text-xs font-body font-semibold text-brand-300 hover:text-brand-200"
+                          className="flex-shrink-0 text-xs font-body font-semibold text-brand-300 hover:text-brand-200"
                         >
                           {item.cta || 'Open'}
                         </Link>
@@ -369,6 +405,8 @@ function HelpCenter() {
   )
 }
 
+// ─── MilestoneNudges ────────────────────────────────────────────────────────
+
 function MilestoneNudges() {
   const { nudges, dismissNudge } = useOnboarding()
 
@@ -377,20 +415,14 @@ function MilestoneNudges() {
   return createPortal(
     <div className="fixed bottom-24 left-4 z-[145] flex w-[min(92vw,360px)] flex-col gap-3">
       {nudges.map(nudge => (
-        <div
-          key={nudge.id}
-          className="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#101826] text-white shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
-        >
+        <DarkShell key={nudge.id}>
           <div className="absolute inset-0 pointer-events-none opacity-70">
             <div className="absolute -top-10 right-0 h-28 w-28 rounded-full bg-brand-500/15 blur-3xl" />
           </div>
 
           <div className="relative p-4">
             <div className="flex items-start justify-between gap-3 mb-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-brand-500/10 px-3 py-1 text-[11px] font-body font-semibold uppercase tracking-[0.18em] text-brand-200">
-                <Sparkles size={12} />
-                Milestone
-              </div>
+              <TourBadge>Milestone</TourBadge>
               <button
                 onClick={() => dismissNudge(nudge.id)}
                 className="rounded-full p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
@@ -405,12 +437,14 @@ function MilestoneNudges() {
               {nudge.body}
             </p>
           </div>
-        </div>
+        </DarkShell>
       ))}
     </div>,
     document.body
   )
 }
+
+// ─── Root export ────────────────────────────────────────────────────────────
 
 export default function OnboardingLayer() {
   return (

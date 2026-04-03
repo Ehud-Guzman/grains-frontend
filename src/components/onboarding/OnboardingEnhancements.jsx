@@ -1,6 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle2, Sparkles, X, ArrowRight, ArrowLeft } from 'lucide-react'
 
+// Glow values are identical between brand and admin, so kept in one place.
+const SHARED_GLOW = ['bg-white/40', 'bg-brand-500/10']
+
 const ACCENT_STYLES = {
   brand: {
     shell: 'border-brand-200/70 bg-brand-50/70',
@@ -18,12 +21,11 @@ const ACCENT_STYLES = {
     helper: 'text-earth-500',
     button: 'text-brand-700 hover:text-brand-800',
     actionButton: 'bg-earth-900 hover:bg-earth-800 text-white',
-    glowPrimary: 'bg-white/40',
-    glowSecondary: 'bg-brand-500/10',
+    glow: SHARED_GLOW,
   },
   admin: {
     shell: 'border-admin-200 bg-white',
-    badge: 'border-admin-300/40 bg-admin-900 text-white',
+    badge: 'border-admin-300/40 bg-admin-900 text-black',
     icon: 'bg-admin-900 text-white',
     title: 'text-admin-900',
     body: 'text-admin-600',
@@ -37,10 +39,35 @@ const ACCENT_STYLES = {
     helper: 'text-admin-500',
     button: 'text-brand-700 hover:text-brand-800',
     actionButton: 'bg-admin-900 hover:bg-admin-800 text-white',
-    glowPrimary: 'bg-white/40',
-    glowSecondary: 'bg-brand-500/10',
+    glow: SHARED_GLOW,
   },
 }
+
+// ─── Shared primitives ──────────────────────────────────────────────────────
+
+function useThemeStyles(theme) {
+  return ACCENT_STYLES[theme] ?? ACCENT_STYLES.brand
+}
+
+function GlowOverlay({ primary, secondary }) {
+  return (
+    <div className="absolute inset-0 pointer-events-none opacity-70">
+      <div className={`absolute -top-12 -right-10 h-40 w-40 rounded-full blur-3xl ${primary}`} />
+      <div className={`absolute -bottom-16 -left-8 h-44 w-44 rounded-full blur-3xl ${secondary}`} />
+    </div>
+  )
+}
+
+function BadgePill({ styles, children }) {
+  return (
+    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${styles.badge}`}>
+      <Sparkles size={12} />
+      {children}
+    </div>
+  )
+}
+
+// ─── Components ─────────────────────────────────────────────────────────────
 
 export function OnboardingChecklistCard({
   eyebrow,
@@ -52,24 +79,21 @@ export function OnboardingChecklistCard({
   theme = 'brand',
 }) {
   const location = useLocation()
+  const styles = useThemeStyles(theme)
+
   const doneCount = items.filter(item => item.done).length
-  const progress = items.length ? Math.round((doneCount / items.length) * 100) : 0
-  const styles = ACCENT_STYLES[theme] || ACCENT_STYLES.brand
+  const total = items.length
+  const progress = total ? Math.round((doneCount / total) * 100) : 0
 
   return (
     <div className={`relative overflow-hidden rounded-[1.75rem] border shadow-sm ${styles.shell}`}>
-      <div className="absolute inset-0 pointer-events-none opacity-70">
-        <div className={`absolute -top-12 -right-10 h-40 w-40 rounded-full blur-3xl ${styles.glowPrimary}`} />
-        <div className={`absolute -bottom-16 -left-8 h-44 w-44 rounded-full blur-3xl ${styles.glowSecondary}`} />
-      </div>
+      <GlowOverlay primary={styles.glow[0]} secondary={styles.glow[1]} />
 
       <div className="relative p-6 sm:p-7">
+        {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
-            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${styles.badge}`}>
-              <Sparkles size={12} />
-              {eyebrow}
-            </div>
+            <BadgePill styles={styles}>{eyebrow}</BadgePill>
             <h3 className={`font-display text-2xl font-bold mt-4 mb-2 ${styles.title}`}>
               {title}
             </h3>
@@ -81,29 +105,29 @@ export function OnboardingChecklistCard({
           <div className="min-w-[88px] text-right">
             <p className={`font-display text-3xl font-bold ${styles.stat}`}>{progress}%</p>
             <p className={`text-xs font-body mt-1 ${styles.subtext}`}>
-              {doneCount} of {items.length} complete
+              {doneCount} of {total} complete
             </p>
           </div>
         </div>
 
-        <div className={`h-2 rounded-full overflow-hidden mb-5 ${styles.track}`}>
+        {/* Progress bar — note: `border` class is required for border-* utilities to render */}
+        <div className={`h-2 rounded-full overflow-hidden border mb-5 ${styles.track}`}>
           <div
             className="h-full rounded-full bg-gradient-to-r from-brand-500 via-brand-400 to-amber-300 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
 
+        {/* Checklist */}
         <div className="space-y-3">
           {items.map(item => (
             <div
               key={item.id}
               className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
-                item.done
-                  ? styles.completedRow
-                  : styles.pendingRow
+                item.done ? styles.completedRow : styles.pendingRow
               }`}
             >
-              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : styles.icon}`}>
+              <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : styles.icon}`}>
                 <CheckCircle2 size={18} />
               </div>
               <div className="flex-1 min-w-0">
@@ -121,7 +145,7 @@ export function OnboardingChecklistCard({
                     onboardingReturnTo: `${location.pathname}${location.search}`,
                     onboardingReturnLabel: 'Operational Readiness',
                   } : undefined}
-                  className={`inline-flex items-center gap-1 text-xs font-body font-semibold transition-colors ${styles.button}`}
+                  className={`inline-flex flex-shrink-0 items-center gap-1 text-xs font-body font-semibold transition-colors ${styles.button}`}
                 >
                   {item.cta || 'Open'}
                   <ArrowRight size={13} />
@@ -153,10 +177,13 @@ export function OnboardingReturnLink({
 }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const returnTo = location.state?.onboardingReturnTo
-  const returnLabel = location.state?.onboardingReturnLabel || fallbackLabel
 
-  if (!returnTo) return null
+  // If there's no injected state, the fallback props are unused — don't render a
+  // misleading back button pointing somewhere the user didn't come from.
+  if (!location.state?.onboardingReturnTo) return null
+
+  const returnTo = location.state.onboardingReturnTo
+  const returnLabel = location.state.onboardingReturnLabel ?? fallbackLabel
 
   return (
     <button
@@ -177,7 +204,7 @@ export function ContextualTip({
   action,
   theme = 'brand',
 }) {
-  const styles = ACCENT_STYLES[theme] || ACCENT_STYLES.brand
+  const styles = useThemeStyles(theme)
 
   return (
     <div className={`relative overflow-hidden rounded-[1.5rem] border p-4 sm:p-5 shadow-sm ${styles.shell}`}>
@@ -187,10 +214,7 @@ export function ContextualTip({
 
       <div className="relative">
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${styles.badge}`}>
-            <Sparkles size={12} />
-            Helpful Tip
-          </div>
+          <BadgePill styles={styles}>Helpful Tip</BadgePill>
           {tipId && onDismiss && (
             <button
               onClick={() => onDismiss(tipId)}
@@ -208,11 +232,7 @@ export function ContextualTip({
           {body}
         </p>
 
-        {action && (
-          <div className="mt-4">
-            {action}
-          </div>
-        )}
+        {action && <div className="mt-4">{action}</div>}
       </div>
     </div>
   )
