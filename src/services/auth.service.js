@@ -5,6 +5,13 @@ export const authService = {
 
   login: (data) => api.post('/auth/login', data),
 
+  // Step 2 of admin login: exchange preAuthToken + chosen branchId for full tokens
+  selectBranch: (preAuthToken, branchId) =>
+    api.post('/auth/select-branch', { preAuthToken, branchId }),
+
+  // Superadmin switches branch context while logged in (branchId = null for global view)
+  switchBranch: (branchId) => api.post('/auth/switch-branch', { branchId }),
+
   // Send refreshToken in body so server blacklists it on logout
   logout: (refreshToken) => api.post('/auth/logout', { refreshToken }),
 

@@ -16,6 +16,7 @@ import { PAYMENT_LABELS } from '../../utils/constants'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
 import Spinner from '../../components/ui/Spinner'
 import toast from 'react-hot-toast'
+import { getOptimizedImageUrl } from '../../utils/image'
 
 const STEPS = [
   { label: 'Contact',  icon: User       },
@@ -690,7 +691,7 @@ export default function CheckoutPage() {
                             </span>
                           </div>
                           <span className="text-earth-900 font-medium font-body flex-shrink-0">
-                            {formatKES(item.unitPrice * item.quantity)}
+                            {formatKES(item.priceKES * item.quantity)}
                           </span>
                         </div>
                       ))}
@@ -823,8 +824,11 @@ export default function CheckoutPage() {
                   <div key={item.key} className="flex gap-3">
                     <div className="w-10 h-10 bg-earth-50 rounded-lg overflow-hidden flex-shrink-0">
                       {item.imageURL ? (
-                        <img src={item.imageURL} alt="" className="w-full h-full object-cover"
-                          loading="lazy" />
+                        <img src={getOptimizedImageUrl(item.imageURL, { width: 96, height: 96 })}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-lg">
                           🌾
@@ -841,7 +845,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-body font-semibold text-earth-800">
-                        {formatKES(item.unitPrice * item.quantity)}
+                        {formatKES(item.priceKES * item.quantity)}
                       </p>
                       <p className="text-xs text-earth-400">×{item.quantity}</p>
                     </div>

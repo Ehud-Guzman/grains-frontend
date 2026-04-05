@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES } from '../../utils/helpers'
+import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartPage() {
   const { items, subtotal: total, removeItem, updateQuantity } = useCart()
@@ -54,8 +55,11 @@ export default function CartPage() {
                 <div className="w-20 h-20 bg-earth-50 rounded-xl flex-shrink-0 overflow-hidden
                   border border-earth-100">
                   {item.imageURL ? (
-                    <img src={item.imageURL} alt={item.productName}
-                      className="w-full h-full object-cover" />
+                    <img src={getOptimizedImageUrl(item.imageURL, { width: 160, height: 160 })}
+                      alt={item.productName}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl">🌾</div>
                   )}

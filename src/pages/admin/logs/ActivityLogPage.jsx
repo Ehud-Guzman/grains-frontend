@@ -2,41 +2,60 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Shield, ChevronRight, LogIn, LogOut,
-  ShoppingCart, Package, Layers, CreditCard, Users, RefreshCw, X
+  ShoppingCart, Package, Layers, CreditCard, Users, RefreshCw,
+  X, GitBranch, ChevronDown, Settings2, Archive,
 } from 'lucide-react'
+import { useAuth } from '../../../context/AuthContext'
 import { adminLogService } from '../../../services/admin/log.service'
+import { adminBranchService } from '../../../services/admin/branch.service'
 import { formatDateTime, timeAgo } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
 
 // ── ACTION CONFIG ─────────────────────────────────────────────────────────────
 const ACTION_CONFIG = {
-  ADMIN_LOGIN:               { label: 'Admin Login',            icon: LogIn,        color: 'blue',   category: 'auth'    },
-  ADMIN_LOGOUT:              { label: 'Admin Logout',           icon: LogOut,       color: 'slate',  category: 'auth'    },
-  CUSTOMER_LOGIN:            { label: 'Customer Login',         icon: LogIn,        color: 'slate',  category: 'auth'    },
-  FAILED_LOGIN:              { label: 'Failed Login',           icon: Shield,       color: 'red',    category: 'auth'    },
-  PASSWORD_CHANGED:          { label: 'Password Changed',       icon: Shield,       color: 'amber',  category: 'auth'    },
-  ORDER_CREATED:             { label: 'Order Created',          icon: ShoppingCart, color: 'blue',   category: 'order'   },
-  ORDER_APPROVED:            { label: 'Order Approved',         icon: ShoppingCart, color: 'green',  category: 'order'   },
-  ORDER_REJECTED:            { label: 'Order Rejected',         icon: ShoppingCart, color: 'red',    category: 'order'   },
-  ORDER_STATUS_CHANGED:      { label: 'Status Changed',         icon: ShoppingCart, color: 'amber',  category: 'order'   },
-  ORDER_CANCELLED:           { label: 'Order Cancelled',        icon: ShoppingCart, color: 'slate',  category: 'order'   },
-  PRODUCT_ADDED:             { label: 'Product Added',          icon: Package,      color: 'green',  category: 'product' },
-  PRODUCT_EDITED:            { label: 'Product Edited',         icon: Package,      color: 'amber',  category: 'product' },
-  PRODUCT_DELETED:           { label: 'Product Deleted',        icon: Package,      color: 'red',    category: 'product' },
-  PRODUCT_ACTIVATED:         { label: 'Product Activated',      icon: Package,      color: 'green',  category: 'product' },
-  PRODUCT_DEACTIVATED:       { label: 'Product Deactivated',    icon: Package,      color: 'slate',  category: 'product' },
-  STOCK_DELIVERY_ADDED:      { label: 'Stock Delivery',         icon: Layers,       color: 'green',  category: 'stock'   },
-  STOCK_MANUALLY_ADJUSTED:   { label: 'Stock Adjusted',         icon: Layers,       color: 'amber',  category: 'stock'   },
-  STOCK_DEDUCTED_BY_ORDER:   { label: 'Stock Deducted',         icon: Layers,       color: 'blue',   category: 'stock'   },
-  PAYMENT_CONFIRMED:         { label: 'Payment Confirmed',      icon: CreditCard,   color: 'green',  category: 'payment' },
-  PAYMENT_FAILED:            { label: 'Payment Failed',         icon: CreditCard,   color: 'red',    category: 'payment' },
-  PAYMENT_MANUALLY_CONFIRMED:{ label: 'Manual Payment Confirm', icon: CreditCard,   color: 'amber',  category: 'payment' },
-  PAYMENT_REFUNDED:          { label: 'Payment Refunded',       icon: CreditCard,   color: 'red',    category: 'payment' },
-  ADMIN_CREATED:             { label: 'Admin Created',          icon: Users,        color: 'blue',   category: 'account' },
-  ADMIN_ROLE_CHANGED:        { label: 'Role Changed',           icon: Users,        color: 'amber',  category: 'account' },
-  CUSTOMER_ACCOUNT_LOCKED:   { label: 'Account Locked',         icon: Users,        color: 'red',    category: 'account' },
-  CUSTOMER_ACCOUNT_UNLOCKED: { label: 'Account Unlocked',       icon: Users,        color: 'green',  category: 'account' },
-  PROFILE_UPDATED:           { label: 'Profile Updated',        icon: Users,        color: 'blue',   category: 'account' },
+  // Auth
+  ADMIN_LOGIN:               { label: 'Admin Login',              icon: LogIn,        color: 'blue',   category: 'auth'    },
+  ADMIN_LOGOUT:              { label: 'Admin Logout',             icon: LogOut,       color: 'slate',  category: 'auth'    },
+  CUSTOMER_LOGIN:            { label: 'Customer Login',           icon: LogIn,        color: 'slate',  category: 'auth'    },
+  FAILED_LOGIN:              { label: 'Failed Login',             icon: Shield,       color: 'red',    category: 'auth'    },
+  PASSWORD_CHANGED:          { label: 'Password Changed',         icon: Shield,       color: 'amber',  category: 'auth'    },
+  // Orders
+  ORDER_CREATED:             { label: 'Order Created',            icon: ShoppingCart, color: 'blue',   category: 'order'   },
+  ORDER_APPROVED:            { label: 'Order Approved',           icon: ShoppingCart, color: 'green',  category: 'order'   },
+  ORDER_REJECTED:            { label: 'Order Rejected',           icon: ShoppingCart, color: 'red',    category: 'order'   },
+  ORDER_STATUS_CHANGED:      { label: 'Status Changed',           icon: ShoppingCart, color: 'amber',  category: 'order'   },
+  ORDER_CANCELLED:           { label: 'Order Cancelled',          icon: ShoppingCart, color: 'slate',  category: 'order'   },
+  // Products
+  PRODUCT_ADDED:             { label: 'Product Added',            icon: Package,      color: 'green',  category: 'product' },
+  PRODUCT_EDITED:            { label: 'Product Edited',           icon: Package,      color: 'amber',  category: 'product' },
+  PRODUCT_DELETED:           { label: 'Product Deleted',          icon: Package,      color: 'red',    category: 'product' },
+  PRODUCT_ACTIVATED:         { label: 'Product Activated',        icon: Package,      color: 'green',  category: 'product' },
+  PRODUCT_DEACTIVATED:       { label: 'Product Deactivated',      icon: Package,      color: 'slate',  category: 'product' },
+  // Stock
+  STOCK_DELIVERY_ADDED:      { label: 'Stock Delivery',           icon: Layers,       color: 'green',  category: 'stock'   },
+  STOCK_MANUALLY_ADJUSTED:   { label: 'Stock Adjusted',           icon: Layers,       color: 'amber',  category: 'stock'   },
+  STOCK_DEDUCTED_BY_ORDER:   { label: 'Stock Deducted',           icon: Layers,       color: 'blue',   category: 'stock'   },
+  // Payments
+  PAYMENT_CONFIRMED:         { label: 'Payment Confirmed',        icon: CreditCard,   color: 'green',  category: 'payment' },
+  PAYMENT_FAILED:            { label: 'Payment Failed',           icon: CreditCard,   color: 'red',    category: 'payment' },
+  PAYMENT_MANUALLY_CONFIRMED:{ label: 'Manual Payment Confirm',   icon: CreditCard,   color: 'amber',  category: 'payment' },
+  PAYMENT_REFUNDED:          { label: 'Payment Refunded',         icon: CreditCard,   color: 'red',    category: 'payment' },
+  // Accounts
+  ADMIN_CREATED:             { label: 'Admin Created',            icon: Users,        color: 'blue',   category: 'account' },
+  ADMIN_ROLE_CHANGED:        { label: 'Role Changed',             icon: Users,        color: 'amber',  category: 'account' },
+  ADMIN_ACCOUNT_LOCKED:      { label: 'Admin Account Locked',     icon: Users,        color: 'red',    category: 'account' },
+  ADMIN_ACCOUNT_UNLOCKED:    { label: 'Admin Account Unlocked',   icon: Users,        color: 'green',  category: 'account' },
+  ADMIN_PASSWORD_RESET:      { label: 'Admin Password Reset',     icon: Users,        color: 'amber',  category: 'account' },
+  CUSTOMER_ACCOUNT_LOCKED:   { label: 'Customer Locked',          icon: Users,        color: 'red',    category: 'account' },
+  CUSTOMER_ACCOUNT_UNLOCKED: { label: 'Customer Unlocked',        icon: Users,        color: 'green',  category: 'account' },
+  PROFILE_UPDATED:           { label: 'Profile Updated',          icon: Users,        color: 'blue',   category: 'account' },
+  // System
+  SETTINGS_UPDATED:          { label: 'Settings Updated',         icon: Settings2,    color: 'amber',  category: 'system'  },
+  PLATFORM_LOCKED:           { label: 'Platform Locked',          icon: Shield,       color: 'red',    category: 'system'  },
+  PLATFORM_UNLOCKED:         { label: 'Platform Unlocked',        icon: Shield,       color: 'green',  category: 'system'  },
+  SYSTEM_BACKUP_CREATED:     { label: 'Backup Created',           icon: Archive,      color: 'blue',   category: 'system'  },
+  SYSTEM_BACKUP_RESTORED:    { label: 'Backup Restored',          icon: Archive,      color: 'amber',  category: 'system'  },
+  SYSTEM_BACKUP_DELETED:     { label: 'Backup Deleted',           icon: Archive,      color: 'red',    category: 'system'  },
 }
 
 const CATEGORIES = [
@@ -47,6 +66,7 @@ const CATEGORIES = [
   { value: 'stock',   label: 'Stock'          },
   { value: 'payment', label: 'Payments'       },
   { value: 'account', label: 'Accounts'       },
+  { value: 'system',  label: 'System'         },
 ]
 
 const COLOR_CLASSES = {
@@ -57,11 +77,66 @@ const COLOR_CLASSES = {
   slate: { bg: 'bg-admin-100', text: 'text-admin-500' },
 }
 
+// ── BRANCH DROPDOWN (superadmin only) ─────────────────────────────────────────
+function BranchFilter({ branches, value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const selected = branches.find(b => b._id === value)
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200
+          rounded-lg text-sm font-admin text-admin-700 hover:border-admin-300 transition-all
+          min-w-[160px] shadow-admin"
+      >
+        <GitBranch size={13} className="text-brand-500 flex-shrink-0" />
+        <span className="flex-1 text-left truncate text-xs">
+          {selected ? selected.name : 'All Branches'}
+        </span>
+        <ChevronDown size={12} className={`text-admin-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-1.5 bg-white border border-admin-200 rounded-xl
+            shadow-admin-lg z-20 min-w-[200px] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => { onChange(''); setOpen(false) }}
+              className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-admin text-left
+                transition-colors hover:bg-admin-50 ${!value ? 'bg-admin-50 font-semibold text-admin-800' : 'text-admin-600'}`}
+            >
+              All Branches
+            </button>
+            {branches.map(b => (
+              <button
+                key={b._id}
+                type="button"
+                onClick={() => { onChange(b._id); setOpen(false) }}
+                className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-admin text-left
+                  transition-colors hover:bg-brand-50 ${
+                    b._id === value ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-admin-700'
+                  }`}
+              >
+                <GitBranch size={12} className={b._id === value ? 'text-brand-500' : 'text-admin-300'} />
+                <span className="flex-1 truncate">{b.name}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ── LOG ROW ───────────────────────────────────────────────────────────────────
 function LogRow({ log }) {
   const config = ACTION_CONFIG[log.action] || { label: log.action, icon: Shield, color: 'slate' }
   const colors = COLOR_CLASSES[config.color] || COLOR_CLASSES.slate
-  const Icon = config.icon
+  const Icon   = config.icon
   const actorName = log.actorId?.name || 'System'
 
   const getDetail = () => {
@@ -75,6 +150,9 @@ function LogRow({ log }) {
     if (log.action === 'FAILED_LOGIN') return d.phone || ''
     if (log.action === 'ADMIN_ROLE_CHANGED') return d.newRole ? `→ ${d.newRole}` : ''
     if (log.action === 'ADMIN_CREATED') return d.targetName || ''
+    if (log.action === 'SETTINGS_UPDATED') return d.updatedFields?.join(', ') || ''
+    if (['SYSTEM_BACKUP_CREATED','SYSTEM_BACKUP_DELETED','SYSTEM_BACKUP_RESTORED'].includes(log.action))
+      return d.filename || d.backupId || ''
     return ''
   }
 
@@ -94,7 +172,7 @@ function LogRow({ log }) {
             {config.label}
           </span>
           {detail && (
-            <span className="text-admin-400 text-xs font-admin truncate max-w-[180px]">
+            <span className="text-admin-400 text-xs font-admin truncate max-w-[200px]">
               {detail}
             </span>
           )}
@@ -145,14 +223,27 @@ function SkeletonRow() {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function ActivityLogPage() {
-  const [logs, setLogs]           = useState([])
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
-  const [loading, setLoading]     = useState(true)
-  const [page, setPage]           = useState(1)
-  const [category, setCategory]   = useState('')
-  const [dateFrom, setDateFrom]   = useState('')
-  const [dateTo, setDateTo]       = useState('')
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'superadmin'
+
+  const [logs, setLogs]               = useState([])
+  const [pagination, setPagination]   = useState({ page: 1, pages: 1, total: 0 })
+  const [loading, setLoading]         = useState(true)
+  const [page, setPage]               = useState(1)
+  const [category, setCategory]       = useState('')
+  const [dateFrom, setDateFrom]       = useState('')
+  const [dateTo, setDateTo]           = useState('')
   const [autoRefresh, setAutoRefresh] = useState(false)
+  const [branches, setBranches]       = useState([])
+  const [branchFilter, setBranchFilter] = useState('')
+
+  // Load branch list for superadmin
+  useEffect(() => {
+    if (!isSuperAdmin) return
+    adminBranchService.getAll(true)
+      .then(res => setBranches(res.data?.data || []))
+      .catch(() => {})
+  }, [isSuperAdmin])
 
   const getActionsForCategory = (cat) => {
     if (!cat) return undefined
@@ -167,18 +258,18 @@ export default function ActivityLogPage() {
     try {
       const params = { page, limit: 30 }
       const actions = getActionsForCategory(category)
-      if (actions) params.action = actions  // ← singular 'action', comma-separated
-      if (dateFrom) params.from = dateFrom
-      if (dateTo)   params.to   = dateTo
+      if (actions)      params.action   = actions
+      if (dateFrom)     params.from     = dateFrom
+      if (dateTo)       params.to       = dateTo
+      if (branchFilter) params.branchId = branchFilter
 
       const res = await adminLogService.getLogs(params)
-      // Response: res.data.data = { logs, total, page, pages, limit }
       const d = res.data.data
       setLogs(d.logs || [])
       setPagination({ page: d.page, pages: d.pages, total: d.total })
     } catch {}
     finally { setLoading(false) }
-  }, [page, category, dateFrom, dateTo])
+  }, [page, category, dateFrom, dateTo, branchFilter])
 
   useEffect(() => { fetchLogs() }, [fetchLogs])
 
@@ -192,10 +283,11 @@ export default function ActivityLogPage() {
     setCategory('')
     setDateFrom('')
     setDateTo('')
+    setBranchFilter('')
     setPage(1)
   }
 
-  const hasFilters = category || dateFrom || dateTo
+  const hasFilters = category || dateFrom || dateTo || branchFilter
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -209,8 +301,7 @@ export default function ActivityLogPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1.5 text-xs font-admin text-admin-500
-            cursor-pointer">
+          <label className="flex items-center gap-1.5 text-xs font-admin text-admin-500 cursor-pointer">
             <input type="checkbox" checked={autoRefresh}
               onChange={e => setAutoRefresh(e.target.checked)}
               className="rounded border-admin-300 text-brand-500 focus:ring-brand-400" />
@@ -241,10 +332,10 @@ export default function ActivityLogPage() {
         ))}
       </div>
 
-      {/* ── Date filters ───────────────────────────────────────────── */}
+      {/* ── Filters ────────────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-4 mb-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-end">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 items-end flex-wrap">
+          <div className="flex-1 min-w-[140px]">
             <label className="block text-xs font-admin font-semibold text-admin-500
               uppercase tracking-wide mb-1.5">From Date</label>
             <input type="date" value={dateFrom}
@@ -253,7 +344,7 @@ export default function ActivityLogPage() {
                 font-admin text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400
                 focus:border-transparent bg-admin-50" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-[140px]">
             <label className="block text-xs font-admin font-semibold text-admin-500
               uppercase tracking-wide mb-1.5">To Date</label>
             <input type="date" value={dateTo}
@@ -262,11 +353,25 @@ export default function ActivityLogPage() {
                 font-admin text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400
                 focus:border-transparent bg-admin-50" />
           </div>
+
+          {/* Branch filter — superadmin only */}
+          {isSuperAdmin && branches.length > 0 && (
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-admin font-semibold text-admin-500
+                uppercase tracking-wide mb-1.5">Branch</label>
+              <BranchFilter
+                branches={branches}
+                value={branchFilter}
+                onChange={id => { setBranchFilter(id); setPage(1) }}
+              />
+            </div>
+          )}
+
           {hasFilters && (
             <button onClick={clearFilters}
               className="flex items-center gap-1.5 px-4 py-2.5 border border-admin-200
                 rounded-lg text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors
-                whitespace-nowrap">
+                whitespace-nowrap flex-shrink-0">
               <X size={13} /> Clear filters
             </button>
           )}

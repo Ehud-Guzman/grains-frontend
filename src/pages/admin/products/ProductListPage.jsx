@@ -5,9 +5,12 @@ import {
   Download, Upload, FileSpreadsheet, X, CheckCircle, AlertCircle,
   ChevronDown, ChevronUp, Package
 } from 'lucide-react'
+import { useAuth } from '../../../context/AuthContext'
 import { adminProductService } from '../../../services/admin/product.service'
 import api from '../../../services/api'
 import toast from 'react-hot-toast'
+import SearchAutocomplete from '../../../components/ui/SearchAutocomplete'
+import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 
 // ── SKELETON ROW ──────────────────────────────────────────────────────────────
 function SkeletonRow() {
@@ -81,11 +84,128 @@ function ImportResultModal({ result, onClose }) {
   )
 }
 
+function ImportPreviewModal({ result, importing, onConfirm, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-admin-lg border border-admin-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet size={18} className="text-brand-600" />
+            <h3 className="font-admin font-bold text-admin-900">Import Preview</h3>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Create', value: result.created, bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', sub: 'text-green-600' },
+              { label: 'Update', value: result.updated, bg: 'bg-blue-50',  border: 'border-blue-200',  text: 'text-blue-700',  sub: 'text-blue-600'  },
+              { label: 'Skip',   value: result.skipped, bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', sub: 'text-amber-600' },
+            ].map(({ label, value, bg, border, text, sub }) => (
+              <div key={label} className={`${bg} border ${border} rounded-xl p-4 text-center`}>
+                <p className={`text-3xl font-admin font-bold ${text}`}>{value}</p>
+                <p className={`text-xs font-admin font-medium ${sub} mt-1`}>{label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-admin-50 border border-admin-200 rounded-xl p-4">
+            <p className="text-xs font-admin font-semibold text-admin-700 mb-2">Target Branches</p>
+            <div className="flex flex-wrap gap-2">
+              {(result.importedToBranches || []).map((branch) => (
+                <span key={branch.id} className="px-2.5 py-1 rounded-full bg-white border border-admin-200 text-xs font-admin text-admin-600">
+                  {branch.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {result.preview?.length > 0 && (
+            <div className="border border-admin-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 bg-admin-50 border-b border-admin-200">
+                <p className="text-xs font-admin font-semibold text-admin-700">
+                  Planned Changes
+                </p>
+              </div>
+              <div className="max-h-64 overflow-y-auto divide-y divide-admin-100">
+                {result.preview.map((item, index) => (
+                  <div key={`${item.branch}-${item.productName}-${index}`} className="px-4 py-3 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-admin font-semibold text-admin-800">{item.productName}</p>
+                      <p className="text-xs text-admin-400 font-admin mt-0.5">
+                        {item.branch} · {item.varieties} variet{item.varieties === 1 ? 'y' : 'ies'} · {item.packagingCount} package row{item.packagingCount === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-admin font-semibold border ${
+                      item.action === 'create'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}>
+                      {item.action === 'create' ? 'Create' : 'Update'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {result.errors?.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-xs font-admin font-semibold text-red-700 mb-2 flex items-center gap-1.5">
+                <AlertCircle size={13} /> {result.errors.length} issue{result.errors.length !== 1 ? 's' : ''} found
+              </p>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {result.errors.map((e, i) => (
+                  <p key={i} className="text-xs font-admin text-red-600 leading-relaxed">
+                    {e.row ? `Row ${e.row}: ` : e.product ? `${e.product}: ` : ''}{e.message}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 pb-5 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 border border-admin-200 text-admin-700 rounded-xl text-sm font-admin font-semibold hover:bg-admin-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={importing}
+            className="flex-1 py-3 bg-brand-500 text-white rounded-xl text-sm font-admin font-semibold hover:bg-brand-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {importing ? 'Importing…' : 'Confirm Import'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── BULK PANEL ────────────────────────────────────────────────────────────────
 function BulkPanel({ onImportDone }) {
   const [open, setOpen] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [previewing, setPreviewing] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [importPreview, setImportPreview] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+
+  const submitImport = async (file, { dryRun = false } = {}) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (dryRun) formData.append('dryRun', 'true')
+
+    return api.post('/admin/products/import', formData, {
+      timeout: 120000
+    })
+  }
 
   const handleExport = async () => {
     setExporting(true)
@@ -118,18 +238,33 @@ function BulkPanel({ onImportDone }) {
   const handleImport = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImporting(true)
+
+    setPreviewing(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await api.post('/admin/products/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      onImportDone(res.data.data)
+      const res = await submitImport(file, { dryRun: true })
+      setSelectedFile(file)
+      setImportPreview(res.data.data)
       toast.success(res.data.message)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Import failed')
-    } finally { setImporting(false); e.target.value = '' }
+    } finally { setPreviewing(false); e.target.value = '' }
+  }
+
+  const confirmImport = async () => {
+    if (!selectedFile) return
+
+    setImporting(true)
+    try {
+      const res = await submitImport(selectedFile)
+      onImportDone(res.data.data)
+      toast.success(res.data.message)
+      setImportPreview(null)
+      setSelectedFile(null)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Import failed')
+    } finally {
+      setImporting(false)
+    }
   }
 
   return (
@@ -196,13 +331,15 @@ function BulkPanel({ onImportDone }) {
               </p>
               <label className={`w-full py-2 rounded-lg text-xs font-admin font-semibold transition-colors
                 flex items-center justify-center gap-1.5 cursor-pointer
-                ${importing ? 'bg-brand-300 text-white cursor-not-allowed' : 'bg-brand-500 text-white hover:bg-brand-600'}`}>
-                {importing ? (
+                ${(importing || previewing) ? 'bg-brand-300 text-white cursor-not-allowed' : 'bg-brand-500 text-white hover:bg-brand-600'}`}>
+                {previewing ? (
+                  <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Previewing…</>
+                ) : importing ? (
                   <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Importing…</>
                 ) : (
-                  <><Upload size={12} /> Upload Excel</>
+                  <><Upload size={12} /> Preview Excel</>
                 )}
-                <input type="file" accept=".xlsx,.xls" className="hidden" disabled={importing} onChange={handleImport} />
+                <input type="file" accept=".xlsx,.xls" className="hidden" disabled={importing || previewing} onChange={handleImport} />
               </label>
             </div>
           </div>
@@ -213,12 +350,27 @@ function BulkPanel({ onImportDone }) {
           </div>
         </div>
       )}
+
+      {importPreview && (
+        <ImportPreviewModal
+          result={importPreview}
+          importing={importing}
+          onConfirm={confirmImport}
+          onClose={() => {
+            if (importing) return
+            setImportPreview(null)
+            setSelectedFile(null)
+          }}
+        />
+      )}
     </div>
   )
 }
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ProductListPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'superadmin'
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -280,6 +432,8 @@ export default function ProductListPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
 
+      {isSuperAdmin && <ViewOnlyBanner />}
+
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -290,15 +444,17 @@ export default function ProductListPage() {
             {inactiveCount > 0 && <span className="ml-1.5 text-admin-400">{inactiveCount} draft</span>}
           </p>
         </div>
-        <Link to="/admin/products/new"
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl
-            text-sm font-admin font-semibold hover:bg-brand-600 transition-colors shadow-admin">
-          <Plus size={16} /> Add Product
-        </Link>
+        {!isSuperAdmin && (
+          <Link to="/admin/products/new"
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl
+              text-sm font-admin font-semibold hover:bg-brand-600 transition-colors shadow-admin">
+            <Plus size={16} /> Add Product
+          </Link>
+        )}
       </div>
 
       {/* ── Bulk panel ─────────────────────────────────────────────────── */}
-      <BulkPanel onImportDone={(result) => { setImportResult(result); fetchProducts() }} />
+      {!isSuperAdmin && <BulkPanel onImportDone={(result) => { setImportResult(result); fetchProducts() }} />}
 
       {/* ── Status + search bar ────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-4 mb-4 space-y-3">
@@ -331,26 +487,13 @@ export default function ProductListPage() {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-admin-400" />
-          <input
-            type="text"
-            placeholder="Search products by name…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-9 py-2.5 border border-admin-200 rounded-lg text-sm
-              font-admin text-admin-800 placeholder-admin-400 focus:outline-none focus:ring-2
-              focus:ring-brand-400 focus:border-transparent bg-admin-50 transition-all"
-          />
-          {search && (
-            <button onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-                hover:bg-admin-200 text-admin-400 transition-colors">
-              <X size={13} />
-            </button>
-          )}
-        </div>
+        {/* Search with autocomplete */}
+        <SearchAutocomplete
+          value={search}
+          onChange={setSearch}
+          onSearch={setSearch}
+          placeholder="Search products by name…"
+        />
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────────── */}
@@ -430,41 +573,57 @@ export default function ProductListPage() {
                       </td>
 
                       <td className="px-5 py-4 text-center">
-                        <button
-                          onClick={() => handleToggle(product._id)}
-                          className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
-                            px-2.5 py-1 rounded-full border transition-all ${
+                        {isSuperAdmin ? (
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
+                            px-2.5 py-1 rounded-full border ${
                               product.isActive
-                                ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                : 'bg-admin-50 text-admin-500 border-admin-200 hover:bg-admin-100'
-                            }`}
-                          title={product.isActive ? 'Click to deactivate' : 'Click to activate'}
-                        >
-                          {product.isActive
-                            ? <><ToggleRight size={13} /> Active</>
-                            : <><ToggleLeft size={13} /> Draft</>
-                          }
-                        </button>
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : 'bg-admin-50 text-admin-500 border-admin-200'
+                            }`}>
+                            {product.isActive
+                              ? <><ToggleRight size={13} /> Active</>
+                              : <><ToggleLeft size={13} /> Draft</>
+                            }
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleToggle(product._id)}
+                            className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
+                              px-2.5 py-1 rounded-full border transition-all ${
+                                product.isActive
+                                  ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                  : 'bg-admin-50 text-admin-500 border-admin-200 hover:bg-admin-100'
+                              }`}
+                            title={product.isActive ? 'Click to deactivate' : 'Click to activate'}
+                          >
+                            {product.isActive
+                              ? <><ToggleRight size={13} /> Active</>
+                              : <><ToggleLeft size={13} /> Draft</>
+                            }
+                          </button>
+                        )}
                       </td>
 
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-0.5">
-                          <Link to={`/admin/products/${product._id}/edit`}
-                            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700
-                              transition-colors" title="Edit">
-                            <Edit size={15} />
-                          </Link>
-                          <button onClick={() => handleDuplicate(product._id)}
-                            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-blue-600
-                              transition-colors" title="Duplicate">
-                            <Copy size={15} />
-                          </button>
-                          <button onClick={() => handleDelete(product._id, product.name)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600
-                              transition-colors opacity-0 group-hover:opacity-100" title="Delete">
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+                        {!isSuperAdmin && (
+                          <div className="flex items-center gap-0.5">
+                            <Link to={`/admin/products/${product._id}/edit`}
+                              className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700
+                                transition-colors" title="Edit">
+                              <Edit size={15} />
+                            </Link>
+                            <button onClick={() => handleDuplicate(product._id)}
+                              className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-blue-600
+                                transition-colors" title="Duplicate">
+                              <Copy size={15} />
+                            </button>
+                            <button onClick={() => handleDelete(product._id, product.name)}
+                              className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600
+                                transition-colors opacity-0 group-hover:opacity-100" title="Delete">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )

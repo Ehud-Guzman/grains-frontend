@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
+import { getOptimizedImageUrl } from '../../utils/image'
 
 // ── SUGGESTED PRODUCT CARD ────────────────────────────────────────────────────
 function SuggestedCard({ product }) {
@@ -24,8 +25,11 @@ function SuggestedCard({ product }) {
       <div className="w-full aspect-square rounded-2xl overflow-hidden bg-earth-100 mb-2.5
         border border-earth-100 relative">
         {image ? (
-          <img src={image} alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img src={getOptimizedImageUrl(image, { width: 320, height: 320 })}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+            decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl opacity-20">🌾</span>
@@ -169,9 +173,12 @@ export default function ProductPage() {
           <div className="space-y-3">
             <div className="aspect-square bg-earth-50 rounded-2xl overflow-hidden relative group">
               {images.length > 0 ? (
-                <img src={images[activeImage]} alt={product.name}
+                <img src={getOptimizedImageUrl(images[activeImage], { width: 1000, height: 1000, fit: 'limit' })}
+                  alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-700
-                    group-hover:scale-105" />
+                    group-hover:scale-105"
+                  fetchPriority="high"
+                  decoding="async" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="text-8xl opacity-10">🌾</span>
@@ -192,7 +199,11 @@ export default function ProductPage() {
                       transition-all ${i === activeImage
                         ? 'border-brand-500 scale-105'
                         : 'border-transparent opacity-70 hover:opacity-100'}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={getOptimizedImageUrl(img, { width: 128, height: 128 })}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async" />
                   </button>
                 ))}
               </div>

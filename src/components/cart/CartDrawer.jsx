@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { X, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { formatKES } from '../../utils/helpers'
+import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartDrawer() {
   const { items, subtotal, isOpen, closeCart, removeItem, updateQuantity } = useCart()
@@ -40,7 +41,11 @@ export default function CartDrawer() {
               <div key={item.key} className="card p-3 flex gap-3">
                 <div className="w-16 h-16 bg-earth-100 rounded-lg flex-shrink-0 overflow-hidden">
                   {item.imageURL ? (
-                    <img src={item.imageURL} alt={item.productName} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={getOptimizedImageUrl(item.imageURL, { width: 128, height: 128 })}
+                      alt={item.productName}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="text-earth-300 text-2xl">🌾</span>

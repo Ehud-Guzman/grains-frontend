@@ -4,8 +4,10 @@ import {
   Search, ChevronRight, Check, X, RefreshCw,
   Package, XCircle, Filter, ArrowUpDown
 } from 'lucide-react'
+import { useAuth } from '../../../context/AuthContext'
 import { useOnboarding } from '../../../context/OnboardingContext'
 import { adminOrderService } from '../../../services/admin/order.service'
+import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { ContextualTip } from '../../../components/onboarding/OnboardingEnhancements'
 import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo } from '../../../utils/helpers'
@@ -119,6 +121,8 @@ function SkeletonCard() {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function OrderListPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'superadmin'
   const { dismissedTips, dismissTip, markChecklistItem, markMilestone } = useOnboarding()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -265,6 +269,8 @@ export default function OrderListPage() {
         </button>
       </div>
 
+      {isSuperAdmin && <ViewOnlyBanner />}
+
       {showOrdersTip && (
         <div className="mb-4">
           <ContextualTip
@@ -332,7 +338,7 @@ export default function OrderListPage() {
       </div>
 
       {/* ── Bulk action bar ─────────────────────────────────────────── */}
-      {selected.length > 0 && (
+      {!isSuperAdmin && selected.length > 0 && (
         <div className="bg-admin-900 rounded-xl px-4 py-3 mb-4 flex items-center
           gap-3 flex-wrap shadow-sm">
           <span className="text-white text-sm font-admin font-semibold">
@@ -392,17 +398,19 @@ export default function OrderListPage() {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       {/* Checkbox — tap to select without navigating */}
-                      <div onClick={e => { e.stopPropagation(); toggleSelect(order._id) }}
-                        className={`w-4 h-4 rounded border-2 flex items-center justify-center
-                          flex-shrink-0 transition-all ${
-                            selected.includes(order._id)
-                              ? 'bg-brand-500 border-brand-500'
-                              : 'border-admin-300'
-                          }`}>
-                        {selected.includes(order._id) && (
-                          <Check size={10} className="text-white" />
-                        )}
-                      </div>
+                      {!isSuperAdmin && (
+                        <div onClick={e => { e.stopPropagation(); toggleSelect(order._id) }}
+                          className={`w-4 h-4 rounded border-2 flex items-center justify-center
+                            flex-shrink-0 transition-all ${
+                              selected.includes(order._id)
+                                ? 'bg-brand-500 border-brand-500'
+                                : 'border-admin-300'
+                            }`}>
+                          {selected.includes(order._id) && (
+                            <Check size={10} className="text-white" />
+                          )}
+                        </div>
+                      )}
                       <span className="font-admin font-bold text-admin-800 text-sm tracking-wide">
                         {order.orderRef}
                       </span>
@@ -462,12 +470,14 @@ export default function OrderListPage() {
           <table className="w-full text-sm font-admin">
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">
-                <th className="w-10 px-4 py-3.5">
-                  <input type="checkbox" checked={allSelected}
-                    onChange={() => setSelected(allSelected ? [] : orders.map(o => o._id))}
-                    className="rounded border-admin-300 text-brand-500
-                      focus:ring-brand-400 cursor-pointer" />
-                </th>
+                {!isSuperAdmin && (
+                  <th className="w-10 px-4 py-3.5">
+                    <input type="checkbox" checked={allSelected}
+                      onChange={() => setSelected(allSelected ? [] : orders.map(o => o._id))}
+                      className="rounded border-admin-300 text-brand-500
+                        focus:ring-brand-400 cursor-pointer" />
+                  </th>
+                )}
                 <th className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
                   uppercase tracking-wide">Order</th>
                 <th className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
@@ -513,13 +523,15 @@ export default function OrderListPage() {
                       }`}
                       onClick={() => navigate(`/admin/orders/${order._id}`)}>
 
-                      <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                        <input type="checkbox"
-                          checked={selected.includes(order._id)}
-                          onChange={() => toggleSelect(order._id)}
-                          className="rounded border-admin-300 text-brand-500
-                            focus:ring-brand-400 cursor-pointer" />
-                      </td>
+                      {!isSuperAdmin && (
+                        <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                          <input type="checkbox"
+                            checked={selected.includes(order._id)}
+                            onChange={() => toggleSelect(order._id)}
+                            className="rounded border-admin-300 text-brand-500
+                              focus:ring-brand-400 cursor-pointer" />
+                        </td>
+                      )}
 
                       <td className="px-4 py-3.5">
                         <p className="font-admin font-bold text-admin-800 tracking-wide">

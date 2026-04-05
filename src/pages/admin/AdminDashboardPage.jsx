@@ -5,6 +5,7 @@ import {
   Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight, Sparkles
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import SuperAdminDashboardPage from './SuperAdminDashboardPage'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { adminReportService } from '../../services/admin/report.service'
 import { adminStockService } from '../../services/admin/stock.service'
@@ -81,6 +82,7 @@ function KpiSkeleton() {
 
 export default function AdminDashboardPage() {
   const { user } = useAuth()
+  if (user?.role === 'superadmin') return <SuperAdminDashboardPage />
   const { startTour, getChecklist } = useOnboarding()
   const [kpis, setKpis]         = useState(null)
   const [lowStock, setLowStock]   = useState([])

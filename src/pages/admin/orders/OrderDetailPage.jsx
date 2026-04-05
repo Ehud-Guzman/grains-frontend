@@ -6,8 +6,10 @@ import {
   CreditCard, Truck, Store, Package, ChevronRight,
   AlertTriangle, Clock, BadgeCheck, Ban
 } from 'lucide-react'
+import { useAuth } from '../../../context/AuthContext'
 import { adminOrderService } from '../../../services/admin/order.service'
 import { useOnboarding } from '../../../context/OnboardingContext'
+import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { OrderStatusTimeline } from '../../../components/orders/OrderStatusTimeline'
 import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../../utils/helpers'
 import { PAYMENT_LABELS } from '../../../utils/constants'
@@ -62,6 +64,8 @@ function DetailRow({ icon: Icon, label, children }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function AdminOrderDetailPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === 'superadmin'
   const { markChecklistItem, markMilestone } = useOnboarding()
   const { id } = useParams()
   const [order, setOrder]               = useState(null)
@@ -147,6 +151,8 @@ export default function AdminOrderDetailPage() {
   return (
     <>
       <div className="p-5 lg:p-7 max-w-6xl mx-auto pb-14">
+
+        {isSuperAdmin && <ViewOnlyBanner />}
 
         {/* ── TOPBAR ───────────────────────────────────────────────────────── */}
         <div className="mb-6">
@@ -291,7 +297,7 @@ export default function AdminOrderDetailPage() {
           <div className="space-y-4">
 
             {/* Approve / Reject — pending only */}
-            {order.status === 'pending' && (
+            {!isSuperAdmin && order.status === 'pending' && (
               <Card title="Actions">
                 <div className="p-4 space-y-2.5">
                   <button
@@ -348,7 +354,7 @@ export default function AdminOrderDetailPage() {
             )}
 
             {/* Pipeline status update */}
-            {nextActions.length > 0 && (
+            {!isSuperAdmin && nextActions.length > 0 && (
               <Card title="Update Status">
                 <div className="p-4 space-y-2">
                   {nextActions.map(action => {

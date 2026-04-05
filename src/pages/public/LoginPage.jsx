@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Lock, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Lock, ArrowLeft, CheckCircle, MapPin, Building2, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
@@ -209,24 +209,121 @@ function ChangePasswordModal({ onClose }) {
   )
 }
 
+// ── BRANCH SELECTOR STEP ─────────────────────────────────────────────────────
+function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack }) {
+  const [selected, setSelected] = useState(branches.length === 1 ? branches[0]._id : '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSelect = async () => {
+    if (!selected) return setError('Please select a branch')
+    setError('')
+    setLoading(true)
+    try {
+      await onSelect(preAuthToken, selected)
+    } catch (err) {
+      setLoading(false)
+      setError(err.response?.data?.message || 'Failed to select branch. Please try again.')
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-warm border border-earth-100 p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+          <Building2 size={15} className="text-brand-600" />
+        </div>
+        <div>
+          <p className="font-display font-semibold text-earth-900 text-sm">Select Branch</p>
+          <p className="text-earth-500 text-xs font-body">Welcome, {pendingUser?.name}</p>
+        </div>
+      </div>
+
+      <div className="space-y-2 mb-5">
+        {branches.map(branch => (
+          <button
+            key={branch._id}
+            type="button"
+            onClick={() => setSelected(branch._id)}
+            className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+              selected === branch._id
+                ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-300'
+                : 'border-earth-200 hover:border-earth-300 bg-earth-50'
+            }`}
+          >
+            <p className="font-body font-semibold text-earth-900 text-sm">{branch.name}</p>
+            {branch.location && (
+              <p className="text-earth-500 text-xs font-body flex items-center gap-1 mt-0.5">
+                <MapPin size={10} /> {branch.location}
+              </p>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700 font-body mb-4">
+          {error}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={handleSelect}
+        disabled={loading || !selected}
+        className="w-full flex items-center justify-center gap-2 py-3.5 bg-earth-900
+          text-white rounded-xl text-sm font-body font-semibold hover:bg-earth-800
+          transition-all active:scale-[0.98] disabled:opacity-60 shadow-warm"
+      >
+        {loading ? (
+          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Entering…</>
+        ) : (
+          <><LogIn size={17} /> Continue</>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-full mt-3 text-center text-sm text-earth-500 hover:text-earth-700 font-body transition-colors"
+      >
+        ← Back to login
+      </button>
+    </div>
+  )
+}
+
 export default function LoginPage() {
   const shopInfo = useShopInfo()
-  const { login } = useAuth()
+  const { login, selectBranch } = useAuth()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/dashboard'
 
+  // Step 1: credentials
   const [form, setForm] = useState({ phone: '', password: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showChangePassword, setShowChangePassword] = useState(false)
 
+  // Step 2: branch selection (admin only)
+  const [branchStep, setBranchStep] = useState(null) // { preAuthToken, branches, user }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const userData = await login(form.phone, form.password)
+      const result = await login(form.phone, form.password)
+
+      if (result.requiresBranchSelection) {
+        setLoading(false)
+        setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
+        return
+      }
+
+      // Customer — go directly
+      const userData = result.user
       if (ADMIN_ROLES.includes(userData.role)) {
         window.location.replace('/admin/dashboard')
       } else {
@@ -245,22 +342,59 @@ export default function LoginPage() {
     }
   }
 
+  const handleBranchSelect = async (preAuthToken, branchId) => {
+    await selectBranch(preAuthToken, branchId)
+    window.location.replace('/admin/dashboard')
+  }
+
   return (
     <>
       <div className="min-h-screen bg-cream flex flex-col">
 
         {/* ── Top brand strip ──────────────────────────────────────────── */}
-        <div className="bg-earth-900 py-3 px-4 text-center">
-          <Link to="/" className="text-earth-400 text-xs font-body hover:text-cream transition-colors">
-            ← Back to {shopInfo.name}
-          </Link>
+        <div className="bg-earth-900 py-3 px-4">
+          <div className="max-w-sm mx-auto">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border border-earth-700
+                bg-earth-800/80 px-3.5 py-2 text-sm font-body font-medium text-earth-200
+                hover:bg-earth-700 hover:text-cream transition-all shadow-sm"
+            >
+              <ArrowLeft size={15} />
+              <span>Back to {shopInfo.name}</span>
+            </Link>
+          </div>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-4 py-10">
           <div className="w-full max-w-sm">
 
-            {/* Logo */}
-            <div className="text-center mb-8">
+            {/* Branch selection step (admin only) */}
+            {branchStep && (
+              <>
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-earth-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-warm overflow-hidden">
+                    <img src="/Vittorios-logo.jpeg" alt="Vittorios" className="w-full h-full object-cover"
+                      onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
+                    <div className="w-full h-full items-center justify-center hidden">
+                      <span className="text-white font-display font-bold text-2xl">V</span>
+                    </div>
+                  </div>
+                  <h1 className="font-display text-2xl font-bold text-earth-900">Choose Branch</h1>
+                  <p className="text-earth-500 text-sm mt-1 font-body">Select the branch you're working at</p>
+                </div>
+                <BranchSelector
+                  branches={branchStep.branches}
+                  preAuthToken={branchStep.preAuthToken}
+                  pendingUser={branchStep.user}
+                  onSelect={handleBranchSelect}
+                  onBack={() => setBranchStep(null)}
+                />
+              </>
+            )}
+
+            {/* Credentials step */}
+            {!branchStep && <div className="text-center mb-8">
               <div className="w-16 h-16 bg-earth-900 rounded-2xl flex items-center justify-center
                 mx-auto mb-4 shadow-warm overflow-hidden">
                 <img src="/Vittorios-logo.jpeg" alt="Vittorios"
@@ -276,10 +410,10 @@ export default function LoginPage() {
               </div>
               <h1 className="font-display text-2xl font-bold text-earth-900">Welcome back</h1>
               <p className="text-earth-500 text-sm mt-1 font-body">{shopInfo.name}</p>
-            </div>
+            </div>}
 
-            {/* Card */}
-            <div className="bg-white rounded-2xl shadow-warm border border-earth-100 p-6">
+            {/* Credentials card */}
+            {!branchStep && <div className="bg-white rounded-2xl shadow-warm border border-earth-100 p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
 
                 <div>
@@ -365,13 +499,21 @@ export default function LoginPage() {
                   </Link>
                 </p>
               </div>
-            </div>
+            </div>}
 
-            <p className="text-center text-xs text-earth-400 mt-5 font-body">
-              <Link to="/shop" className="hover:text-brand-600 transition-colors">
-                ← Continue browsing without signing in
-              </Link>
-            </p>
+            {!branchStep && (
+              <div className="mt-5">
+                <Link
+                  to="/shop"
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-earth-200
+                    bg-white px-4 py-3 text-sm font-body font-medium text-earth-700 shadow-warm
+                    hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
+                >
+                  <ShoppingBag size={16} />
+                  <span>Continue Browsing</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

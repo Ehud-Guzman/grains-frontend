@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ShoppingCart, Eye, Tag, Check } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { formatKES, getPriceRange, getStockStatus } from '../../utils/helpers'
+import { getOptimizedImageUrl } from '../../utils/image'
 
 // ── STOCK CONFIG ──────────────────────────────────────────────────────────────
 const stockConfig = {
@@ -23,9 +24,12 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
       {/* Image */}
       <div className="relative aspect-[4/3] bg-earth-50 overflow-hidden">
         {imageURL ? (
-          <img src={imageURL} alt={product.name}
+          <img src={getOptimizedImageUrl(imageURL, { width: 640, height: 480 })}
+            alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105
-              transition-transform duration-700 ease-out" loading="lazy" />
+              transition-transform duration-700 ease-out"
+            loading="lazy"
+            decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-6xl opacity-20">🌾</span>
@@ -141,9 +145,12 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
       {/* Image — square */}
       <div className="relative aspect-square bg-earth-50 overflow-hidden">
         {imageURL ? (
-          <img src={imageURL} alt={product.name}
+          <img src={getOptimizedImageUrl(imageURL, { width: 420, height: 420 })}
+            alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105
-              transition-transform duration-700 ease-out" loading="lazy" />
+              transition-transform duration-700 ease-out"
+            loading="lazy"
+            decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl opacity-20">🌾</span>

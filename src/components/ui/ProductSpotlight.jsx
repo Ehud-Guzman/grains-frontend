@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { X, ChevronRight, Sparkles, Tag } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
+import { getOptimizedImageUrl } from '../../utils/image'
 
 const MAX_DISMISSALS = 3
 const SESSION_KEY = 'spotlight_dismissals'
@@ -139,9 +140,11 @@ export default function ProductSpotlight({ products = [] }) {
             {/* Image */}
             <div className="relative h-36 bg-earth-50 overflow-hidden">
               <img
-                src={image}
+                src={getOptimizedImageUrl(image, { width: 640, height: 360 })}
                 alt={product.name}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute top-2 left-2">
                 <span className="bg-white/90 backdrop-blur-sm text-earth-700 text-xs font-admin font-medium px-2 py-1 rounded-full">

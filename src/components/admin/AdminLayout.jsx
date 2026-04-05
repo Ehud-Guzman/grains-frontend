@@ -3,39 +3,71 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, Package, Users, LogOut,
   Menu, X, Layers, TrendingUp, UserCog, Shield, Settings2,
-  Bell, ChevronRight
+  Bell, ChevronRight, GitBranch, Eye, Archive,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import api from '../../services/api'
 
-// ── NAV DEFINITION ────────────────────────────────────────────────────────────
-const NAV_ITEMS = [
+// ── NAV DEFINITIONS ───────────────────────────────────────────────────────────
+// Business staff/admin nav
+const BUSINESS_NAV = [
   {
     group: 'Operations',
     items: [
-      { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard',   roles: ['staff','supervisor','admin','superadmin'] },
-      { to: '/admin/orders',    icon: ShoppingCart,    label: 'Orders',       roles: ['staff','supervisor','admin'] },
-      { to: '/admin/stock',     icon: Layers,          label: 'Stock',        roles: ['staff','supervisor','admin'] },
+      { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard',    roles: ['staff','supervisor','admin'] },
+      { to: '/admin/orders',    icon: ShoppingCart,    label: 'Orders',        roles: ['staff','supervisor','admin'] },
+      { to: '/admin/stock',     icon: Layers,          label: 'Stock',         roles: ['staff','supervisor','admin'] },
     ]
   },
   {
     group: 'Management',
     items: [
-      { to: '/admin/products',  icon: Package,         label: 'Products',     roles: ['admin'] },
-      { to: '/admin/customers', icon: Users,           label: 'Customers',    roles: ['supervisor','admin'] },
-      { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',      roles: ['supervisor','admin'] },
+      { to: '/admin/products',  icon: Package,         label: 'Products',      roles: ['admin'] },
+      { to: '/admin/customers', icon: Users,           label: 'Customers',     roles: ['supervisor','admin'] },
+      { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',       roles: ['supervisor','admin'] },
     ]
   },
   {
     group: 'System',
     items: [
-      { to: '/admin/settings',  icon: Settings2,       label: 'Settings',     roles: ['admin'] },
-      { to: '/admin/logs',      icon: Shield,          label: 'Activity Log', roles: ['superadmin'] },
-      { to: '/admin/users',     icon: UserCog,         label: 'User Mgmt',    roles: ['superadmin'] },
+      { to: '/admin/settings',  icon: Settings2,       label: 'Settings',      roles: ['admin'] },
     ]
   },
 ]
+
+// Superadmin-only nav — platform control
+const SUPERADMIN_NAV = [
+  {
+    group: 'Platform',
+    items: [
+      { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Control Center' },
+      { to: '/admin/branches',  icon: GitBranch,       label: 'Branches'       },
+    ]
+  },
+  {
+    group: 'Observe (View Only)',
+    items: [
+      { to: '/admin/orders',    icon: ShoppingCart,    label: 'Orders',    viewOnly: true },
+      { to: '/admin/products',  icon: Package,         label: 'Products',  viewOnly: true },
+      { to: '/admin/stock',     icon: Layers,          label: 'Stock',     viewOnly: true },
+      { to: '/admin/customers', icon: Users,           label: 'Customers', viewOnly: true },
+      { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',   viewOnly: true },
+    ]
+  },
+  {
+    group: 'System',
+    items: [
+      { to: '/admin/users',     icon: UserCog,         label: 'User Management' },
+      { to: '/admin/logs',      icon: Shield,          label: 'Activity Log'    },
+      { to: '/admin/backups',   icon: Archive,         label: 'Backups'         },
+      { to: '/admin/settings',  icon: Settings2,       label: 'Settings'        },
+    ]
+  },
+]
+
+// Used by page title map (same for all roles)
+const NAV_ITEMS = BUSINESS_NAV
 
 const ROLE_COLORS = {
   superadmin: 'bg-red-500/20 text-red-300 border border-red-500/30',
@@ -55,6 +87,7 @@ const getGreeting = () => {
 // ── PAGE TITLE MAP ─────────────────────────────────────────────────────────────
 const PAGE_TITLES = {
   '/admin/dashboard': 'Dashboard',
+  '/admin/branches':  'Branch Management',
   '/admin/orders':    'Orders',
   '/admin/stock':     'Stock',
   '/admin/products':  'Products',
@@ -63,6 +96,7 @@ const PAGE_TITLES = {
   '/admin/settings':  'Settings',
   '/admin/logs':      'Activity Log',
   '/admin/users':     'User Management',
+  '/admin/backups':   'Backups',
 }
 
 export default function AdminLayout() {
@@ -124,16 +158,22 @@ export default function AdminLayout() {
             <p className="text-white font-admin font-semibold text-sm leading-tight">
               Vittorios
             </p>
-            <p className="text-white/40 text-xs leading-tight">Admin Panel</p>
+            <p className={`text-xs leading-tight font-admin ${
+              user?.role === 'superadmin' ? 'text-red-400/70' : 'text-white/40'
+            }`}>
+              {user?.role === 'superadmin' ? '⚡ Platform Control' : 'Admin Panel'}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
-        {NAV_ITEMS.map(group => {
-          const visible = group.items.filter(i => i.roles.includes(user?.role))
-          if (visible.length === 0) return null
+        {(user?.role === 'superadmin' ? SUPERADMIN_NAV : BUSINESS_NAV).map(group => {
+          const items = user?.role === 'superadmin'
+            ? group.items
+            : group.items.filter(i => i.roles?.includes(user?.role))
+          if (items.length === 0) return null
           return (
             <div key={group.group}>
               <p className="text-white/25 text-xs font-admin font-semibold uppercase
@@ -141,7 +181,7 @@ export default function AdminLayout() {
                 {group.group}
               </p>
               <div className="space-y-0.5">
-                {visible.map(item => (
+                {items.map(item => (
                   <NavLink key={item.to} to={item.to}
                     onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) =>
@@ -158,17 +198,15 @@ export default function AdminLayout() {
                           isActive ? 'text-white' : 'text-white/40 group-hover:text-white/80'
                         }`} />
                         <span className="flex-1">{item.label}</span>
-                        {/* Pending badge on Orders nav item */}
-                        {item.to === '/admin/orders' && pendingCount > 0 && (
+                        {item.to === '/admin/orders' && pendingCount > 0 && !item.viewOnly && (
                           <span className="bg-amber-500 text-white text-xs font-bold
                             min-w-[18px] h-[18px] rounded-full flex items-center justify-center
                             px-1 leading-none">
                             {pendingCount > 99 ? '99+' : pendingCount}
                           </span>
                         )}
-                        {item.roles.length === 1 && item.roles[0] === 'superadmin' && (
-                          <span className="text-xs bg-white/10 text-white/40
-                            px-1.5 py-0.5 rounded font-normal">SA</span>
+                        {item.viewOnly && (
+                          <Eye size={11} className="text-white/25 flex-shrink-0" />
                         )}
                       </>
                     )}

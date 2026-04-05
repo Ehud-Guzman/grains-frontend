@@ -2,69 +2,60 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   ShoppingCart, Menu, X, User, LogOut, Package, UserCircle,
-  ChevronDown, ShoppingBag, MapPin, Search, Phone, Clock,
-  Truck, Layers, ChevronRight,
+  ChevronDown, ChevronLeft, ShoppingBag, MapPin, Search, Phone, Clock,
+  Truck, ChevronRight, MessageCircle, LayoutGrid, Home,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
+import SearchAutocomplete from '../ui/SearchAutocomplete'
+import { productService } from '../../services/product.service'
 
-// ── Category config ──────────────────────────────────────────────────────────
-// Update labels/routes to match your actual product categories.
-const GRAIN_CATEGORIES = [
-  { label: 'Maize',            to: '/shop?category=Maize',   icon: '🌽' },
-  { label: 'Beans',            to: '/shop?category=Beans',   icon: '🫘' },
-  { label: 'Rice',             to: '/shop?category=Rice',    icon: '🍚' },
-  { label: 'Wheat',            to: '/shop?category=Wheat',   icon: '🌾' },
-  { label: 'Sorghum',          to: '/shop?category=Sorghum', icon: '🌾' },
-  { label: 'Lentils',          to: '/shop?category=Lentils', icon: '🟤' },
-  { label: 'Millet',           to: '/shop?category=Millet',  icon: '🌾' },
-  { label: 'Bulk / Wholesale', to: '/shop?packaging=Bulk',   icon: '📦', highlight: true },
-]
+// ── Category icon map ─────────────────────────────────────────────────────────
+const CATEGORY_ICONS = {
+  maize: '🌽', corn: '🌽',
+  beans: '🫘', legumes: '🫘', soya: '🫘', soybeans: '🫘',
+  rice: '🍚',
+  wheat: '🌾', flour: '🌾', sorghum: '🌾', millet: '🌾', barley: '🌾', oats: '🌾',
+  lentils: '🟤', peas: '🟤', chickpeas: '🟤',
+  nuts: '🥜', groundnuts: '🥜',
+  cassava: '🥔', potato: '🥔',
+  sesame: '🌰', sunflower: '🌻',
+}
 
-// ── SearchBar ────────────────────────────────────────────────────────────────
-function SearchBar({ onSearch, autoFocus = false }) {
+const getCategoryIcon = (name) =>
+  CATEGORY_ICONS[name.toLowerCase().split(/[\s/]/)[0]] || '🌾'
+
+const fmt = (n) => n >= 1000
+  ? `KES ${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
+  : `KES ${n}`
+
+// ── NavSearchBar ──────────────────────────────────────────────────────────────
+function NavSearchBar({ onClose, autoFocus = false, size = 'md' }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
-  const inputRef = useRef()
 
-  useEffect(() => {
-    if (autoFocus) inputRef.current?.focus()
-  }, [autoFocus])
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!q.trim()) return
-    navigate(`/shop?q=${encodeURIComponent(q.trim())}`)
-    onSearch?.()
+  const handleSearch = (query) => {
+    if (!query.trim()) return
+    navigate(`/shop?search=${encodeURIComponent(query.trim())}`)
+    onClose?.()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full">
-      <input
-        ref={inputRef}
-        type="text"
-        value={q}
-        onChange={e => setQ(e.target.value)}
-        placeholder="Search maize, beans, rice..."
-        className="flex-1 min-w-0 bg-earth-800 text-cream placeholder-earth-500 text-sm font-body
-          rounded-l-xl px-4 py-2.5 border border-earth-700 border-r-0
-          focus:outline-none focus:border-brand-500 transition-colors"
-      />
-      <button
-        type="submit"
-        className="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2.5 rounded-r-xl
-          transition-colors flex-shrink-0"
-        aria-label="Search"
-      >
-        <Search size={16} />
-      </button>
-    </form>
+    <SearchAutocomplete
+      value={q}
+      onChange={setQ}
+      onSearch={handleSearch}
+      placeholder="Search maize, beans, rice, flour…"
+      darkMode={size !== 'hero'}
+      autoFocus={autoFocus}
+      className="w-full"
+    />
   )
 }
 
-// ── CategoriesDropdown ───────────────────────────────────────────────────────
-function CategoriesDropdown() {
+// ── AllCategoriesMenu — full dropdown with grid layout ────────────────────────
+function AllCategoriesMenu({ categories }) {
   const [open, setOpen] = useState(false)
   const ref = useRef()
   const location = useLocation()
@@ -79,66 +70,57 @@ function CategoriesDropdown() {
   }, [open])
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative h-full flex items-center" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-body
-          font-medium transition-all ${
+        className={`flex items-center gap-2 px-4 h-full text-sm font-body font-semibold
+          transition-colors ${
             open
-              ? 'bg-brand-500 text-white'
-              : 'text-earth-300 hover:text-cream hover:bg-earth-800'
+              ? 'bg-brand-600 text-white'
+              : 'bg-brand-500 text-white hover:bg-brand-600'
           }`}
       >
-        <Layers size={15} />
-        Categories
+        <LayoutGrid size={15} />
+        <span>All Categories</span>
         <ChevronDown size={13} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-2xl
-          shadow-[0_12px_40px_rgba(0,0,0,0.16)] border border-earth-100 overflow-hidden z-50
-          animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute left-0 top-full w-72 bg-white border border-earth-200
+          shadow-[0_16px_48px_rgba(0,0,0,0.14)] z-50 overflow-hidden
+          animate-in fade-in slide-in-from-top-1 duration-150">
 
-          <div className="px-4 py-2.5 bg-earth-50 border-b border-earth-100">
-            <p className="text-[11px] font-body font-bold text-earth-400 uppercase tracking-widest">
-              Shop by Category
-            </p>
-          </div>
+          {categories.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-earth-400 font-body">Loading…</p>
+          ) : (
+            <div className="py-1.5">
+              {categories.map((cat, i) => (
+                <Link
+                  key={cat}
+                  to={`/shop?category=${encodeURIComponent(cat)}`}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-body
+                    text-earth-700 hover:bg-brand-50 hover:text-brand-700 transition-colors group"
+                >
+                  <span className="w-6 text-center flex-shrink-0 text-lg leading-none">{getCategoryIcon(cat)}</span>
+                  <span className="flex-1 font-medium">{cat}</span>
+                  <ChevronRight size={13} className="text-earth-300 group-hover:text-brand-400 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          )}
 
-          <div className="py-1.5">
-            {GRAIN_CATEGORIES.map(cat => (
-              <Link
-                key={cat.label}
-                to={cat.to}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-2.5 text-sm font-body
-                  hover:bg-brand-50 transition-colors ${
-                    cat.highlight
-                      ? 'text-brand-700 font-semibold border-t border-earth-100 mt-1'
-                      : 'text-earth-700'
-                  }`}
-              >
-                <span className="w-5 text-center flex-shrink-0 text-base">{cat.icon}</span>
-                <span className="flex-1">{cat.label}</span>
-                {cat.highlight && (
-                  <span className="text-[10px] bg-brand-100 text-brand-700 px-1.5 py-0.5
-                    rounded-md font-bold uppercase tracking-wide">
-                    Quote
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-
-          <div className="border-t border-earth-100 px-4 py-3">
+          <div className="border-t border-earth-100 px-4 py-3 bg-earth-50">
             <Link
               to="/shop"
               onClick={() => setOpen(false)}
               className="flex items-center justify-between text-sm font-body font-semibold
                 text-brand-600 hover:text-brand-700 transition-colors"
             >
-              View all products
-              <ChevronRight size={14} />
+              <span>Browse all products</span>
+              <span className="flex items-center gap-1 text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">
+                View all <ChevronRight size={11} />
+              </span>
             </Link>
           </div>
         </div>
@@ -147,37 +129,143 @@ function CategoriesDropdown() {
   )
 }
 
-// ── TopBar ───────────────────────────────────────────────────────────────────
-// Scrolls away — not sticky. The main <header> below is the sticky element.
+// ── CategoryStrip — scrollable quick-links with arrows + edge fades ──────────
+function CategoryStrip({ categories }) {
+  const scrollRef = useRef()
+  const [canLeft,  setCanLeft]  = useState(false)
+  const [canRight, setCanRight] = useState(false)
+
+  const checkScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanLeft(el.scrollLeft > 4)
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }
+
+  useEffect(() => {
+    checkScroll()
+    const el = scrollRef.current
+    if (!el) return
+    el.addEventListener('scroll', checkScroll, { passive: true })
+    window.addEventListener('resize', checkScroll, { passive: true })
+    return () => {
+      el.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('resize', checkScroll)
+    }
+  }, [categories])
+
+  const scroll = (dir) => {
+    scrollRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' })
+  }
+
+  return (
+    <div className="relative flex-1 flex items-stretch min-w-0 overflow-hidden">
+      {/* Left fade + arrow */}
+      <div className={`absolute left-0 top-0 bottom-0 z-10 flex items-center
+        transition-opacity duration-200 pointer-events-none ${canLeft ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="w-10 h-full bg-gradient-to-r from-earth-800/90 to-transparent" />
+      </div>
+      {canLeft && (
+        <button
+          onClick={() => scroll(-1)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6
+            bg-earth-700 hover:bg-earth-600 text-earth-300 hover:text-cream
+            rounded-full flex items-center justify-center shadow-md transition-all
+            border border-earth-600/50"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={13} />
+        </button>
+      )}
+
+      {/* Scrollable list */}
+      <div
+        ref={scrollRef}
+        className="flex items-center gap-0 flex-1 overflow-x-auto scrollbar-none"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {categories.map(cat => (
+          <NavLink
+            key={cat}
+            to={`/shop?category=${encodeURIComponent(cat)}`}
+            className={({ isActive }) =>
+              `flex items-center gap-1.5 px-3.5 h-full text-sm font-body font-medium
+              whitespace-nowrap transition-all border-b-2 ${
+                isActive
+                  ? 'text-brand-400 border-brand-400'
+                  : 'text-earth-400 border-transparent hover:text-cream hover:border-earth-500'
+              }`
+            }
+          >
+            <span className="text-sm leading-none">{getCategoryIcon(cat)}</span>
+            {cat}
+          </NavLink>
+        ))}
+      </div>
+
+      {/* Right fade + arrow */}
+      <div className={`absolute right-0 top-0 bottom-0 z-10 flex items-center justify-end
+        transition-opacity duration-200 pointer-events-none ${canRight ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="w-10 h-full bg-gradient-to-l from-earth-800/90 to-transparent" />
+      </div>
+      {canRight && (
+        <button
+          onClick={() => scroll(1)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6
+            bg-earth-700 hover:bg-earth-600 text-earth-300 hover:text-cream
+            rounded-full flex items-center justify-center shadow-md transition-all
+            border border-earth-600/50"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={13} />
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── TopBar ────────────────────────────────────────────────────────────────────
 function TopBar({ shopInfo }) {
   return (
-    <div className="bg-earth-900 border-b border-earth-800">
+    <div className="bg-earth-900 border-b border-earth-700/40 hidden sm:block">
       <div className="container-page">
-        <div className="flex items-center justify-between h-9 gap-4 text-xs font-body text-earth-400">
+        <div className="flex items-center justify-between h-8 text-[11px] font-body text-earth-500">
 
-          {/* Delivery note */}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Truck size={12} className="text-brand-400 flex-shrink-0" />
-            <span className="hidden sm:block truncate">
-              Free delivery on orders over KES 5,000 within Nairobi
-            </span>
-            <span className="sm:hidden truncate">Free delivery over KES 5,000</span>
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-1.5">
+              <Truck size={11} className="text-brand-400 flex-shrink-0" />
+              <span>Free delivery on orders over <span className="text-earth-300 font-semibold">KES 50,000</span></span>
+            </div>
+            {shopInfo?.location && (
+              <div className="hidden lg:flex items-center gap-1.5">
+                <MapPin size={10} className="text-earth-600" />
+                <span>{shopInfo.location}</span>
+              </div>
+            )}
           </div>
 
-          {/* Phone + hours */}
-          <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            {shopInfo?.whatsapp && (
+              <a
+                href={`https://wa.me/${shopInfo.whatsapp.replace(/\D/g, '')}`}
+                target="_blank" rel="noreferrer"
+                className="flex items-center gap-1.5 hover:text-green-400 transition-colors"
+              >
+                <MessageCircle size={11} />
+                <span>WhatsApp</span>
+              </a>
+            )}
             {shopInfo?.phone && (
               <a
                 href={`tel:${shopInfo.phone.replace(/\s/g, '')}`}
                 className="flex items-center gap-1.5 hover:text-brand-400 transition-colors"
               >
-                <Phone size={11} />
-                <span className="hidden md:block">{shopInfo.phone}</span>
-                <span className="md:hidden font-semibold text-earth-300">Call Us</span>
+                <Phone size={10} />
+                <span>{shopInfo.phone}</span>
               </a>
             )}
-            <div className="hidden sm:flex items-center gap-1.5">
-              <Clock size={11} />
+            <div className="flex items-center gap-1.5">
+              <Clock size={10} />
               <span>{shopInfo?.hours ?? 'Mon–Sat, 8am–6pm'}</span>
             </div>
           </div>
@@ -188,36 +276,41 @@ function TopBar({ shopInfo }) {
   )
 }
 
-// ── Navbar ───────────────────────────────────────────────────────────────────
+// ── Navbar ────────────────────────────────────────────────────────────────────
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
-  const { itemCount, openCart } = useCart()
+  const { itemCount, subtotal, openCart } = useCart()
   const shopInfo = useShopInfo()
 
   const [menuOpen, setMenuOpen]         = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen]     = useState(false)
   const [scrolled, setScrolled]         = useState(false)
+  const [categories, setCategories]     = useState([])
 
-  const navigate = useNavigate()
-  const location = useLocation()
-  const menuRef  = useRef()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const menuRef   = useRef()
+  const headerRef = useRef()
 
-  // Close everything on route change
+  useEffect(() => {
+    productService.getCategories()
+      .then(res => setCategories(res.data?.data || []))
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     setMenuOpen(false)
     setUserMenuOpen(false)
     setSearchOpen(false)
   }, [location.pathname])
 
-  // Scroll shadow
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 8)
+    const fn = () => setScrolled(window.scrollY > 4)
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  // Close user dropdown on outside click
   useEffect(() => {
     if (!userMenuOpen) return
     const fn = e => {
@@ -234,7 +327,6 @@ export default function Navbar() {
     navigate('/')
   }
 
-  // Avatar initials helper
   const initial = user?.name?.charAt(0).toUpperCase()
 
   const AvatarInner = ({ size = 'sm' }) =>
@@ -248,282 +340,358 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ── Top info bar (scrolls away) ─────────────────────── */}
+      {/* ── Topbar ──────────────────────────────────────────────── */}
       <TopBar shopInfo={shopInfo} />
 
-      {/* ── Main sticky header ──────────────────────────────── */}
-      <header className={`bg-earth-900 text-cream sticky top-0 z-40 transition-shadow duration-300 ${
-        scrolled ? 'shadow-2xl' : 'shadow-warm-lg'
+      {/* ── Sticky wrapper ──────────────────────────────────────── */}
+      <div ref={headerRef} className={`sticky top-0 z-40 transition-shadow duration-300 ${
+        scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.35)]' : ''
       }`}>
-        <div className="container-page">
-          <div className="flex items-center gap-2 h-20">
 
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 group flex-shrink-0 mr-1">
-              <div className="w-11 h-11 flex-shrink-0">
-                <img
-                  src="/Vittorios-logo.jpeg"
-                  alt={shopInfo.name}
-                  className="w-full h-full object-cover rounded-xl border border-earth-700
-                    group-hover:border-brand-500 transition-colors shadow-sm"
-                />
+        {/* ── Row 1: Logo + Search + Cart/Account ─────────────── */}
+        <div className="bg-earth-900">
+          <div className="container-page">
+            <div className="flex items-center gap-3 h-[68px]">
+
+              {/* Logo */}
+              <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
+                <div className="w-10 h-10 flex-shrink-0">
+                  <img
+                    src="/Vittorios-logo.jpeg"
+                    alt={shopInfo.name}
+                    className="w-full h-full object-cover rounded-lg border border-earth-700
+                      group-hover:border-brand-400 transition-colors"
+                  />
+                </div>
+                <div className="hidden lg:block">
+                  <p className="font-display font-bold text-cream text-[15px] leading-tight
+                    group-hover:text-brand-300 transition-colors whitespace-nowrap">
+                    {shopInfo.name}
+                  </p>
+                  <p className="text-earth-500 text-[10px] leading-tight font-body">{shopInfo.tagline}</p>
+                </div>
+              </Link>
+
+              {/* ── Search — center dominant ── */}
+              <div className="flex-1 hidden md:block">
+                <NavSearchBar />
               </div>
-              <div className="hidden sm:block">
-                <p className="font-display font-bold text-cream leading-tight
-                  group-hover:text-brand-300 transition-colors">
-                  {shopInfo.name}
-                </p>
-                <p className="text-earth-500 text-xs leading-tight">{shopInfo.tagline}</p>
-              </div>
-            </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-0.5 flex-shrink-0">
-              <CategoriesDropdown />
+              {/* ── Right actions ── */}
+              <div className="flex items-center gap-1 ml-auto md:ml-0">
 
-              <NavLink
-                to="/shop"
-                end
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded-xl text-sm font-body font-medium transition-all ${
-                    isActive
-                      ? 'bg-brand-500 text-white'
-                      : 'text-earth-300 hover:text-cream hover:bg-earth-800'
-                  }`
-                }
-              >
-                Shop All
-              </NavLink>
-
-              <NavLink
-                to="/track"
-                data-tour="public-track-link"
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded-xl text-sm font-body font-medium transition-all ${
-                    isActive
-                      ? 'bg-brand-500 text-white'
-                      : 'text-earth-300 hover:text-cream hover:bg-earth-800'
-                  }`
-                }
-              >
-                Track Order
-              </NavLink>
-            </nav>
-
-            {/* Desktop search — grows to fill available space */}
-            <div className="hidden md:block flex-1 max-w-xs mx-3">
-              <SearchBar />
-            </div>
-
-            {/* Right actions */}
-            <div className="flex items-center gap-1.5 ml-auto md:ml-0">
-
-              {/* Search toggle (mobile only) */}
-              <button
-                onClick={() => setSearchOpen(o => !o)}
-                className={`md:hidden p-2.5 rounded-xl transition-all ${
-                  searchOpen
-                    ? 'bg-earth-800 text-cream'
-                    : 'text-earth-300 hover:text-cream hover:bg-earth-800'
-                }`}
-                aria-label={searchOpen ? 'Close search' : 'Search'}
-              >
-                {searchOpen ? <X size={20} /> : <Search size={20} />}
-              </button>
-
-              {/* Cart — shows text label on sm+ screens */}
-              <button
-                onClick={() => openCart?.()}
-                className="relative flex items-center gap-2 px-3 py-2 rounded-xl
-                  text-earth-300 hover:text-cream hover:bg-earth-800 transition-all group"
-                aria-label="Open cart"
-              >
-                <ShoppingCart size={20} className="group-hover:scale-110 transition-transform flex-shrink-0" />
-                <span className="hidden sm:block text-sm font-body font-medium">Cart</span>
-                {itemCount > 0 && (
-                  <>
-                    {/* Mobile: floating badge */}
-                    <span className="sm:hidden absolute -top-1 -right-1 bg-brand-500 text-white
-                      text-xs min-w-[18px] h-[18px] rounded-full flex items-center justify-center
-                      font-bold leading-none px-1 border-2 border-earth-900">
-                      {itemCount > 9 ? '9+' : itemCount}
-                    </span>
-                    {/* Desktop: inline pill */}
-                    <span className="hidden sm:flex items-center justify-center bg-brand-500 text-white
-                      text-xs min-w-[20px] h-5 rounded-full font-bold leading-none px-1">
-                      {itemCount > 9 ? '9+' : itemCount}
-                    </span>
-                  </>
-                )}
-              </button>
-
-              {/* Sign In */}
-              {!isAuthenticated && (
-                <Link
-                  to="/login"
-                  data-tour="public-signin-link"
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-500 text-white
-                    rounded-xl text-sm font-body font-semibold hover:bg-brand-600
-                    transition-all active:scale-[0.97]"
+                {/* Mobile search */}
+                <button
+                  onClick={() => setSearchOpen(o => !o)}
+                  className={`md:hidden p-2.5 rounded-lg transition-all ${
+                    searchOpen ? 'bg-earth-700 text-cream' : 'text-earth-400 hover:text-cream hover:bg-earth-800'
+                  }`}
+                  aria-label="Search"
                 >
-                  <User size={15} />
-                  <span className="hidden sm:block">Sign In</span>
-                </Link>
-              )}
+                  {searchOpen ? <X size={20} /> : <Search size={20} />}
+                </button>
 
-              {/* User dropdown (authenticated) */}
-              {isAuthenticated && (
-                <div className="relative" ref={menuRef}>
-                  <button
-                    onClick={() => setUserMenuOpen(o => !o)}
-                    className={`flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl
-                      transition-all ${
-                        userMenuOpen
-                          ? 'bg-earth-800 text-cream'
-                          : 'text-earth-300 hover:text-cream hover:bg-earth-800'
-                      }`}
+                {/* Account */}
+                {!isAuthenticated ? (
+                  <Link
+                    to="/login"
+                    data-tour="public-signin-link"
+                    className="inline-flex items-center gap-2 rounded-xl border border-brand-400/35
+                      bg-brand-500/15 px-3 sm:px-4 py-2.5 text-brand-100 shadow-[0_10px_28px_rgba(0,0,0,0.18)]
+                      transition-all hover:border-brand-300 hover:bg-brand-500 hover:text-white active:scale-[0.98]"
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0
-                      bg-brand-500 flex items-center justify-center border-2 border-earth-700 shadow-sm">
-                      <AvatarInner size="sm" />
-                    </div>
-                    <span className="hidden sm:block text-sm font-body font-medium max-w-[80px] truncate">
-                      {user?.name?.split(' ')[0]}
+                    <User size={16} />
+                    <span className="text-sm font-body font-semibold leading-none whitespace-nowrap">
+                      Sign In
                     </span>
-                    <ChevronDown
-                      size={14}
-                      className={`hidden sm:block transition-transform duration-200 ${
-                        userMenuOpen ? 'rotate-180' : ''
+                    <span className="hidden lg:inline text-[11px] font-body text-brand-200/90 leading-none whitespace-nowrap">
+                      My Account
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="relative hidden sm:block" ref={menuRef}>
+                    <button
+                      onClick={() => setUserMenuOpen(o => !o)}
+                      className={`flex flex-col items-center px-3 py-1.5 rounded-lg transition-all ${
+                        userMenuOpen ? 'bg-earth-800 text-cream' : 'text-earth-400 hover:text-cream hover:bg-earth-800'
                       }`}
-                    />
-                  </button>
+                    >
+                      <div className="w-6 h-6 rounded-full overflow-hidden bg-brand-500
+                        flex items-center justify-center border border-earth-600">
+                        <AvatarInner size="sm" />
+                      </div>
+                      <span className="text-[10px] font-body mt-0.5 leading-none max-w-[56px] truncate">
+                        {user?.name?.split(' ')[0]}
+                      </span>
+                    </button>
 
-                  {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl
-                      shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-earth-100
-                      overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl
+                        shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-earth-100
+                        overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
 
-                      {/* User header */}
-                      <div className="px-4 py-3.5 bg-gradient-to-br from-earth-900 to-earth-800">
-                        <div className="flex items-center gap-3">
+                        <div className="px-4 py-3 bg-gradient-to-br from-earth-900 to-earth-800 flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full overflow-hidden bg-brand-500
                             flex items-center justify-center border-2 border-earth-600 flex-shrink-0">
                             <AvatarInner size="md" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-body font-semibold text-cream truncate">
-                              {user?.name}
-                            </p>
-                            <p className="text-xs text-earth-400 font-body mt-0.5">
-                              Customer Account
-                            </p>
+                            <p className="text-sm font-body font-semibold text-cream truncate">{user?.name}</p>
+                            <p className="text-[10px] text-earth-400 font-body mt-0.5">Customer Account</p>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Links */}
-                      <div className="py-1.5">
-                        {[
-                          { to: '/dashboard', icon: Package,    label: 'My Orders',  sub: 'Track & manage orders'     },
-                          { to: '/profile',   icon: UserCircle, label: 'My Profile', sub: 'Photo, addresses, password' },
-                        ].map(item => (
-                          <Link
-                            key={item.to}
-                            to={item.to}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-3 text-sm text-earth-700
-                              hover:bg-earth-50 font-body transition-colors group"
-                          >
-                            <div className="w-7 h-7 bg-earth-100 group-hover:bg-brand-100 rounded-lg
+                        <div className="py-1">
+                          {[
+                            { to: '/dashboard', icon: Package,    label: 'My Orders',  sub: 'Track & manage' },
+                            { to: '/profile',   icon: UserCircle, label: 'My Profile', sub: 'Settings & address' },
+                          ].map(item => (
+                            <Link key={item.to} to={item.to}
+                              onClick={() => setUserMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-earth-50
+                                font-body transition-colors group">
+                              <div className="w-7 h-7 bg-earth-100 group-hover:bg-brand-100 rounded-lg
+                                flex items-center justify-center transition-colors flex-shrink-0">
+                                <item.icon size={14} className="text-earth-500 group-hover:text-brand-600 transition-colors" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-earth-800 font-semibold leading-tight">{item.label}</p>
+                                <p className="text-xs text-earth-400 mt-0.5">{item.sub}</p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+
+                        <div className="border-t border-earth-100 py-1">
+                          <button onClick={handleLogout}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600
+                              hover:bg-red-50 w-full font-body transition-colors group">
+                            <div className="w-7 h-7 bg-red-50 group-hover:bg-red-100 rounded-lg
                               flex items-center justify-center transition-colors flex-shrink-0">
-                              <item.icon size={14} className="text-earth-500 group-hover:text-brand-600 transition-colors" />
+                              <LogOut size={14} className="text-red-500" />
                             </div>
-                            <div>
-                              <p className="font-semibold leading-tight">{item.label}</p>
-                              <p className="text-xs text-earth-400 mt-0.5">{item.sub}</p>
-                            </div>
-                          </Link>
-                        ))}
+                            <p className="font-semibold">Sign Out</p>
+                          </button>
+                        </div>
                       </div>
+                    )}
+                  </div>
+                )}
 
-                      {/* Logout */}
-                      <div className="border-t border-earth-100 py-1.5">
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center gap-3 px-4 py-3 text-sm text-red-600
-                            hover:bg-red-50 w-full font-body transition-colors group"
-                        >
-                          <div className="w-7 h-7 bg-red-50 group-hover:bg-red-100 rounded-lg
-                            flex items-center justify-center transition-colors flex-shrink-0">
-                            <LogOut size={14} className="text-red-500" />
-                          </div>
-                          <p className="font-semibold">Sign Out</p>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                {/* Cart */}
+                <button
+                  onClick={() => openCart?.()}
+                  aria-label="Open cart"
+                  className="relative flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-lg
+                    bg-brand-500 hover:bg-brand-600 text-white transition-all
+                    active:scale-[0.97] group shadow-sm"
+                >
+                  <div className="relative">
+                    <ShoppingCart size={19} className="group-hover:scale-110 transition-transform" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-white text-brand-600 text-[10px]
+                        min-w-[16px] h-4 rounded-full flex items-center justify-center
+                        font-bold leading-none px-0.5 border border-brand-200 shadow-sm">
+                        {itemCount > 9 ? '9+' : itemCount}
+                      </span>
+                    )}
+                  </div>
+                  <div className="hidden sm:block text-left leading-none">
+                    <p className="text-[10px] text-brand-200 font-body">
+                      {itemCount === 0 ? 'Your cart' : `${itemCount} item${itemCount > 1 ? 's' : ''}`}
+                    </p>
+                    <p className="text-[13px] font-body font-bold">
+                      {itemCount > 0 ? fmt(subtotal) : 'KES 0'}
+                    </p>
+                  </div>
+                </button>
 
-              {/* Hamburger */}
-              <button
-                onClick={() => setMenuOpen(o => !o)}
-                className={`md:hidden p-2.5 rounded-xl transition-all ${
-                  menuOpen
-                    ? 'bg-earth-800 text-cream'
-                    : 'text-earth-300 hover:text-cream hover:bg-earth-800'
-                }`}
-                aria-label="Toggle menu"
-              >
-                {menuOpen ? <X size={22} /> : <Menu size={22} />}
-              </button>
+                {/* Hamburger (mobile) */}
+                <button
+                  onClick={() => setMenuOpen(o => !o)}
+                  className={`md:hidden p-2.5 rounded-lg transition-all ${
+                    menuOpen ? 'bg-earth-700 text-cream' : 'text-earth-400 hover:text-cream hover:bg-earth-800'
+                  }`}
+                  aria-label="Menu"
+                >
+                  {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* ── Mobile search panel ──────────────────────────── */}
+        {/* ── Mobile search panel ─────────────────────────────── */}
         {searchOpen && (
-          <div className="md:hidden border-t border-earth-800 px-3 py-3">
-            <SearchBar autoFocus onSearch={() => setSearchOpen(false)} />
+          <div className="md:hidden bg-earth-900 border-t border-earth-800 px-3 py-2.5">
+            <NavSearchBar autoFocus onClose={() => setSearchOpen(false)} />
           </div>
         )}
 
-        {/* ── Mobile drawer ────────────────────────────────── */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-earth-800">
+        {/* ── Row 2: Category nav (desktop only) ──────────────── */}
+        <div className="hidden md:block bg-earth-800/90 border-t border-earth-700/50">
+          <div className="container-page">
+            <div className="flex items-stretch h-10 gap-0">
 
-            {/* Category grid */}
-            <div className="px-3 pt-4 pb-2">
-              <p className="text-[11px] font-body font-bold text-earth-500 uppercase tracking-widest px-1 mb-2">
+              {/* All Categories */}
+              <AllCategoriesMenu categories={categories} />
+
+              {/* Divider */}
+              <div className="w-px bg-earth-700/50 mx-1 flex-shrink-0" />
+
+              {/* Category quick-links — scrollable with arrows */}
+              <CategoryStrip categories={categories} />
+
+              {/* Right side nav */}
+              <div className="flex items-center gap-0.5 flex-shrink-0 border-l border-earth-700/50 pl-2 ml-1">
+                <NavLink
+                  to="/"
+                  end
+                  className={({ isActive }) =>
+                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
+                    transition-colors whitespace-nowrap ${
+                      isActive
+                        ? 'text-brand-400 border-b-2 border-brand-400'
+                        : 'text-earth-400 hover:text-cream'
+                    }`
+                  }
+                >
+                  <Home size={13} />
+                  Home
+                </NavLink>
+                <NavLink
+                  to="/shop"
+                  end
+                  className={({ isActive }) =>
+                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
+                    transition-colors whitespace-nowrap ${
+                      isActive
+                        ? 'text-brand-400 border-b-2 border-brand-400'
+                        : 'text-earth-400 hover:text-cream'
+                    }`
+                  }
+                >
+                  <ShoppingBag size={13} />
+                  Shop All
+                </NavLink>
+                <NavLink
+                  to="/track"
+                  data-tour="public-track-link"
+                  className={({ isActive }) =>
+                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
+                    transition-colors whitespace-nowrap ${
+                      isActive
+                        ? 'text-brand-400 border-b-2 border-brand-400'
+                        : 'text-earth-400 hover:text-cream'
+                    }`
+                  }
+                >
+                  <MapPin size={13} />
+                  Track Order
+                </NavLink>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mobile full-screen drawer ────────────────────────────── */}
+      {menuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 z-50 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="fixed top-0 left-0 h-full w-[82vw] max-w-xs bg-earth-900 z-50
+            md:hidden flex flex-col shadow-2xl overflow-y-auto"
+            style={{ animation: 'slideInLeft 0.22s ease-out' }}
+          >
+            {/* Drawer header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-earth-800">
+              <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3">
+                <img src="/Vittorios-logo.jpeg" alt={shopInfo.name}
+                  className="w-9 h-9 rounded-lg object-cover border border-earth-700" />
+                <div>
+                  <p className="font-display font-bold text-cream text-sm leading-tight">{shopInfo.name}</p>
+                  <p className="text-earth-500 text-[10px] font-body">{shopInfo.tagline}</p>
+                </div>
+              </Link>
+              <button onClick={() => setMenuOpen(false)}
+                className="p-2 rounded-lg text-earth-500 hover:text-cream hover:bg-earth-800 transition-all">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Account strip */}
+            {isAuthenticated ? (
+              <div className="px-4 py-3 bg-earth-800/60 border-b border-earth-800 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-brand-500
+                  flex items-center justify-center border-2 border-earth-600 flex-shrink-0">
+                  <AvatarInner size="md" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-cream text-sm font-body font-semibold leading-tight truncate">{user?.name}</p>
+                  <p className="text-earth-500 text-[10px] font-body mt-0.5">Customer Account</p>
+                </div>
+              </div>
+            ) : (
+              <div className="px-4 py-3 border-b border-earth-800">
+                <Link to="/login" onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-brand-500
+                    text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-600
+                    transition-all active:scale-[0.98]">
+                  <User size={15} />
+                  Sign In / Register
+                </Link>
+              </div>
+            )}
+
+            {/* Categories */}
+            <div className="px-4 pt-4 pb-2">
+              <p className="text-[10px] font-body font-bold text-earth-500 uppercase tracking-widest mb-2">
                 Shop by Category
               </p>
-              <div className="grid grid-cols-2 gap-1">
-                {GRAIN_CATEGORIES.map(cat => (
+              <div className="space-y-0.5">
+                {categories.map(cat => (
                   <Link
-                    key={cat.label}
-                    to={cat.to}
+                    key={cat}
+                    to={`/shop?category=${encodeURIComponent(cat)}`}
                     onClick={() => setMenuOpen(false)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-body
-                      transition-all ${
-                        cat.highlight
-                          ? 'bg-brand-500/15 text-brand-300 font-semibold col-span-2'
-                          : 'text-earth-300 hover:text-cream hover:bg-earth-800'
-                      }`}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body
+                      text-earth-300 hover:text-cream hover:bg-earth-800 transition-all"
                   >
-                    <span className="text-base">{cat.icon}</span>
-                    {cat.label}
+                    <span className="text-base w-6 text-center flex-shrink-0">{getCategoryIcon(cat)}</span>
+                    <span className="flex-1 font-medium">{cat}</span>
+                    <ChevronRight size={13} className="text-earth-600" />
                   </Link>
                 ))}
               </div>
             </div>
 
-            <div className="mx-3 my-2 border-t border-earth-800" />
+            <div className="mx-4 my-2 border-t border-earth-800" />
 
             {/* Nav links */}
-            <div className="px-3 pb-2 space-y-0.5">
+            <div className="px-4 pb-2 space-y-0.5">
+              <NavLink to="/" end onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body font-medium transition-all ${
+                    isActive ? 'bg-brand-500 text-white' : 'text-earth-300 hover:text-cream hover:bg-earth-800'
+                  }`
+                }>
+                {({ isActive }) => (
+                  <>
+                    <Home size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
+                    Home
+                  </>
+                )}
+              </NavLink>
               <NavLink to="/shop" end onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-body font-medium transition-all ${
+                  `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body font-medium transition-all ${
                     isActive ? 'bg-brand-500 text-white' : 'text-earth-300 hover:text-cream hover:bg-earth-800'
                   }`
                 }>
@@ -536,74 +704,58 @@ export default function Navbar() {
               </NavLink>
               <NavLink to="/track" onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-body font-medium transition-all ${
+                  `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body font-medium transition-all ${
                     isActive ? 'bg-brand-500 text-white' : 'text-earth-300 hover:text-cream hover:bg-earth-800'
                   }`
                 }>
                 {({ isActive }) => (
                   <>
                     <MapPin size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
-                    Track Order
+                    Track My Order
                   </>
                 )}
               </NavLink>
             </div>
 
-            {/* Authenticated account section */}
+            {/* Authenticated links */}
             {isAuthenticated && (
               <>
-                <div className="mx-3 my-2 border-t border-earth-800" />
-                <div className="mx-3 mb-2 px-4 py-3 bg-earth-800/60 rounded-xl flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-brand-500
-                    flex items-center justify-center border-2 border-earth-600 flex-shrink-0">
-                    <AvatarInner size="md" />
-                  </div>
-                  <div>
-                    <p className="text-cream text-sm font-body font-semibold leading-tight">{user?.name}</p>
-                    <p className="text-earth-500 text-xs font-body mt-0.5">Customer Account</p>
-                  </div>
-                </div>
-                <div className="px-3 pb-2 space-y-0.5">
+                <div className="mx-4 my-2 border-t border-earth-800" />
+                <div className="px-4 pb-2 space-y-0.5">
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-body
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body
                       text-earth-300 hover:text-cream hover:bg-earth-800 transition-all">
                     <Package size={16} className="text-earth-500 flex-shrink-0" />
                     My Orders
                   </Link>
                   <Link to="/profile" onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-body
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body
                       text-earth-300 hover:text-cream hover:bg-earth-800 transition-all">
                     <UserCircle size={16} className="text-earth-500 flex-shrink-0" />
                     My Profile
                   </Link>
                 </div>
-                <div className="mx-3 mb-4 mt-1">
+                <div className="mx-4 mt-auto mb-4">
                   <button onClick={handleLogout}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3.5
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3
                       rounded-xl text-sm font-body font-semibold text-red-400
                       border border-red-900/40 hover:bg-red-900/20 transition-all">
-                    <LogOut size={16} />
+                    <LogOut size={15} />
                     Sign Out
                   </button>
                 </div>
               </>
             )}
-
-            {/* Sign in (unauthenticated) */}
-            {!isAuthenticated && (
-              <div className="px-3 pb-4 pt-2">
-                <Link to="/login" onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-500
-                    text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-600
-                    transition-all active:scale-[0.98]">
-                  <User size={16} />
-                  Sign In / Register
-                </Link>
-              </div>
-            )}
           </div>
-        )}
-      </header>
+
+          <style>{`
+            @keyframes slideInLeft {
+              from { transform: translateX(-100%); }
+              to   { transform: translateX(0); }
+            }
+          `}</style>
+        </>
+      )}
     </>
   )
 }

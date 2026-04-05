@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
@@ -7,46 +8,49 @@ import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import OnboardingLayer from "./components/onboarding/OnboardingLayer";
+import Spinner from "./components/ui/Spinner";
 
 // Layouts
 import PublicLayout from "./components/layout/PublicLayout";
 import AdminLayout from "./components/admin/AdminLayout";
 
 // Public pages
-import HomePage from "./pages/public/HomePage";
-import CataloguePage from "./pages/public/CataloguePage";
-import ProductPage from "./pages/public/ProductPage";
-import CartPage from "./pages/public/CartPage";
-import CheckoutPage from "./pages/public/CheckoutPage";
-import { OrderConfirmPage } from "./pages/public/OrderConfirmPage";
-import TrackOrderPage from "./pages/public/TrackOrderPage";
-import LoginPage from "./pages/public/LoginPage";
-import RegisterPage from "./pages/public/RegisterPage";
+const HomePage = lazy(() => import("./pages/public/HomePage"));
+const CataloguePage = lazy(() => import("./pages/public/CataloguePage"));
+const ProductPage = lazy(() => import("./pages/public/ProductPage"));
+const CartPage = lazy(() => import("./pages/public/CartPage"));
+const CheckoutPage = lazy(() => import("./pages/public/CheckoutPage"));
+const OrderConfirmPage = lazy(() => import("./pages/public/OrderConfirmPage").then(m => ({ default: m.OrderConfirmPage })));
+const TrackOrderPage = lazy(() => import("./pages/public/TrackOrderPage"));
+const LoginPage = lazy(() => import("./pages/public/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/public/RegisterPage"));
 
 // Customer pages
-import CustomerDashboardPage from "./pages/customer/DashboardPage";
-import CustomerOrderDetailPage from "./pages/customer/OrderDetailPage";
-import CustomerProfilePage from "./pages/customer/ProfilePage";
+const CustomerDashboardPage = lazy(() => import("./pages/customer/DashboardPage"));
+const CustomerOrderDetailPage = lazy(() => import("./pages/customer/OrderDetailPage"));
+const CustomerProfilePage = lazy(() => import("./pages/customer/ProfilePage"));
 
 // Admin pages
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import OrderListPage from "./pages/admin/orders/OrderListPage";
-import AdminOrderDetailPage from "./pages/admin/orders/OrderDetailPage";
-import ProductListPage from "./pages/admin/products/ProductListPage";
-import ProductFormPage from "./pages/admin/products/ProductFormPage";
-import StockPage from "./pages/admin/stock/StockPage";
-import CustomerListPage from "./pages/admin/customers/CustomerListPage";
-import AdminCustomerProfilePage from "./pages/admin/customers/CustomerProfilePage";
-import ReportsPage from "./pages/admin/reports/ReportsPage";
-import SettingsPage from "./pages/admin/settings/SettingsPage";
-import ActivityLogPage from "./pages/admin/logs/ActivityLogPage";
-import UserManagementPage from "./pages/admin/users/UserManagementPage";
+const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
+const OrderListPage = lazy(() => import("./pages/admin/orders/OrderListPage"));
+const AdminOrderDetailPage = lazy(() => import("./pages/admin/orders/OrderDetailPage"));
+const ProductListPage = lazy(() => import("./pages/admin/products/ProductListPage"));
+const ProductFormPage = lazy(() => import("./pages/admin/products/ProductFormPage"));
+const StockPage = lazy(() => import("./pages/admin/stock/StockPage"));
+const CustomerListPage = lazy(() => import("./pages/admin/customers/CustomerListPage"));
+const AdminCustomerProfilePage = lazy(() => import("./pages/admin/customers/CustomerProfilePage"));
+const ReportsPage = lazy(() => import("./pages/admin/reports/ReportsPage"));
+const SettingsPage = lazy(() => import("./pages/admin/settings/SettingsPage"));
+const ActivityLogPage = lazy(() => import("./pages/admin/logs/ActivityLogPage"));
+const UserManagementPage = lazy(() => import("./pages/admin/users/UserManagementPage"));
+const BranchManagementPage = lazy(() => import("./pages/admin/branches/BranchManagementPage"));
+const BackupManagementPage = lazy(() => import("./pages/admin/backups/BackupManagementPage"));
 
-const ADMIN_ROLES   = ["staff", "supervisor", "admin", "superadmin"];
-
-// Business roles — superadmin excluded
+const ADMIN_ROLES        = ["staff", "supervisor", "admin", "superadmin"];
 const BUSINESS_ROLES     = ["staff", "supervisor", "admin"];
-const SUPERVISOR_ROLES   = ["supervisor", "admin"];
+const ALL_EXCEPT_STAFF   = ["supervisor", "admin", "superadmin"]; // superadmin can observe
+const SUPERVISOR_UP      = ["supervisor", "admin", "superadmin"]; // superadmin can observe
+const ADMIN_UP           = ["admin", "superadmin"];               // superadmin can observe + manage settings
 const ADMIN_ONLY_ROLES   = ["admin"];
 const SUPERADMIN_ROLES   = ["superadmin"];
 
@@ -75,7 +79,11 @@ export default function App() {
               />
               <ScrollToTop />
               <OnboardingLayer />
-
+              <Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center bg-cream">
+                  <Spinner size="lg" />
+                </div>
+              }>
               <Routes>
             {/* ── PUBLIC ───────────────────────────────────────────── */}
             <Route element={<PublicLayout />}>
@@ -119,20 +127,20 @@ export default function App() {
               {/* Dashboard — all admin roles including superadmin */}
               <Route path="dashboard" element={<AdminDashboardPage />} />
 
-              {/* Business operations — superadmin blocked */}
+              {/* Business operations — superadmin can VIEW, not act */}
               <Route path="orders" element={
-                <ProtectedRoute requireRole={BUSINESS_ROLES}>
+                <ProtectedRoute requireRole={ADMIN_ROLES}>
                   <OrderListPage />
                 </ProtectedRoute>
               } />
               <Route path="orders/:id" element={
-                <ProtectedRoute requireRole={BUSINESS_ROLES}>
+                <ProtectedRoute requireRole={ADMIN_ROLES}>
                   <AdminOrderDetailPage />
                 </ProtectedRoute>
               } />
 
               <Route path="products" element={
-                <ProtectedRoute requireRole={ADMIN_ONLY_ROLES}>
+                <ProtectedRoute requireRole={ADMIN_UP}>
                   <ProductListPage />
                 </ProtectedRoute>
               } />
@@ -148,31 +156,38 @@ export default function App() {
               } />
 
               <Route path="stock" element={
-                <ProtectedRoute requireRole={BUSINESS_ROLES}>
+                <ProtectedRoute requireRole={ADMIN_ROLES}>
                   <StockPage />
                 </ProtectedRoute>
               } />
 
               <Route path="customers" element={
-                <ProtectedRoute requireRole={SUPERVISOR_ROLES}>
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
                   <CustomerListPage />
                 </ProtectedRoute>
               } />
               <Route path="customers/:id" element={
-                <ProtectedRoute requireRole={SUPERVISOR_ROLES}>
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
                   <AdminCustomerProfilePage />
                 </ProtectedRoute>
               } />
 
               <Route path="reports" element={
-                <ProtectedRoute requireRole={SUPERVISOR_ROLES}>
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
                   <ReportsPage />
                 </ProtectedRoute>
               } />
 
               <Route path="settings" element={
-                <ProtectedRoute requireRole={ADMIN_ONLY_ROLES}>
+                <ProtectedRoute requireRole={ADMIN_UP}>
                   <SettingsPage />
+                </ProtectedRoute>
+              } />
+
+              {/* Superadmin: branch management */}
+              <Route path="branches" element={
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                  <BranchManagementPage />
                 </ProtectedRoute>
               } />
 
@@ -187,11 +202,17 @@ export default function App() {
                   <UserManagementPage />
                 </ProtectedRoute>
               } />
+              <Route path="backups" element={
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                  <BackupManagementPage />
+                </ProtectedRoute>
+              } />
             </Route>
 
             {/* ── FALLBACK ─────────────────────────────────────────── */}
             <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </Suspense>
             </CartProvider>
           </OnboardingProvider>
         </AppSettingsProvider>

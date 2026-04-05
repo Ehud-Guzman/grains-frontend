@@ -10,6 +10,10 @@ const api = axios.create({
 // Attach access token to every request
 api.interceptors.request.use(
   (config) => {
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
+
     const token = sessionStorage.getItem('accessToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
