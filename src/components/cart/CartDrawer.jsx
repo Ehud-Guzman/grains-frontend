@@ -12,7 +12,8 @@ export default function CartDrawer() {
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" onClick={closeCart} />
-      <div className="fixed right-0 top-0 h-full w-full max-w-sm bg-cream z-50 flex flex-col shadow-warm-lg">
+      <div className="fixed right-0 top-0 h-full w-full max-w-sm bg-cream z-50 flex flex-col shadow-warm-lg"
+        style={{ animation: 'slideInRight 0.22s ease-out' }}>
 
         <div className="flex items-center justify-between p-5 border-b border-earth-100">
           <div className="flex items-center gap-2">

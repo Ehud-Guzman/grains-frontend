@@ -339,6 +339,7 @@ export default function BranchManagementPage() {
   const [loading, setLoading]   = useState(true)
   const [showInactive, setShowInactive] = useState(false)
   const [modal, setModal]       = useState(null) // { type: 'create'|'edit'|'staff', branch? }
+  const [confirmDeactivate, setConfirmDeactivate] = useState(null) // branch._id
 
   const fetchBranches = async () => {
     setLoading(true)
@@ -352,7 +353,7 @@ export default function BranchManagementPage() {
   useEffect(() => { fetchBranches() }, [])
 
   const handleDeactivate = async (branch) => {
-    if (!window.confirm(`Deactivate "${branch.name}"? Staff will lose access until reactivated.`)) return
+    setConfirmDeactivate(null)
     try {
       await adminBranchService.deactivate(branch._id)
       toast.success(`${branch.name} deactivated`)
@@ -483,12 +484,30 @@ export default function BranchManagementPage() {
                     <Edit size={15} />
                   </button>
                   {branch.isActive && !branch.isDefault && (
-                    <button
-                      onClick={() => handleDeactivate(branch)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600 transition-colors"
-                      title="Deactivate branch">
-                      <Trash2 size={15} />
-                    </button>
+                    confirmDeactivate === branch._id ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-admin-500 font-admin flex items-center gap-1">
+                          <AlertTriangle size={11} className="text-amber-500" />Sure?
+                        </span>
+                        <button onClick={() => handleDeactivate(branch)}
+                          className="px-2 py-1 bg-red-600 text-white rounded-lg text-xs font-admin
+                            font-semibold hover:bg-red-700 transition-colors">
+                          Yes
+                        </button>
+                        <button onClick={() => setConfirmDeactivate(null)}
+                          className="px-2 py-1 border border-admin-200 text-admin-500 rounded-lg
+                            text-xs font-admin hover:bg-admin-50 transition-colors">
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeactivate(branch._id)}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600 transition-colors"
+                        title="Deactivate branch">
+                        <Trash2 size={15} />
+                      </button>
+                    )
                   )}
                   {!branch.isActive && (
                     <button

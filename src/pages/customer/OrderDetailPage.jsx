@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Phone, XCircle, Package, Truck, Store, CreditCard, Receipt as ReceiptIcon } from 'lucide-react'
+import { ArrowLeft, Phone, XCircle, Package, Truck, Store, CreditCard, Receipt as ReceiptIcon, AlertTriangle } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES, formatDate, getStatusLabel } from '../../utils/helpers'
-import { PAYMENT_LABELS } from '../../utils/constants'
+import { PAYMENT_LABELS, ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
+import toast from 'react-hot-toast'
 import Receipt from '../../components/orders/Receipt'
 
 const STATUS_STEPS = ['pending', 'approved', 'preparing', 'out_for_delivery', 'completed']
@@ -16,22 +17,13 @@ const STEP_LABELS = {
   out_for_delivery: 'On the Way', completed: 'Delivered'
 }
 
-const STATUS_CONFIG = {
-  pending:          { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-700',  dot: 'bg-amber-400'  },
-  approved:         { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   dot: 'bg-blue-400'   },
-  preparing:        { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', dot: 'bg-purple-400' },
-  out_for_delivery: { bg: 'bg-brand-50',  border: 'border-brand-200',  text: 'text-brand-700',  dot: 'bg-brand-400'  },
-  completed:        { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700',  dot: 'bg-green-400'  },
-  rejected:         { bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    dot: 'bg-red-400'    },
-  cancelled:        { bg: 'bg-earth-50',  border: 'border-earth-200',  text: 'text-earth-500',  dot: 'bg-earth-300'  },
-}
-
 export default function CustomerOrderDetailPage() {
   const shopInfo = useShopInfo()
   const { id } = useParams()
   const [order, setOrder]         = useState(null)
   const [loading, setLoading]     = useState(true)
   const [cancelling, setCancelling] = useState(false)
+  const [confirmCancel, setConfirmCancel] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
 
   useEffect(() => {
@@ -47,13 +39,13 @@ export default function CustomerOrderDetailPage() {
   }, [id])
 
   const handleCancel = async () => {
-    if (!window.confirm('Cancel this order?')) return
     setCancelling(true)
+    setConfirmCancel(false)
     try {
       await orderService.cancelOrder(id)
       setOrder(o => ({ ...o, status: 'cancelled' }))
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not cancel order')
+      toast.error(err.response?.data?.message || 'Could not cancel order')
     } finally { setCancelling(false) }
   }
 
@@ -261,13 +253,30 @@ export default function CustomerOrderDetailPage() {
             </button>
           )}
           {order.status === 'pending' && (
-            <button onClick={handleCancel} disabled={cancelling}
-              className="flex items-center justify-center gap-2 w-full py-3.5 border-2
-                border-red-200 text-red-600 rounded-xl text-sm font-body font-semibold
-                hover:bg-red-50 transition-colors disabled:opacity-60">
-              <XCircle size={16} />
-              {cancelling ? 'Cancelling…' : 'Cancel Order'}
-            </button>
+            confirmCancel ? (
+              <div className="flex items-center gap-2 p-4 border-2 border-red-200 rounded-xl bg-red-50">
+                <AlertTriangle size={15} className="text-amber-500 flex-shrink-0" />
+                <span className="text-sm font-body text-red-700 flex-1">Cancel this order?</span>
+                <button onClick={handleCancel} disabled={cancelling}
+                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-body
+                    font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors">
+                  {cancelling ? 'Cancelling…' : 'Yes, cancel'}
+                </button>
+                <button onClick={() => setConfirmCancel(false)}
+                  className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg
+                    text-xs font-body font-semibold hover:bg-white transition-colors">
+                  No
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmCancel(true)}
+                className="flex items-center justify-center gap-2 w-full py-3.5 border-2
+                  border-red-200 text-red-600 rounded-xl text-sm font-body font-semibold
+                  hover:bg-red-50 transition-colors">
+                <XCircle size={16} />
+                Cancel Order
+              </button>
+            )
           )}
           <a href={`tel:${shopInfo.phone}`}
             className="flex items-center justify-center gap-2 w-full py-3.5 bg-earth-900

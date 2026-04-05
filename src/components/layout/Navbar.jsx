@@ -7,9 +7,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
-import { useShopInfo } from '../../context/AppSettingsContext'
+import { useShopInfo, useCategories } from '../../context/AppSettingsContext'
 import SearchAutocomplete from '../ui/SearchAutocomplete'
-import { productService } from '../../services/product.service'
 
 // ── Category icon map ─────────────────────────────────────────────────────────
 const CATEGORY_ICONS = {
@@ -280,24 +279,18 @@ function TopBar({ shopInfo }) {
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
   const { itemCount, subtotal, openCart } = useCart()
-  const shopInfo = useShopInfo()
+  const shopInfo   = useShopInfo()
+  const categories = useCategories()
 
   const [menuOpen, setMenuOpen]         = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen]     = useState(false)
   const [scrolled, setScrolled]         = useState(false)
-  const [categories, setCategories]     = useState([])
 
   const navigate  = useNavigate()
   const location  = useLocation()
   const menuRef   = useRef()
   const headerRef = useRef()
-
-  useEffect(() => {
-    productService.getCategories()
-      .then(res => setCategories(res.data?.data || []))
-      .catch(() => {})
-  }, [])
 
   useEffect(() => {
     setMenuOpen(false)
@@ -748,12 +741,6 @@ export default function Navbar() {
             )}
           </div>
 
-          <style>{`
-            @keyframes slideInLeft {
-              from { transform: translateX(-100%); }
-              to   { transform: translateX(0); }
-            }
-          `}</style>
         </>
       )}
     </>

@@ -11,18 +11,8 @@ import { adminReportService } from '../../services/admin/report.service'
 import { adminStockService } from '../../services/admin/stock.service'
 import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
+import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
-
-// ── STATUS CONFIG ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-  pending:          { dot: 'bg-amber-400',  text: 'text-amber-700',  badge: 'bg-amber-50  border-amber-200'  },
-  approved:         { dot: 'bg-blue-400',   text: 'text-blue-700',   badge: 'bg-blue-50   border-blue-200'   },
-  preparing:        { dot: 'bg-purple-400', text: 'text-purple-700', badge: 'bg-purple-50 border-purple-200' },
-  out_for_delivery: { dot: 'bg-brand-400',  text: 'text-brand-700',  badge: 'bg-brand-50  border-brand-200'  },
-  completed:        { dot: 'bg-green-400',  text: 'text-green-700',  badge: 'bg-green-50  border-green-200'  },
-  rejected:         { dot: 'bg-red-400',    text: 'text-red-700',    badge: 'bg-red-50    border-red-200'    },
-  cancelled:        { dot: 'bg-admin-300',  text: 'text-admin-500',  badge: 'bg-admin-50  border-admin-200'  },
-}
 
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending

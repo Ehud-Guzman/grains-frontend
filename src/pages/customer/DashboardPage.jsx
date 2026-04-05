@@ -1,23 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ChevronRight, XCircle, ShoppingBag, Clock, UserCircle, Sparkles } from 'lucide-react'
+import { Package, ChevronRight, XCircle, ShoppingBag, Clock, UserCircle, Sparkles, AlertTriangle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { orderService } from '../../services/order.service'
 import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../utils/helpers'
+import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
-
-// ── STATUS CONFIG ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-  pending:          { dot: 'bg-amber-400',  text: 'text-amber-700',  badge: 'bg-amber-50  border-amber-200',  stripe: 'bg-amber-400'  },
-  approved:         { dot: 'bg-blue-400',   text: 'text-blue-700',   badge: 'bg-blue-50   border-blue-200',   stripe: 'bg-blue-400'   },
-  preparing:        { dot: 'bg-purple-400', text: 'text-purple-700', badge: 'bg-purple-50 border-purple-200', stripe: 'bg-purple-400' },
-  out_for_delivery: { dot: 'bg-brand-400',  text: 'text-brand-700',  badge: 'bg-brand-50  border-brand-200',  stripe: 'bg-brand-400'  },
-  completed:        { dot: 'bg-green-400',  text: 'text-green-700',  badge: 'bg-green-50  border-green-200',  stripe: 'bg-green-400'  },
-  rejected:         { dot: 'bg-red-400',    text: 'text-red-700',    badge: 'bg-red-50    border-red-200',    stripe: 'bg-red-400'    },
-  cancelled:        { dot: 'bg-earth-300',  text: 'text-earth-500',  badge: 'bg-earth-50  border-earth-200',  stripe: 'bg-earth-200'  },
-}
 
 function StatusPill({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
@@ -52,6 +43,7 @@ export default function CustomerDashboardPage() {
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(null)
+  const [confirmCancel, setConfirmCancel] = useState(null)
   const [page, setPage] = useState(1)
   const checklistItems = getChecklist('customer')
 
@@ -72,13 +64,13 @@ export default function CustomerDashboardPage() {
   useEffect(() => { fetchOrders(page) }, [page])
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Cancel this order?')) return
     setCancelling(id)
+    setConfirmCancel(null)
     try {
       await orderService.cancelOrder(id)
       fetchOrders(page)
     } catch (err) {
-      alert(err.response?.data?.message || 'Could not cancel order')
+      toast.error(err.response?.data?.message || 'Could not cancel order')
     } finally { setCancelling(null) }
   }
 
@@ -209,12 +201,35 @@ export default function CustomerDashboardPage() {
                             </span>
                             <div className="flex items-center gap-2">
                               {order.status === 'pending' && (
-                                <button onClick={() => handleCancel(order._id)}
-                                  disabled={cancelling === order._id}
-                                  className="text-xs text-red-500 hover:text-red-700 font-body
-                                    font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                                  {cancelling === order._id ? 'Cancelling…' : 'Cancel'}
-                                </button>
+                                confirmCancel === order._id ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs text-earth-500 font-body flex items-center gap-1">
+                                      <AlertTriangle size={11} className="text-amber-500" />
+                                      Sure?
+                                    </span>
+                                    <button
+                                      onClick={() => handleCancel(order._id)}
+                                      disabled={cancelling === order._id}
+                                      className="text-xs text-red-600 font-body font-semibold px-2 py-1
+                                        rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
+                                      {cancelling === order._id ? 'Cancelling…' : 'Yes'}
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmCancel(null)}
+                                      className="text-xs text-earth-500 font-body px-2 py-1
+                                        rounded-lg hover:bg-earth-100 transition-colors">
+                                      No
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setConfirmCancel(order._id)}
+                                    disabled={cancelling === order._id}
+                                    className="text-xs text-red-500 hover:text-red-700 font-body
+                                      font-medium px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                                    Cancel
+                                  </button>
+                                )
                               )}
                               <Link to={`/orders/${order._id}`}
                                 className="flex items-center gap-1 text-xs text-brand-600

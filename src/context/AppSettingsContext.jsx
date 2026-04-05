@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { publicSettingsService } from '../services/admin/settings.service'
+import { productService } from '../services/product.service'
 import { DEFAULT_SHOP_INFO } from '../utils/constants'
 
 const DEFAULT_SETTINGS = {
@@ -51,6 +52,7 @@ export function AppSettingsProvider({ children }) {
   const [settings, setSettings] = useState(() => normalizeSettings())
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
+  const [categories, setCategories] = useState([])
 
   const refreshSettings = async () => {
     setIsLoading(true)
@@ -76,6 +78,9 @@ export function AppSettingsProvider({ children }) {
 
   useEffect(() => {
     refreshSettings()
+    productService.getCategories()
+      .then(res => setCategories(res.data?.data || []))
+      .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -83,9 +88,10 @@ export function AppSettingsProvider({ children }) {
     ...settings,
     isLoading,
     hasLoaded,
+    categories,
     refreshSettings,
     applySettings,
-  }), [settings, isLoading, hasLoaded])
+  }), [settings, isLoading, hasLoaded, categories])
 
   return (
     <AppSettingsContext.Provider value={value}>
@@ -102,4 +108,8 @@ export function useAppSettings() {
 
 export function useShopInfo() {
   return useAppSettings().shopInfo
+}
+
+export function useCategories() {
+  return useAppSettings().categories
 }

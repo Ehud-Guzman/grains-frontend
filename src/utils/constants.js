@@ -58,3 +58,19 @@ export const DEFAULT_SHOP_INFO = {
 }
 
 export const SHOP_INFO = DEFAULT_SHOP_INFO
+
+export const STOCK_CONFIG = {
+  in:  { dot: 'bg-green-400', text: 'text-green-600', label: 'In Stock',     badge: 'bg-green-50 text-green-700 border-green-200'  },
+  low: { dot: 'bg-amber-400', text: 'text-amber-600', label: 'Low Stock',    badge: 'bg-amber-50 text-amber-700 border-amber-200'  },
+  out: { dot: 'bg-red-400',   text: 'text-red-500',   label: 'Out of Stock', badge: 'bg-red-50 text-red-600 border-red-200'        },
+}
+
+export const ORDER_STATUS_CONFIG = {
+  pending:          { dot: 'bg-amber-400',  text: 'text-amber-700',  badge: 'bg-amber-50  border-amber-200',  stripe: 'bg-amber-400',  bg: 'bg-amber-50',  border: 'border-amber-200',  label: 'Pending'         },
+  approved:         { dot: 'bg-blue-400',   text: 'text-blue-700',   badge: 'bg-blue-50   border-blue-200',   stripe: 'bg-blue-400',   bg: 'bg-blue-50',   border: 'border-blue-200',   label: 'Approved'        },
+  preparing:        { dot: 'bg-purple-400', text: 'text-purple-700', badge: 'bg-purple-50 border-purple-200', stripe: 'bg-purple-400', bg: 'bg-purple-50', border: 'border-purple-200', label: 'Preparing'       },
+  out_for_delivery: { dot: 'bg-brand-400',  text: 'text-brand-700',  badge: 'bg-brand-50  border-brand-200',  stripe: 'bg-brand-400',  bg: 'bg-brand-50',  border: 'border-brand-200',  label: 'Out for Delivery' },
+  completed:        { dot: 'bg-green-400',  text: 'text-green-700',  badge: 'bg-green-50  border-green-200',  stripe: 'bg-green-400',  bg: 'bg-green-50',  border: 'border-green-200',  label: 'Completed'       },
+  rejected:         { dot: 'bg-red-400',    text: 'text-red-700',    badge: 'bg-red-50    border-red-200',    stripe: 'bg-red-400',    bg: 'bg-red-50',    border: 'border-red-200',    label: 'Rejected'        },
+  cancelled:        { dot: 'bg-earth-300',  text: 'text-earth-500',  badge: 'bg-earth-50  border-earth-200',  stripe: 'bg-earth-200',  bg: 'bg-earth-50',  border: 'border-earth-200',  label: 'Cancelled'       },
+}

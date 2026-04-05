@@ -3,14 +3,8 @@ import { Link } from 'react-router-dom'
 import { ShoppingCart, Eye, Tag, Check } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { formatKES, getPriceRange, getStockStatus } from '../../utils/helpers'
+import { STOCK_CONFIG as stockConfig } from '../../utils/constants'
 import { getOptimizedImageUrl } from '../../utils/image'
-
-// ── STOCK CONFIG ──────────────────────────────────────────────────────────────
-const stockConfig = {
-  in:  { dot: 'bg-green-400', text: 'text-green-600', label: 'In Stock',     badge: 'bg-green-50 text-green-700 border-green-200'   },
-  low: { dot: 'bg-amber-400', text: 'text-amber-600', label: 'Low Stock',    badge: 'bg-amber-50 text-amber-700 border-amber-200'   },
-  out: { dot: 'bg-red-400',   text: 'text-red-500',   label: 'Out of Stock', badge: 'bg-red-50 text-red-600 border-red-200'         },
-}
 
 // ── FULL CARD (default) ───────────────────────────────────────────────────────
 function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added }) {

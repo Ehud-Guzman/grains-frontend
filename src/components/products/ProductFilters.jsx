@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
-import { productService } from '../../services/product.service'
+import { useCategories } from '../../context/AppSettingsContext'
 import { PACKAGING_SIZES } from '../../utils/constants'
 
 // ── COLLAPSIBLE SECTION ───────────────────────────────────────────────────────
@@ -72,12 +72,7 @@ function Toggle({ checked, onChange, label }) {
 
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function ProductFilters({ filters, onChange, onClose }) {
-  const [categories, setCategories] = useState([])
-
-  useEffect(() => {
-    productService.getCategories()
-      .then(res => setCategories(res.data.data || []))
-  }, [])
+  const categories = useCategories()
 
   const hasActive = filters.category || filters.inStock ||
     filters.packagingSize || filters.minPrice || filters.maxPrice

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Package, Shield, Truck, Star, LayoutGrid, Rows, Sparkles } from 'lucide-react'
+import { ArrowRight, Package, Shield, Truck, Star, Sparkles } from 'lucide-react'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductSpotlight from '../../components/ui/ProductSpotlight'
 import CTABanner from '../../components/ui/CTABanner'
-import { useShopInfo } from '../../context/AppSettingsContext'
+import SkeletonCard from '../../components/ui/SkeletonCard'
+import GridToggle from '../../components/ui/GridToggle'
+import { useShopInfo, useCategories } from '../../context/AppSettingsContext'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 const FEATURED_LIMIT = 8
@@ -38,58 +40,17 @@ function getProductHeroImage(product) {
   return product.imageURLs?.[0] || null
 }
 
-// ── GRID TOGGLE ───────────────────────────────────────────────────────────────
-function GridToggle({ compact, onChange }) {
-  return (
-    <div className="flex items-center gap-1 bg-earth-100 p-1 rounded-xl">
-      <button
-        onClick={() => onChange(false)}
-        title="List view"
-        className={`p-2 rounded-lg transition-all ${
-          !compact
-            ? 'bg-white text-earth-900 shadow-sm'
-            : 'text-earth-400 hover:text-earth-600'
-        }`}>
-        <Rows size={16} />
-      </button>
-      <button
-        onClick={() => onChange(true)}
-        title="Grid view"
-        className={`p-2 rounded-lg transition-all ${
-          compact
-            ? 'bg-white text-earth-900 shadow-sm'
-            : 'text-earth-400 hover:text-earth-600'
-        }`}>
-        <LayoutGrid size={16} />
-      </button>
-    </div>
-  )
-}
-
-// ── SKELETON ──────────────────────────────────────────────────────────────────
-function SkeletonCard({ compact }) {
-  return (
-    <div className={`bg-white rounded-2xl border border-earth-100 overflow-hidden animate-pulse`}>
-      <div className={`bg-earth-100 ${compact ? 'aspect-square' : 'aspect-[4/3]'}`} />
-      <div className="p-4 space-y-3">
-        <div className="h-5 bg-earth-100 rounded w-2/3" />
-        <div className="h-3 bg-earth-100 rounded w-1/2" />
-        <div className="h-9 bg-earth-100 rounded-xl mt-2" />
-      </div>
-    </div>
-  )
-}
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const shopInfo = useShopInfo()
+  const shopInfo   = useShopInfo()
+  const categories = useCategories()
   const { startTour } = useOnboarding()
-  const [featured, setFeatured]     = useState([])
+  const [featured, setFeatured]         = useState([])
   const [moreProducts, setMoreProducts] = useState([])
-  const [spotlight, setSpotlight]   = useState([])
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [compact, setCompact]       = useState(false)
+  const [spotlight, setSpotlight]       = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [compact, setCompact]           = useState(false)
 
   // Persist grid preference
   useEffect(() => {
@@ -103,10 +64,7 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    Promise.all([
-      productService.getAll({ limit: 18 }),
-      productService.getCategories()
-    ]).then(([prodRes, catRes]) => {
+    productService.getAll({ limit: 18 }).then(prodRes => {
       const all = prodRes.data.data || []
       const prioritized = [...all].sort((a, b) => Number(hasStock(b)) - Number(hasStock(a)))
       const spotlightCandidates = prioritized.filter(product =>
@@ -115,7 +73,6 @@ export default function HomePage() {
 
       setFeatured(prioritized.slice(0, FEATURED_LIMIT))
       setMoreProducts(prioritized.slice(FEATURED_LIMIT, FEATURED_LIMIT + SECONDARY_LIMIT))
-      setCategories(catRes.data.data || [])
       setSpotlight([...spotlightCandidates].sort(() => Math.random() - 0.5).slice(0, 6))
     }).finally(() => setLoading(false))
   }, [])

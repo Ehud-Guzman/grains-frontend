@@ -5,6 +5,7 @@ import { productService } from '../../services/product.service'
 import { useCart } from '../../context/CartContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES } from '../../utils/helpers'
+import { STOCK_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import { getOptimizedImageUrl } from '../../utils/image'
 
@@ -128,11 +129,7 @@ export default function ProductPage() {
     : packaging.stock <= (packaging.lowStockThreshold || 10) ? 'low'
     : 'in'
 
-  const stockConfig = {
-    in:  { label: 'In Stock',     dot: 'bg-green-400', text: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-    low: { label: 'Low Stock',    dot: 'bg-amber-400', text: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-    out: { label: 'Out of Stock', dot: 'bg-red-400',   text: 'text-red-700',   bg: 'bg-red-50 border-red-200'   },
-  }[stockStatus] || {}
+  const stockConfig = STOCK_CONFIG[stockStatus] || {}
 
   const handleAddToCart = () => {
     if (!variety || !packaging || isQuoteOnly || !inStock || added) return
@@ -276,7 +273,7 @@ export default function ProductPage() {
                 </div>
                 {stockStatus && (
                   <span className={`inline-flex items-center gap-1.5 text-xs font-body font-semibold
-                    px-2.5 py-1 rounded-full border ${stockConfig.bg} ${stockConfig.text}`}>
+                    px-2.5 py-1 rounded-full border ${stockConfig.badge} ${stockConfig.text}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${stockConfig.dot}`} />
                     {stockConfig.label}
                   </span>

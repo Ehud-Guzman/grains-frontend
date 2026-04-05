@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Lock, ArrowLeft, CheckCircle, MapPin, Building2, ShoppingBag } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Lock, X, ArrowLeft, CheckCircle, MapPin, Building2, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
@@ -66,7 +66,7 @@ function ChangePasswordModal({ onClose }) {
           </div>
           <button onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors">
-            <ArrowLeft size={16} />
+            <X size={16} />
           </button>
         </div>
 

@@ -1,27 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, X, SlidersHorizontal, LayoutGrid, Rows, Sparkles } from 'lucide-react'
+import { Search, X, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductFilters from '../../components/products/ProductFilters'
 import Spinner from '../../components/ui/Spinner'
 import SearchAutocomplete from '../../components/ui/SearchAutocomplete'
+import SkeletonCard from '../../components/ui/SkeletonCard'
+import GridToggle from '../../components/ui/GridToggle'
 import { getOptimizedImageUrl } from '../../utils/image'
-
-// ── SKELETON ──────────────────────────────────────────────────────────────────
-function SkeletonCard({ compact }) {
-  return (
-    <div className="bg-white rounded-2xl border border-earth-100 overflow-hidden animate-pulse">
-      <div className={`bg-earth-100 ${compact ? 'aspect-square' : 'aspect-[4/3]'}`} />
-      <div className="p-4 space-y-3">
-        <div className="h-5 bg-earth-100 rounded w-2/3" />
-        <div className="h-3 bg-earth-100 rounded w-1/2" />
-        <div className="h-9 bg-earth-100 rounded-xl mt-2" />
-      </div>
-    </div>
-  )
-}
 
 // ── FILTER CHIP ───────────────────────────────────────────────────────────────
 function FilterChip({ label, onRemove }) {
@@ -34,26 +22,6 @@ function FilterChip({ label, onRemove }) {
         <X size={11} />
       </button>
     </span>
-  )
-}
-
-// ── GRID TOGGLE ───────────────────────────────────────────────────────────────
-function GridToggle({ compact, onChange }) {
-  return (
-    <div className="flex items-center gap-0.5 bg-earth-100 p-1 rounded-xl">
-      <button onClick={() => onChange(false)} title="Comfortable view"
-        className={`p-2 rounded-lg transition-all ${
-          !compact ? 'bg-white text-earth-900 shadow-sm' : 'text-earth-400 hover:text-earth-600'
-        }`}>
-        <Rows size={15} />
-      </button>
-      <button onClick={() => onChange(true)} title="Compact grid"
-        className={`p-2 rounded-lg transition-all ${
-          compact ? 'bg-white text-earth-900 shadow-sm' : 'text-earth-400 hover:text-earth-600'
-        }`}>
-        <LayoutGrid size={15} />
-      </button>
-    </div>
   )
 }
 
@@ -126,7 +94,7 @@ function StoryRail({ products, pagination, startTour }) {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function CataloguePage() {
-  const { startTour } = useOnboarding()
+  const { startTour, activeTour, currentStep } = useOnboarding()
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts]         = useState([])
   const [pagination, setPagination]     = useState(null)
@@ -181,6 +149,17 @@ export default function CataloguePage() {
     const t = setTimeout(() => setSearch(searchInput), 400)
     return () => clearTimeout(t)
   }, [searchInput])
+
+  // Auto-open / auto-close filter drawer during the tour's search+filter step on mobile
+  useEffect(() => {
+    const onFilterStep = activeTour === 'public' && currentStep === 2
+    if (onFilterStep && window.innerWidth < 768) {
+      setFiltersOpen(true)
+    } else if (!onFilterStep && activeTour) {
+      // Tour is active but moved past this step — close the drawer
+      setFiltersOpen(false)
+    }
+  }, [activeTour, currentStep])
 
   // Lock body scroll when mobile filters open
   useEffect(() => {
@@ -412,13 +391,6 @@ export default function CataloguePage() {
         </div>
       </div>
 
-      {/* Slide-in animation */}
-      <style>{`
-        @keyframes slideInLeft {
-          from { transform: translateX(-100%); }
-          to   { transform: translateX(0); }
-        }
-      `}</style>
     </div>
   )
 }

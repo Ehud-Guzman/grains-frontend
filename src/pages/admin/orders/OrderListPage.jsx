@@ -11,18 +11,8 @@ import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { ContextualTip } from '../../../components/onboarding/OnboardingEnhancements'
 import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo } from '../../../utils/helpers'
+import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../../utils/constants'
 import toast from 'react-hot-toast'
-
-// ── STATUS CONFIG ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-  pending:          { label: 'Pending',         dot: 'bg-amber-400',  badge: 'bg-amber-50  text-amber-700  border-amber-200'  },
-  approved:         { label: 'Approved',        dot: 'bg-blue-400',   badge: 'bg-blue-50   text-blue-700   border-blue-200'   },
-  preparing:        { label: 'Preparing',       dot: 'bg-purple-400', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
-  out_for_delivery: { label: 'Out for Delivery',dot: 'bg-brand-400',  badge: 'bg-orange-50 text-orange-700 border-orange-200' },
-  completed:        { label: 'Completed',       dot: 'bg-green-400',  badge: 'bg-green-50  text-green-700  border-green-200'  },
-  rejected:         { label: 'Rejected',        dot: 'bg-red-400',    badge: 'bg-red-50    text-red-700    border-red-200'    },
-  cancelled:        { label: 'Cancelled',       dot: 'bg-admin-300',  badge: 'bg-admin-50  text-admin-500  border-admin-200'  },
-}
 
 const STATUS_FILTERS = [
   { value: '',                label: 'All'         },
@@ -40,7 +30,7 @@ function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
-      px-2.5 py-1 rounded-full border whitespace-nowrap ${cfg.badge}`}>
+      px-2.5 py-1 rounded-full border whitespace-nowrap ${cfg.badge} ${cfg.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>

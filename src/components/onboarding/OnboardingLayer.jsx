@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { Compass, Sparkles, ArrowRight, X, LifeBuoy, CheckCircle2 } from 'lucide-react'
+import { Compass, Sparkles, ArrowRight, X, LifeBuoy, CheckCircle2, ShoppingCart, Lightbulb, Package, Search, CreditCard, MapPin, Star } from 'lucide-react'
 import { useOnboarding } from '../../context/OnboardingContext'
 
 // ─── Shared primitives ──────────────────────────────────────────────────────
@@ -58,6 +58,11 @@ function useTargetRect(targetId, enabled) {
       const el = document.querySelector(`[data-tour="${targetId}"]`)
       if (!el) return
       const b = el.getBoundingClientRect()
+      // Element is display:none (hidden on this breakpoint) — treat as not found
+      if (b.width === 0 && b.height === 0) {
+        setRect(null)
+        return
+      }
       setRect({ top: b.top, left: b.left, width: b.width, height: b.height })
     }
 
@@ -103,9 +108,9 @@ function WelcomeModal() {
   if (!config) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-8">
-      <div className="absolute inset-0 bg-[#05070c]/58 backdrop-blur-none sm:backdrop-blur-[2px]" />
-      <DarkShell className="relative w-full max-w-xl">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-6 overflow-y-auto">
+      <div className="fixed inset-0 bg-[#05070c]/58 backdrop-blur-none sm:backdrop-blur-[2px]" />
+      <DarkShell className="relative w-full max-w-xl my-auto max-h-[90vh] overflow-y-auto">
         {/* Glows */}
         <div className="absolute inset-0 opacity-70 pointer-events-none">
           <div className="absolute -top-20 -right-12 w-56 h-56 rounded-full bg-brand-500/20 blur-3xl" />
@@ -179,9 +184,24 @@ function TourOverlay() {
         return
       }
       const bounds = el.getBoundingClientRect()
-      const margin = 96
-      if (bounds.top < margin || bounds.bottom > window.innerHeight - margin) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+      const isMobile = window.innerWidth < 640
+      const vh = window.innerHeight
+      const topMargin = 72
+
+      if (isMobile) {
+        const targetCenterY = bounds.top + bounds.height / 2
+        const tooltipInLower = targetCenterY > vh * 0.5
+        // When tooltip goes top, keep target in lower half (below ~200px); when tooltip goes bottom, keep target in upper ~55%
+        const reservedTop = tooltipInLower ? 200 : topMargin
+        const reservedBottom = tooltipInLower ? 80 : 320
+        if (bounds.top < reservedTop || bounds.bottom > vh - reservedBottom) {
+          el.scrollIntoView({ behavior: 'smooth', block: tooltipInLower ? 'end' : 'start', inline: 'nearest' })
+        }
+      } else {
+        const reservedBottom = 96
+        if (bounds.top < topMargin || bounds.bottom > vh - reservedBottom) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+        }
       }
     }
 
@@ -193,21 +213,51 @@ function TourOverlay() {
   }, [step?.target, activeTour, currentStep])
 
   const tooltipStyle = useMemo(() => {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const margin = 16
+
     if (!rect) {
+      // No spotlight target (element hidden on this breakpoint) — pin to bottom on mobile, centre on desktop
+      if (vw < 640) {
+        const tipW = Math.min(vw * 0.92, 360)
+        return { bottom: margin, left: (vw - tipW) / 2, top: 'auto', transform: 'none' }
+      }
       return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
     }
 
+    // On mobile: pin to top or bottom depending on where the target is,
+    // so the tooltip never overlaps the spotlit element.
+    if (vw < 640) {
+      const tipW = Math.min(vw * 0.92, 360)
+      const targetCenterY = rect.top + rect.height / 2
+      // If target is in the lower half of the screen, tooltip goes to the top
+      if (targetCenterY > vh * 0.5) {
+        return { top: margin, left: (vw - tipW) / 2, bottom: 'auto', transform: 'none' }
+      }
+      return { bottom: margin, left: (vw - tipW) / 2, top: 'auto', transform: 'none' }
+    }
+
     const tooltipWidth = 360
-    const margin = 24
-    const vw = window.innerWidth
-    const vh = window.innerHeight
+    const tooltipHeight = 260
+    const spaceBelow = vh - (rect.top + rect.height)
+    const spaceAbove = rect.top
 
-    let top = rect.top + rect.height + 20
+    let top
+    if (spaceBelow >= tooltipHeight + 20) {
+      top = rect.top + rect.height + 16        // below target
+    } else if (spaceAbove >= tooltipHeight + 20) {
+      top = rect.top - tooltipHeight - 16      // above target
+    } else {
+      // Not enough room above or below — align to whichever side has more space
+      top = spaceBelow >= spaceAbove
+        ? Math.min(rect.top + rect.height + 16, vh - tooltipHeight - margin)
+        : Math.max(margin, rect.top - tooltipHeight - 16)
+    }
+
     let left = rect.left
-
     if (left + tooltipWidth > vw - margin) left = vw - tooltipWidth - margin
     if (left < margin) left = margin
-    if (top > vh - 240) top = Math.max(margin, rect.top - 220)
 
     return { top, left, transform: 'none' }
   }, [rect])
@@ -287,6 +337,77 @@ function TourOverlay() {
 
 // ─── HelpCenter ─────────────────────────────────────────────────────────────
 
+const HOW_TO_BUY_STEPS = [
+  {
+    icon: Search,
+    title: 'Browse the catalogue',
+    body: 'Go to Shop and use filters (category, weight, price) to narrow down products.',
+    href: '/shop',
+    cta: 'Shop now',
+  },
+  {
+    icon: ShoppingCart,
+    title: 'Add items to your cart',
+    body: 'Pick a quantity and tap "Add to Cart". You can keep browsing — your cart saves automatically.',
+    href: '/shop',
+    cta: null,
+  },
+  {
+    icon: CreditCard,
+    title: 'Checkout',
+    body: 'Review your cart, confirm your delivery address, and place the order.',
+    href: '/cart',
+    cta: 'Go to cart',
+  },
+  {
+    icon: MapPin,
+    title: 'Track your order',
+    body: 'Use Order Tracking to follow your delivery in real time — no account required.',
+    href: '/track',
+    cta: 'Track order',
+  },
+  {
+    icon: Package,
+    title: 'Receive & reorder',
+    body: 'Once delivered, your order history lets you reorder the same items in one click.',
+    href: '/dashboard',
+    cta: null,
+  },
+]
+
+const TIPS = [
+  {
+    icon: Star,
+    title: 'Bulk orders save more',
+    body: 'Larger quantities often qualify for better rates. Check the product page for tiered pricing.',
+  },
+  {
+    icon: Search,
+    title: 'Use filters to save time',
+    body: 'Filter by grain type, weight, or price range — especially useful when the catalogue is large.',
+  },
+  {
+    icon: Package,
+    title: 'Check stock before ordering',
+    body: 'Product pages show real-time availability. If something is low-stock it will be marked.',
+  },
+  {
+    icon: MapPin,
+    title: 'Track without an account',
+    body: 'Got an order number? You can track any delivery from the Track page — no sign-in needed.',
+  },
+  {
+    icon: Lightbulb,
+    title: 'Create an account for history',
+    body: 'Signed-in customers get full order history, saved addresses, and one-tap reorders.',
+  },
+  {
+    icon: Compass,
+    title: 'Replay the guided tour',
+    body: 'New to the platform? Head to "Get Started" and hit Replay Tour to walk through key features.',
+  },
+]
+
 function HelpCenter() {
   const {
     helpCenterOpen,
@@ -297,9 +418,17 @@ function HelpCenter() {
     startTour,
   } = useOnboarding()
 
+  const [tab, setTab] = useState('start')
+
   const items = getChecklist(currentExperience)
   const doneCount = items.filter(item => item.done).length
   const progress = items.length ? Math.round((doneCount / items.length) * 100) : 0
+
+  const tabs = [
+    { id: 'start', label: 'Get Started' },
+    { id: 'buy', label: 'How to Buy' },
+    { id: 'tips', label: 'Tips' },
+  ]
 
   return createPortal(
     <>
@@ -332,10 +461,10 @@ function HelpCenter() {
                 <div>
                   <TourBadge>Help Center</TourBadge>
                   <h3 className="font-display text-3xl font-bold text-white mt-4 mb-2">
-                    Replay tours and keep moving
+                    How can we help?
                   </h3>
                   <p className="text-sm font-body leading-relaxed text-white/70">
-                    Your onboarding progress is saved for signed-in users, so you can pick back up from any device.
+                    Guides, tips, and your onboarding progress — all in one place.
                   </p>
                 </div>
                 <button
@@ -346,56 +475,132 @@ function HelpCenter() {
                 </button>
               </div>
 
-              {/* Progress summary */}
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 mb-5">
-                <div className="flex items-center justify-between gap-4 mb-3">
-                  <div>
-                    <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] text-white/45">
-                      Current Experience
-                    </p>
-                    <p className="font-display text-2xl font-bold capitalize text-white mt-2">
-                      {currentExperience}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-3xl font-bold text-white">{progress}%</p>
-                    <p className="text-xs font-body text-white/50">progress</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => startTour(currentExperience, { force: true })}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 text-sm font-body font-semibold text-white transition-all hover:bg-brand-600"
-                >
-                  <Compass size={15} />
-                  Replay Tour
-                </button>
-              </div>
-
-              {/* Checklist */}
-              <div className="space-y-3">
-                {items.map(item => (
-                  <div key={item.id} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-white/10 text-white'}`}>
-                        <CheckCircle2 size={18} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-body font-semibold text-white">{item.label}</p>
-                        <p className="text-xs font-body text-white/55 mt-1">{item.helper}</p>
-                      </div>
-                      {!item.done && item.href && (
-                        <Link
-                          to={item.href}
-                          onClick={closeHelpCenter}
-                          className="flex-shrink-0 text-xs font-body font-semibold text-brand-300 hover:text-brand-200"
-                        >
-                          {item.cta || 'Open'}
-                        </Link>
-                      )}
-                    </div>
-                  </div>
+              {/* Tabs */}
+              <div className="flex gap-1 rounded-2xl border border-white/10 bg-white/5 p-1 mb-6">
+                {tabs.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`flex-1 rounded-xl py-2 text-xs font-body font-semibold transition-all ${
+                      tab === t.id
+                        ? 'bg-brand-500 text-white shadow-sm'
+                        : 'text-white/50 hover:text-white/80'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
                 ))}
               </div>
+
+              {/* ── Get Started tab ── */}
+              {tab === 'start' && (
+                <>
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 mb-5">
+                    <div className="flex items-center justify-between gap-4 mb-3">
+                      <div>
+                        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] text-white/45">
+                          Current Experience
+                        </p>
+                        <p className="font-display text-2xl font-bold capitalize text-white mt-2">
+                          {currentExperience}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-display text-3xl font-bold text-white">{progress}%</p>
+                        <p className="text-xs font-body text-white/50">progress</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => startTour(currentExperience, { force: true })}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 text-sm font-body font-semibold text-white transition-all hover:bg-brand-600"
+                    >
+                      <Compass size={15} />
+                      Replay Tour
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {items.map(item => (
+                      <div key={item.id} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-white/10 text-white'}`}>
+                            <CheckCircle2 size={18} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-body font-semibold text-white">{item.label}</p>
+                            <p className="text-xs font-body text-white/55 mt-1">{item.helper}</p>
+                          </div>
+                          {!item.done && item.href && (
+                            <Link
+                              to={item.href}
+                              onClick={closeHelpCenter}
+                              className="flex-shrink-0 text-xs font-body font-semibold text-brand-300 hover:text-brand-200"
+                            >
+                              {item.cta || 'Open'}
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* ── How to Buy tab ── */}
+              {tab === 'buy' && (
+                <div className="space-y-3">
+                  {HOW_TO_BUY_STEPS.map((step, i) => {
+                    const Icon = step.icon
+                    return (
+                      <div key={i} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/20 text-brand-300">
+                            <Icon size={17} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-body font-bold uppercase tracking-widest text-white/30">Step {i + 1}</span>
+                            </div>
+                            <p className="text-sm font-body font-semibold text-white">{step.title}</p>
+                            <p className="text-xs font-body text-white/55 mt-1 leading-relaxed">{step.body}</p>
+                          </div>
+                          {step.href && step.cta && (
+                            <Link
+                              to={step.href}
+                              onClick={closeHelpCenter}
+                              className="flex-shrink-0 text-xs font-body font-semibold text-brand-300 hover:text-brand-200 whitespace-nowrap"
+                            >
+                              {step.cta}
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* ── Tips tab ── */}
+              {tab === 'tips' && (
+                <div className="space-y-3">
+                  {TIPS.map((tip, i) => {
+                    const Icon = tip.icon
+                    return (
+                      <div key={i} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-300/15 text-amber-300">
+                            <Icon size={17} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-body font-semibold text-white">{tip.title}</p>
+                            <p className="text-xs font-body text-white/55 mt-1 leading-relaxed">{tip.body}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

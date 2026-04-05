@@ -52,7 +52,7 @@ export default function Footer() {
 
             {/* WhatsApp CTA */}
             {shopInfo.whatsapp && (
-              <a href={`https://wa.me/${shopInfo.whatsapp}`}
+              <a href={`https://wa.me/${shopInfo.whatsapp?.replace(/\D/g, '')}`}
                 target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600/20
                   border border-green-600/30 text-green-400 rounded-xl text-xs font-body

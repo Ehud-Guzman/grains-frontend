@@ -377,6 +377,7 @@ export default function ProductListPage() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [importResult, setImportResult] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null) // product._id
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
@@ -417,8 +418,8 @@ export default function ProductListPage() {
     } catch (err) { toast.error(err.response?.data?.message || 'Failed') }
   }
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
+  const handleDelete = async (id) => {
+    setConfirmDelete(null)
     try {
       await adminProductService.delete(id)
       toast.success('Product deleted')
@@ -617,11 +618,26 @@ export default function ProductListPage() {
                                 transition-colors" title="Duplicate">
                               <Copy size={15} />
                             </button>
-                            <button onClick={() => handleDelete(product._id, product.name)}
-                              className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600
-                                transition-colors opacity-0 group-hover:opacity-100" title="Delete">
-                              <Trash2 size={15} />
-                            </button>
+                            {confirmDelete === product._id ? (
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => handleDelete(product._id)}
+                                  className="px-2 py-1 bg-red-600 text-white rounded-lg text-xs
+                                    font-admin font-semibold hover:bg-red-700 transition-colors">
+                                  Delete
+                                </button>
+                                <button onClick={() => setConfirmDelete(null)}
+                                  className="px-2 py-1 text-admin-500 rounded-lg text-xs font-admin
+                                    hover:bg-admin-100 transition-colors">
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button onClick={() => setConfirmDelete(product._id)}
+                                className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600
+                                  transition-colors opacity-0 group-hover:opacity-100" title="Delete">
+                                <Trash2 size={15} />
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
