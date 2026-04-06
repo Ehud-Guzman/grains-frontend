@@ -174,7 +174,7 @@ export default function ProductPage() {
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-700
                     group-hover:scale-105"
-                  fetchPriority="high"
+                  fetchpriority="high"
                   decoding="async" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
