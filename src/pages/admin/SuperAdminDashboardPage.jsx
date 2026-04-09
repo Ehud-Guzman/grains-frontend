@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom'
 import {
   GitBranch, Users, ShoppingCart, Package, TrendingUp, Shield,
   Settings2, Activity, RefreshCw, ArrowUpRight, CheckCircle,
-  AlertCircle, Clock, DollarSign, Eye, Layers, UserCog, Archive,
+  AlertCircle, Clock, DollarSign, Eye, Layers, UserCog, Archive, Sparkles,
 } from 'lucide-react'
 import { adminBranchService } from '../../services/admin/branch.service'
 import { adminUserService } from '../../services/admin/user.service'
 import { adminReportService } from '../../services/admin/report.service'
 import { adminLogService } from '../../services/admin/log.service'
 import { formatKES, timeAgo } from '../../utils/helpers'
+import { useOnboarding } from '../../context/OnboardingContext'
+import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 
 // ── STAT CARD ─────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color = 'brand', link }) {
@@ -108,6 +110,7 @@ function Skel({ w = 'w-20', h = 'h-4' }) {
 }
 
 export default function SuperAdminDashboardPage() {
+  const { startTour, getChecklist } = useOnboarding()
   const [branches, setBranches]   = useState([])
   const [users, setUsers]         = useState([])
   const [kpis, setKpis]           = useState(null)
@@ -145,11 +148,14 @@ export default function SuperAdminDashboardPage() {
   const totalUsers      = users.length
   const nonSuperAdmins  = users.filter(u => u.role !== 'superadmin').length
 
+  const superadminChecklist = getChecklist('superadmin')
+  const showChecklist = superadminChecklist.length > 0 && superadminChecklist.some(item => !item.done)
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
 
       {/* ── Header ───────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-6" data-tour="superadmin-header">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -162,16 +168,40 @@ export default function SuperAdminDashboardPage() {
             System-wide view — updated {timeAgo(lastRefreshed)}
           </p>
         </div>
-        <button onClick={() => fetchAll(true)} disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
-            text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
-          <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-          <span className="hidden sm:inline">Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => startTour('superadmin', { force: true })}
+            className="flex items-center gap-2 px-3 py-2 bg-brand-500/10 border border-brand-500/20 rounded-lg
+              text-sm font-admin font-semibold text-brand-700 hover:bg-brand-500/15 transition-colors shadow-admin"
+          >
+            <Sparkles size={14} />
+            <span className="hidden sm:inline">Tour</span>
+          </button>
+          <button onClick={() => fetchAll(true)} disabled={refreshing}
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
+              text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
+      {showChecklist && (
+        <div className="mb-6">
+          <OnboardingChecklistCard
+            eyebrow="Platform Setup"
+            title="Get familiar with the control center"
+            description="These steps cover the key areas of the superadmin workspace so you can manage the platform with confidence."
+            items={superadminChecklist}
+            actionLabel="Replay Tour"
+            onAction={() => startTour('superadmin', { force: true })}
+            theme="admin"
+          />
+        </div>
+      )}
+
       {/* ── Platform Stats ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-tour="superadmin-platform-stats">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="bg-white rounded-xl border border-admin-100 p-4 animate-pulse">
@@ -193,7 +223,7 @@ export default function SuperAdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
 
         {/* ── Branches Overview ───────────────────────────────────────── */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden" data-tour="superadmin-branches">
           <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
             <div>
               <h2 className="font-admin font-bold text-admin-900">Branches</h2>
@@ -262,7 +292,7 @@ export default function SuperAdminDashboardPage() {
         </div>
 
         {/* ── Quick Actions ────────────────────────────────────────────── */}
-        <div className="space-y-2.5">
+        <div className="space-y-2.5" data-tour="superadmin-system-controls">
           <h2 className="font-admin font-bold text-admin-900 text-sm px-1 mb-3">System Controls</h2>
           <ActionCard icon={GitBranch} label="Branch Management" desc="Create, edit, assign staff" to="/admin/branches" color="brand" />
           <ActionCard icon={UserCog}   label="User Management"   desc="Accounts, roles, passwords" to="/admin/users"    color="blue" />
@@ -297,7 +327,7 @@ export default function SuperAdminDashboardPage() {
       </div>
 
       {/* ── Recent Activity ──────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
+      <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden" data-tour="superadmin-activity">
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div>
             <h2 className="font-admin font-bold text-admin-900">Recent Activity</h2>

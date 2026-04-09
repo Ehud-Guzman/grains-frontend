@@ -10,4 +10,5 @@ export const adminSettingsService = {
 
 export const publicSettingsService = {
   get: () => api.get('/settings'),
+  getDeliveryFee: (lat, lng) => api.get('/settings/delivery-fee', { params: { lat, lng } }),
 }

@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, Package, Users, LogOut,
   Menu, X, Layers, TrendingUp, UserCog, Shield, Settings2,
-  Bell, ChevronRight, GitBranch, Eye, Archive,
+  Bell, ChevronRight, GitBranch, Eye, Archive, Truck, ClipboardList,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -17,13 +17,15 @@ const BUSINESS_NAV = [
     items: [
       { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard',    roles: ['staff','supervisor','admin'] },
       { to: '/admin/orders',    icon: ShoppingCart,    label: 'Orders',        roles: ['staff','supervisor','admin'] },
-      { to: '/admin/stock',     icon: Layers,          label: 'Stock',         roles: ['staff','supervisor','admin'] },
+      { to: '/admin/stock',          icon: Layers,          label: 'Stock',         roles: ['staff','supervisor','admin'], end: true },
+      { to: '/admin/stock/intake',   icon: ClipboardList,   label: 'Intake',        roles: ['supervisor','admin'] },
     ]
   },
   {
     group: 'Management',
     items: [
       { to: '/admin/products',  icon: Package,         label: 'Products',      roles: ['admin'] },
+      { to: '/admin/drivers',   icon: Truck,           label: 'Drivers',       roles: ['supervisor','admin'] },
       { to: '/admin/customers', icon: Users,           label: 'Customers',     roles: ['supervisor','admin'] },
       { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',       roles: ['supervisor','admin'] },
     ]
@@ -50,7 +52,8 @@ const SUPERADMIN_NAV = [
     items: [
       { to: '/admin/orders',    icon: ShoppingCart,    label: 'Orders',    viewOnly: true },
       { to: '/admin/products',  icon: Package,         label: 'Products',  viewOnly: true },
-      { to: '/admin/stock',     icon: Layers,          label: 'Stock',     viewOnly: true },
+      { to: '/admin/stock',          icon: Layers,          label: 'Stock',     viewOnly: true, end: true },
+      { to: '/admin/stock/intake',   icon: ClipboardList,   label: 'Intake',    viewOnly: true },
       { to: '/admin/customers', icon: Users,           label: 'Customers', viewOnly: true },
       { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',   viewOnly: true },
     ]
@@ -89,7 +92,8 @@ const PAGE_TITLES = {
   '/admin/dashboard': 'Dashboard',
   '/admin/branches':  'Branch Management',
   '/admin/orders':    'Orders',
-  '/admin/stock':     'Stock',
+  '/admin/stock/intake': 'Stock Intake',
+  '/admin/stock':        'Stock',
   '/admin/products':  'Products',
   '/admin/customers': 'Customers',
   '/admin/reports':   'Reports',
@@ -182,7 +186,7 @@ export default function AdminLayout() {
               </p>
               <div className="space-y-0.5">
                 {items.map(item => (
-                  <NavLink key={item.to} to={item.to}
+                  <NavLink key={item.to} to={item.to} end={item.end}
                     onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-admin

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, Check, MapPin, CreditCard,
-  User, ShoppingBag, Truck, Store, Smartphone
+  User, ShoppingBag, Truck, Store, Smartphone, Navigation, X
 } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
@@ -10,6 +10,7 @@ import { useAppSettings } from '../../context/AppSettingsContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { orderService } from '../../services/order.service'
 import { paymentService } from '../../services/payment.service'
+import { publicSettingsService } from '../../services/admin/settings.service'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, isValidKenyanPhone } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
@@ -106,6 +107,12 @@ export default function CheckoutPage() {
   const [placedOrder, setPlacedOrder] = useState(null) // { orderId, orderRef, total }
   const [showMpesa, setShowMpesa]     = useState(false)
 
+  // Distance-based delivery fee
+  const [locating, setLocating]               = useState(false)
+  const [deliveryCoordinates, setDeliveryCoords] = useState(null) // { lat, lng }
+  const [locationFeeData, setLocationFeeData] = useState(null)   // { fee, distanceKm, zoneName }
+  const feeDebounce = useRef(null)
+
   const [form, setForm] = useState({
     name:                user?.name  || '',
     phone:               user?.phone || '',
@@ -117,8 +124,14 @@ export default function CheckoutPage() {
     specialInstructions: ''
   })
 
-  const deliveryFee = form.deliveryMethod === 'delivery' ? orderSettings.deliveryFee : 0
-  const orderTotal = total + deliveryFee
+  // If mode === 'distance' and coords are known → use calculated fee; else fall back to flat
+  const deliveryFee = form.deliveryMethod === 'delivery'
+    ? (locationFeeData?.fee ?? orderSettings.deliveryFee)
+    : 0
+  const vatEnabled  = orderSettings.vatEnabled === true
+  const vatRate     = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
+  const vatAmount   = vatEnabled ? Math.round(total * vatRate) / 100 : 0
+  const orderTotal  = total + deliveryFee + vatAmount
   const belowMinimum = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
   const availablePaymentOptions = [
     orderSettings.allowMpesa && {
@@ -178,6 +191,55 @@ export default function CheckoutPage() {
   const set = (field, value) => {
     setForm(f => ({ ...f, [field]: value }))
     setErrors(e => ({ ...e, [field]: '' }))
+  }
+
+  // Reset location data when switching away from delivery
+  const handleDeliveryMethodChange = (method) => {
+    set('deliveryMethod', method)
+    if (method !== 'delivery') {
+      setDeliveryCoords(null)
+      setLocationFeeData(null)
+    }
+  }
+
+  // Geolocation — request browser location, then fetch fee from backend
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser')
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const { latitude: lat, longitude: lng } = coords
+        setDeliveryCoords({ lat, lng })
+        clearTimeout(feeDebounce.current)
+        feeDebounce.current = setTimeout(async () => {
+          try {
+            const res = await publicSettingsService.getDeliveryFee(lat, lng)
+            setLocationFeeData(res.data.data)
+          } catch {
+            // Non-fatal — fall back to flat fee silently
+          } finally {
+            setLocating(false)
+          }
+        }, 200)
+      },
+      (err) => {
+        setLocating(false)
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error('Location access denied — using default delivery fee')
+        } else {
+          toast.error('Could not detect location — using default delivery fee')
+        }
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    )
+  }
+
+  const clearLocation = () => {
+    setDeliveryCoords(null)
+    setLocationFeeData(null)
   }
 
   if (!isAuthenticated && !orderSettings.allowGuestOrders) {
@@ -253,6 +315,8 @@ export default function CheckoutPage() {
         deliveryAddress:     form.deliveryAddress || null,
         paymentMethod:       form.paymentMethod,
         specialInstructions: form.specialInstructions || null,
+        // Include GPS coords if captured — backend re-calculates fee from these
+        deliveryCoordinates: deliveryCoordinates ?? undefined,
         orderItems: items.map(i => ({
           productId: i.productId,
           variety:   i.variety,
@@ -505,32 +569,97 @@ export default function CheckoutPage() {
                     <OptionCard icon={Store} label="Pickup from Shop"
                       desc="Collect your order from our location in Bungoma"
                       checked={form.deliveryMethod === 'pickup'}
-                      onChange={() => set('deliveryMethod', 'pickup')} />
+                      onChange={() => handleDeliveryMethodChange('pickup')} />
                     <OptionCard icon={Truck} label="Home Delivery"
                       desc="We bring your order directly to your door"
                       checked={form.deliveryMethod === 'delivery'}
-                      onChange={() => set('deliveryMethod', 'delivery')} />
+                      onChange={() => handleDeliveryMethodChange('delivery')} />
                   </div>
                   {form.deliveryMethod === 'delivery' && (
-                    <Field label="Delivery Address" required error={errors.deliveryAddress}>
-                      <textarea rows={3}
-                        placeholder="Building name, street, area, town…"
-                        value={form.deliveryAddress}
-                        onChange={e => set('deliveryAddress', e.target.value)}
-                        className={`w-full border rounded-xl px-4 py-3 text-sm font-body
-                          text-earth-800 placeholder-earth-400 focus:outline-none focus:ring-2
-                          focus:border-transparent transition-all bg-earth-50 resize-none ${
-                            errors.deliveryAddress
-                              ? 'border-red-300 focus:ring-red-300'
-                              : 'border-earth-200 focus:ring-brand-400'
-                          }`}
-                      />
-                      {errors.deliveryAddress && (
-                        <p className="text-red-500 text-xs mt-1.5 font-body">
-                          {errors.deliveryAddress}
-                        </p>
+                    <>
+                      {/* ── Distance-based fee detection ───────────────── */}
+                      {orderSettings.deliveryPricingMode === 'distance' && (
+                        <div className="rounded-xl border border-earth-200 bg-earth-50 p-4 space-y-3">
+                          <p className="text-xs font-body font-semibold text-earth-600 uppercase tracking-wide">
+                            Delivery Fee
+                          </p>
+                          {locationFeeData ? (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Navigation size={14} className="text-green-600" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-body font-semibold text-earth-800">
+                                    {formatKES(locationFeeData.fee)}
+                                    {locationFeeData.zoneName && (
+                                      <span className="text-earth-500 font-normal"> · {locationFeeData.zoneName}</span>
+                                    )}
+                                  </p>
+                                  {locationFeeData.distanceKm != null && (
+                                    <p className="text-xs font-body text-earth-500">
+                                      ~{locationFeeData.distanceKm} km from our shop
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={clearLocation}
+                                className="p-1.5 text-earth-400 hover:text-red-500 transition-colors"
+                                title="Clear location"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-xs font-body text-earth-500">
+                                Share your location to get the exact delivery fee for your area.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={detectLocation}
+                                disabled={locating}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white
+                                  rounded-xl text-sm font-body font-semibold hover:bg-brand-600
+                                  disabled:opacity-60 transition-colors"
+                              >
+                                {locating
+                                  ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Detecting…</>
+                                  : <><Navigation size={14} /> Use My Location</>
+                                }
+                              </button>
+                              {orderSettings.deliveryFee > 0 && (
+                                <p className="text-xs font-body text-earth-400">
+                                  Or skip — standard fee of {formatKES(orderSettings.deliveryFee)} applies
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
-                    </Field>
+                      {/* ── Delivery address ──────────────────────────── */}
+                      <Field label="Delivery Address" required error={errors.deliveryAddress}>
+                        <textarea rows={3}
+                          placeholder="Building name, street, area, town…"
+                          value={form.deliveryAddress}
+                          onChange={e => set('deliveryAddress', e.target.value)}
+                          className={`w-full border rounded-xl px-4 py-3 text-sm font-body
+                            text-earth-800 placeholder-earth-400 focus:outline-none focus:ring-2
+                            focus:border-transparent transition-all bg-earth-50 resize-none ${
+                              errors.deliveryAddress
+                                ? 'border-red-300 focus:ring-red-300'
+                                : 'border-earth-200 focus:ring-brand-400'
+                            }`}
+                        />
+                        {errors.deliveryAddress && (
+                          <p className="text-red-500 text-xs mt-1.5 font-body">
+                            {errors.deliveryAddress}
+                          </p>
+                        )}
+                      </Field>
+                    </>
                   )}
                   <Field label="Special Instructions">
                     <textarea rows={2}
@@ -725,8 +854,21 @@ export default function CheckoutPage() {
                     </div>
                     {form.deliveryMethod === 'delivery' && (
                       <div className="flex justify-between text-sm font-body">
-                        <span className="text-earth-500">Delivery Fee</span>
+                        <span className="text-earth-500">
+                          Delivery Fee
+                          {locationFeeData?.distanceKm != null && (
+                            <span className="text-earth-400 text-xs ml-1">
+                              (~{locationFeeData.distanceKm} km)
+                            </span>
+                          )}
+                        </span>
                         <span className="text-earth-700">{formatKES(deliveryFee)}</span>
+                      </div>
+                    )}
+                    {vatEnabled && (
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-earth-500">VAT ({vatRate}%)</span>
+                        <span className="text-earth-700">{formatKES(vatAmount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm font-body">
@@ -859,8 +1001,24 @@ export default function CheckoutPage() {
                 </div>
                 {form.deliveryMethod === 'delivery' && (
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="font-body text-earth-600">Delivery Fee</span>
-                    <span className="font-body text-earth-700">{formatKES(deliveryFee)}</span>
+                    <span className="font-body text-earth-600">
+                      Delivery Fee
+                      {locationFeeData?.distanceKm != null && (
+                        <span className="text-earth-400 text-xs ml-1">~{locationFeeData.distanceKm} km</span>
+                      )}
+                    </span>
+                    <span className="font-body text-earth-700">
+                      {locating
+                        ? <span className="text-earth-400 text-xs">detecting…</span>
+                        : formatKES(deliveryFee)
+                      }
+                    </span>
+                  </div>
+                )}
+                {vatEnabled && (
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-body text-earth-600">VAT ({vatRate}%)</span>
+                    <span className="font-body text-earth-700">{formatKES(vatAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">

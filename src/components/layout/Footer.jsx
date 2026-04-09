@@ -89,25 +89,40 @@ export default function Footer() {
               Contact Us
             </h4>
             <ul className="space-y-4">
-              <li>
-                <a href={`tel:${shopInfo.phone}`}
-                  className="flex items-start gap-3 group">
-                  <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
-                    flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/20
-                    transition-colors mt-0.5">
-                    <Phone size={13} className="text-brand-400" />
+              {(shopInfo.phones?.length > 0 || shopInfo.phone) && (
+                <li>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-brand-500/10 border border-brand-500/20 rounded-lg
+                      flex items-center justify-center flex-shrink-0 group-hover:bg-brand-500/20
+                      transition-colors mt-0.5">
+                      <Phone size={13} className="text-brand-400" />
+                    </div>
+                    <div>
+                      <p className="text-earth-500 text-xs font-body uppercase tracking-wide mb-0.5">
+                        Phone
+                      </p>
+                      <div className="space-y-1">
+                        {shopInfo.phone && (
+                          <a href={`tel:${shopInfo.phone}`}
+                            className="block text-earth-300 text-sm font-body hover:text-brand-300
+                              transition-colors">
+                            {shopInfo.phone}
+                          </a>
+                        )}
+                        {shopInfo.phones && shopInfo.phones.length > 0 && (
+                          shopInfo.phones.map((phone, idx) => (
+                            <a key={idx} href={`tel:${phone}`}
+                              className="block text-earth-300 text-sm font-body hover:text-brand-300
+                                transition-colors">
+                              {phone}
+                            </a>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-earth-500 text-xs font-body uppercase tracking-wide mb-0.5">
-                      Phone
-                    </p>
-                    <p className="text-earth-300 text-sm font-body group-hover:text-brand-300
-                      transition-colors">
-                      {shopInfo.phone}
-                    </p>
-                  </div>
-                </a>
-              </li>
+                </li>
+              )}
 
               <li>
                 <a href={`mailto:${shopInfo.email}`}

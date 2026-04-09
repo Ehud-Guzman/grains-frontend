@@ -30,6 +30,12 @@ const CustomerDashboardPage = lazy(() => import("./pages/customer/DashboardPage"
 const CustomerOrderDetailPage = lazy(() => import("./pages/customer/OrderDetailPage"));
 const CustomerProfilePage = lazy(() => import("./pages/customer/ProfilePage"));
 
+// Driver portal
+const DriverLayout        = lazy(() => import("./components/driver/DriverLayout"));
+const DriverDashboardPage = lazy(() => import("./pages/driver/DriverDashboardPage"));
+const DriverOrdersPage    = lazy(() => import("./pages/driver/DriverOrdersPage"));
+const DriversPage         = lazy(() => import("./pages/admin/drivers/DriversPage"));
+
 // Admin pages
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage"));
 const OrderListPage = lazy(() => import("./pages/admin/orders/OrderListPage"));
@@ -37,6 +43,7 @@ const AdminOrderDetailPage = lazy(() => import("./pages/admin/orders/OrderDetail
 const ProductListPage = lazy(() => import("./pages/admin/products/ProductListPage"));
 const ProductFormPage = lazy(() => import("./pages/admin/products/ProductFormPage"));
 const StockPage = lazy(() => import("./pages/admin/stock/StockPage"));
+const StockIntakePage = lazy(() => import("./pages/admin/stock/StockIntakePage"));
 const CustomerListPage = lazy(() => import("./pages/admin/customers/CustomerListPage"));
 const AdminCustomerProfilePage = lazy(() => import("./pages/admin/customers/CustomerProfilePage"));
 const ReportsPage = lazy(() => import("./pages/admin/reports/ReportsPage"));
@@ -116,6 +123,17 @@ export default function App() {
             <Route path="/login"    element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
+            {/* ── DRIVER PORTAL ────────────────────────────────────── */}
+            <Route path="/driver" element={
+              <ProtectedRoute requireRole={["driver"]}>
+                <DriverLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/driver/dashboard" replace />} />
+              <Route path="dashboard" element={<DriverDashboardPage />} />
+              <Route path="orders"    element={<DriverOrdersPage />} />
+            </Route>
+
             {/* ── ADMIN ────────────────────────────────────────────── */}
             <Route path="/admin" element={
               <ProtectedRoute requireRole={ADMIN_ROLES}>
@@ -158,6 +176,18 @@ export default function App() {
               <Route path="stock" element={
                 <ProtectedRoute requireRole={ADMIN_ROLES}>
                   <StockPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="stock/intake" element={
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
+                  <StockIntakePage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="drivers" element={
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
+                  <DriversPage />
                 </ProtectedRoute>
               } />
 

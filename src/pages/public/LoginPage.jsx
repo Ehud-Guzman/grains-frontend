@@ -322,10 +322,12 @@ export default function LoginPage() {
         return
       }
 
-      // Customer — go directly
+      // Route by role
       const userData = result.user
       if (ADMIN_ROLES.includes(userData.role)) {
         window.location.replace('/admin/dashboard')
+      } else if (userData.role === 'driver') {
+        window.location.replace('/driver/dashboard')
       } else {
         const customerTarget = ['/login', '/register', '/'].includes(from) ? '/dashboard' : from
         window.location.replace(customerTarget)

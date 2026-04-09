@@ -7,18 +7,19 @@ import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingE
 import {
   Store, ShoppingCart, Bell, Shield, Save, AlertTriangle,
   GitBranch, ChevronDown, Lock, Users, Package, Clock,
-  Tag, UserCheck, MapPin, Plus, Trash2,
+  Tag, UserCheck, MapPin, Plus, Trash2, Percent, Info,
 } from 'lucide-react'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 
 // ── NAV SECTIONS ──────────────────────────────────────────────────────────────
 const NAV = [
-  { id: 'shop',          icon: Store,        label: 'Shop Info'     },
-  { id: 'orders',        icon: ShoppingCart, label: 'Orders'        },
-  { id: 'catalog',       icon: Tag,          label: 'Catalog'       },
-  { id: 'customers',     icon: UserCheck,    label: 'Customers'     },
-  { id: 'notifications', icon: Bell,         label: 'Notifications' },
+  { id: 'shop',          icon: Store,        label: 'Shop Info'        },
+  { id: 'tax',           icon: Percent,      label: 'Tax & Compliance' },
+  { id: 'orders',        icon: ShoppingCart, label: 'Orders'           },
+  { id: 'catalog',       icon: Tag,          label: 'Catalog'          },
+  { id: 'customers',     icon: UserCheck,    label: 'Customers'        },
+  { id: 'notifications', icon: Bell,         label: 'Notifications'    },
   { id: 'system',        icon: Shield,       label: 'System', superAdminOnly: true },
 ]
 
@@ -229,7 +230,9 @@ export default function SettingsPage() {
         enableOrderHours: false,
         orderAcceptanceStart: '07:00',
         orderAcceptanceEnd: '20:00',
-        useDeliveryZones: false,
+        deliveryPricingMode: 'flat',
+        branchLat: null,
+        branchLng: null,
         deliveryZones: [],
         autoHideOutOfStock: false,
         allowProductReviews: false,
@@ -237,6 +240,10 @@ export default function SettingsPage() {
         requirePhoneVerification: false,
         requireEmailVerification: false,
         receiptFooterNote: '',
+        shopPhones: [],
+        kraPin: '',
+        vatEnabled: false,
+        vatRate: 16,
         ...res.data.data,
       }))
       .catch(() => toast.error('Failed to load settings'))
@@ -384,6 +391,41 @@ export default function SettingsPage() {
               </Field>
             </div>
             <Divider />
+            <Field label="Additional Phone Numbers"
+              hint="Display multiple phone numbers in the footer (max 20 characters each)">
+              <div className="space-y-2">
+                {(form.shopPhones || []).map((phone, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <Input value={phone} 
+                      onChange={e => {
+                        const phones = [...(form.shopPhones || [])];
+                        phones[idx] = e.target.value;
+                        set('shopPhones', phones);
+                      }}
+                      placeholder="+254 712 345 678" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const phones = (form.shopPhones || []).filter((_, i) => i !== idx);
+                        set('shopPhones', phones);
+                      }}
+                      className="px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg
+                        text-red-600 hover:bg-red-100 transition-colors flex-shrink-0">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => set('shopPhones', [...(form.shopPhones || []), ''])}
+                  className="flex items-center gap-2 px-3 py-2.5 bg-brand-50 border border-brand-200
+                    rounded-lg text-brand-600 hover:bg-brand-100 transition-colors text-sm font-admin">
+                  <Plus size={16} />
+                  Add Phone Number
+                </button>
+              </div>
+            </Field>
+            <Divider />
             <Field label="Receipt Footer Note"
               hint="Printed at the bottom of every order confirmation">
               <textarea
@@ -398,16 +440,106 @@ export default function SettingsPage() {
             </Field>
           </Section>
 
+          {/* ── TAX & COMPLIANCE ────────────────────────────────────────── */}
+          <Section id="tax" icon={Percent} title="Tax & Compliance"
+            desc="KRA PIN, VAT settings — printed on every customer receipt">
+
+            <Field label="KRA PIN"
+              hint="Your business KRA PIN — printed on every receipt as required by Kenya Revenue Authority">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={form.kraPin}
+                  onChange={e => set('kraPin', e.target.value.toUpperCase())}
+                  placeholder="e.g. P051272345T"
+                  maxLength={20}
+                  className="w-full border border-admin-200 rounded-lg px-3 py-2.5 text-sm
+                    text-admin-800 placeholder-admin-300 focus:outline-none focus:ring-2
+                    focus:ring-brand-400 focus:border-transparent bg-white transition-all
+                    tracking-widest uppercase font-mono"
+                />
+              </div>
+            </Field>
+
+            {form.kraPin && (
+              <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2.5
+                flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                <p className="text-green-700 text-xs">
+                  KRA PIN <strong className="font-mono tracking-widest">{form.kraPin}</strong> will appear on all receipts.
+                </p>
+              </div>
+            )}
+
+            <Divider />
+            <SubHeading>Value Added Tax (VAT)</SubHeading>
+
+            <Toggle
+              label="Charge VAT on Orders"
+              desc="VAT is added on top of the order subtotal. The rate and amount are printed on the receipt."
+              checked={form.vatEnabled}
+              onChange={e => set('vatEnabled', e.target.checked)}
+            />
+
+            {form.vatEnabled && (
+              <div className="space-y-4 pl-1">
+                <Field label="VAT Rate (%)" hint="Kenya standard rate is 16%. Enter 0 for zero-rated items.">
+                  <div className="relative max-w-[160px]">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={form.vatRate}
+                      onChange={e => set('vatRate', Number(e.target.value))}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400
+                      text-sm font-admin font-semibold pointer-events-none">%</span>
+                  </div>
+                </Field>
+
+                {/* Live preview */}
+                <div className="bg-admin-50 border border-admin-200 rounded-xl p-4 space-y-2">
+                  <p className="text-xs font-admin font-bold text-admin-500 uppercase tracking-widest mb-3">
+                    Receipt Preview (example order KES 5,000)
+                  </p>
+                  {[
+                    { label: 'Subtotal', value: 'KES 5,000.00' },
+                    { label: `VAT @ ${form.vatRate}%`, value: `KES ${(5000 * (form.vatRate / 100)).toLocaleString('en-KE', { minimumFractionDigits: 2 })}` },
+                    { label: 'Delivery Fee', value: 'KES —' },
+                  ].map(row => (
+                    <div key={row.label} className="flex justify-between text-xs font-admin text-admin-600">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{row.value}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-admin-200 pt-2 flex justify-between text-sm font-admin font-bold text-admin-900">
+                    <span>Total Payable</span>
+                    <span className="font-mono">
+                      KES {(5000 + 5000 * (form.vatRate / 100)).toLocaleString('en-KE', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!form.vatEnabled && (
+              <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2.5">
+                <Info size={13} className="text-blue-500 mt-0.5 flex-shrink-0" />
+                <p className="text-blue-700 text-xs font-admin leading-relaxed">
+                  VAT is currently <strong>off</strong> — orders are not taxed. Enable to add VAT to all new orders.
+                  Existing orders are unaffected (VAT is snapshotted at placement).
+                </p>
+              </div>
+            )}
+          </Section>
+
           {/* ── ORDERS ──────────────────────────────────────────────────── */}
           <Section id="orders" icon={ShoppingCart} title="Orders"
             desc="Controls how orders are placed and processed">
 
             <SubHeading>Pricing</SubHeading>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Delivery Fee (KES)" hint="Set to 0 for free delivery">
-                <Input type="number" min="0" value={form.deliveryFee}
-                  onChange={e => set('deliveryFee', Number(e.target.value))} />
-              </Field>
               <Field label="Minimum Order Value (KES)" hint="Set to 0 for no minimum">
                 <Input type="number" min="0" value={form.minimumOrderValue}
                   onChange={e => set('minimumOrderValue', Number(e.target.value))} />
@@ -483,61 +615,196 @@ export default function SettingsPage() {
             </div>
 
             <Divider />
-            <SubHeading>Delivery Zones</SubHeading>
+            <SubHeading>Delivery Pricing Mode</SubHeading>
             <div className="space-y-4">
-              <Toggle label="Use Delivery Zones"
-                desc="Replace the flat delivery fee with per-zone pricing"
-                checked={form.useDeliveryZones}
-                onChange={e => set('useDeliveryZones', e.target.checked)} />
-              {form.useDeliveryZones && (
-                <div className="space-y-2 pl-1">
-                  {form.deliveryZones.map((zone, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={zone.name}
-                        onChange={e => {
-                          const zones = [...form.deliveryZones]
-                          zones[i] = { ...zones[i], name: e.target.value }
-                          set('deliveryZones', zones)
-                        }}
-                        placeholder="Zone name (e.g. Town Centre)"
-                        className="flex-1 border border-admin-200 rounded-lg px-3 py-2 text-sm font-admin
-                          text-admin-800 placeholder-admin-300 focus:outline-none focus:ring-2
-                          focus:ring-brand-400 bg-white"
-                      />
-                      <div className="relative w-28 flex-shrink-0">
-                        <MapPin size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-admin-300" />
+              {/* Mode selector */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'flat',     label: 'Flat Fee',       desc: 'One fixed fee for all deliveries' },
+                  { value: 'distance', label: 'Distance-based', desc: 'Auto-calculate by GPS distance'    },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => set('deliveryPricingMode', opt.value)}
+                    className={`text-left p-3.5 rounded-xl border-2 transition-all ${
+                      form.deliveryPricingMode === opt.value
+                        ? 'border-brand-500 bg-brand-50'
+                        : 'border-admin-200 hover:border-admin-300 bg-white'
+                    }`}
+                  >
+                    <p className={`text-sm font-admin font-semibold ${
+                      form.deliveryPricingMode === opt.value ? 'text-brand-800' : 'text-admin-800'
+                    }`}>{opt.label}</p>
+                    <p className="text-xs font-admin text-admin-400 mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+
+              {/* ── FLAT MODE ── */}
+              {form.deliveryPricingMode !== 'distance' && (
+                <Field label="Delivery Fee (KES)" hint="Set to 0 for free delivery">
+                  <Input type="number" min="0" value={form.deliveryFee}
+                    onChange={e => set('deliveryFee', Number(e.target.value))} />
+                </Field>
+              )}
+
+              {/* ── DISTANCE MODE ── */}
+              {form.deliveryPricingMode === 'distance' && (
+                <div className="space-y-5">
+                  {/* Branch coordinates */}
+                  <div className="bg-admin-50 border border-admin-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-brand-500 flex-shrink-0" />
+                      <p className="text-sm font-admin font-semibold text-admin-800">Shop / Branch Location</p>
+                    </div>
+                    <p className="text-xs font-admin text-admin-500">
+                      The GPS origin used to measure distance to the customer. Click the button to set from your current location, or enter manually.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Latitude">
+                        <Input type="number" step="any"
+                          placeholder="e.g. 0.5635"
+                          value={form.branchLat ?? ''}
+                          onChange={e => set('branchLat', e.target.value === '' ? null : Number(e.target.value))} />
+                      </Field>
+                      <Field label="Longitude">
+                        <Input type="number" step="any"
+                          placeholder="e.g. 34.5606"
+                          value={form.branchLng ?? ''}
+                          onChange={e => set('branchLng', e.target.value === '' ? null : Number(e.target.value))} />
+                      </Field>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!navigator.geolocation) {
+                          toast.error('Geolocation not supported by this browser')
+                          return
+                        }
+                        navigator.geolocation.getCurrentPosition(
+                          ({ coords }) => {
+                            set('branchLat', Math.round(coords.latitude  * 1e6) / 1e6)
+                            set('branchLng', Math.round(coords.longitude * 1e6) / 1e6)
+                            toast.success('Branch location set — save settings to apply')
+                          },
+                          () => toast.error('Could not detect location')
+                        )
+                      }}
+                      className="flex items-center gap-1.5 text-xs font-admin font-semibold text-brand-600
+                        hover:text-brand-700 transition-colors"
+                    >
+                      <MapPin size={12} /> Use my current location
+                    </button>
+                    {form.branchLat && form.branchLng && (
+                      <p className="text-xs font-admin text-green-700 bg-green-50 border border-green-200
+                        rounded-lg px-3 py-2">
+                        Set: {form.branchLat}, {form.branchLng}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Fallback flat fee */}
+                  <Field label="Fallback Fee (KES)"
+                    hint="Applied if customer location is unavailable or outside all bands">
+                    <Input type="number" min="0" value={form.deliveryFee}
+                      onChange={e => set('deliveryFee', Number(e.target.value))} />
+                  </Field>
+
+                  {/* Distance bands */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-admin font-bold text-admin-500 uppercase tracking-widest">Distance Bands</p>
+                      <button
+                        type="button"
+                        onClick={() => set('deliveryZones', [...(form.deliveryZones || []), { name: '', minKm: 0, maxKm: 9999, fee: 0 }])}
+                        className="flex items-center gap-1 text-xs font-admin font-semibold text-brand-600
+                          hover:text-brand-700 transition-colors"
+                      >
+                        <Plus size={12} /> Add Band
+                      </button>
+                    </div>
+
+                    {/* Header row */}
+                    {(form.deliveryZones || []).length > 0 && (
+                      <div className="grid grid-cols-[1fr_80px_80px_90px_32px] gap-2 px-1">
+                        {['Label', 'From km', 'To km', 'Fee (KES)', ''].map(h => (
+                          <p key={h} className="text-[10px] font-admin font-bold text-admin-400 uppercase tracking-wide">{h}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    {(form.deliveryZones || []).map((zone, i) => (
+                      <div key={i} className="grid grid-cols-[1fr_80px_80px_90px_32px] gap-2 items-center">
+                        <input
+                          type="text"
+                          value={zone.name || ''}
+                          onChange={e => {
+                            const zones = [...form.deliveryZones]
+                            zones[i] = { ...zones[i], name: e.target.value }
+                            set('deliveryZones', zones)
+                          }}
+                          placeholder="e.g. Within Town"
+                          className="border border-admin-200 rounded-lg px-3 py-2 text-sm font-admin
+                            text-admin-800 placeholder-admin-300 focus:outline-none focus:ring-2
+                            focus:ring-brand-400 bg-white"
+                        />
+                        <input
+                          type="number" min="0" step="0.1"
+                          value={zone.minKm ?? 0}
+                          onChange={e => {
+                            const zones = [...form.deliveryZones]
+                            zones[i] = { ...zones[i], minKm: Number(e.target.value) }
+                            set('deliveryZones', zones)
+                          }}
+                          className="border border-admin-200 rounded-lg px-2 py-2 text-sm font-admin
+                            text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400 bg-white"
+                        />
+                        <input
+                          type="number" min="0" step="0.1"
+                          value={zone.maxKm === 9999 ? '' : (zone.maxKm ?? '')}
+                          placeholder="∞"
+                          onChange={e => {
+                            const zones = [...form.deliveryZones]
+                            zones[i] = { ...zones[i], maxKm: e.target.value === '' ? 9999 : Number(e.target.value) }
+                            set('deliveryZones', zones)
+                          }}
+                          className="border border-admin-200 rounded-lg px-2 py-2 text-sm font-admin
+                            text-admin-800 placeholder-admin-300 focus:outline-none focus:ring-2
+                            focus:ring-brand-400 bg-white"
+                        />
                         <input
                           type="number" min="0"
-                          value={zone.fee}
+                          value={zone.fee ?? 0}
                           onChange={e => {
                             const zones = [...form.deliveryZones]
                             zones[i] = { ...zones[i], fee: Number(e.target.value) }
                             set('deliveryZones', zones)
                           }}
-                          placeholder="KES"
-                          className="w-full border border-admin-200 rounded-lg pl-7 pr-3 py-2 text-sm font-admin
+                          className="border border-admin-200 rounded-lg px-2 py-2 text-sm font-admin
                             text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400 bg-white"
                         />
+                        <button
+                          type="button"
+                          onClick={() => set('deliveryZones', form.deliveryZones.filter((_, j) => j !== i))}
+                          className="p-1.5 text-admin-300 hover:text-red-500 transition-colors flex-shrink-0"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => set('deliveryZones', form.deliveryZones.filter((_, j) => j !== i))}
-                        className="p-2 text-admin-300 hover:text-red-500 transition-colors flex-shrink-0"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => set('deliveryZones', [...form.deliveryZones, { name: '', fee: 0 }])}
-                    className="flex items-center gap-1.5 text-xs font-admin font-semibold text-brand-600
-                      hover:text-brand-700 transition-colors mt-1"
-                  >
-                    <Plus size={13} /> Add Zone
-                  </button>
+                    ))}
+
+                    {(form.deliveryZones || []).length === 0 && (
+                      <p className="text-xs font-admin text-admin-400 text-center py-4 bg-admin-50 rounded-lg">
+                        No bands configured. Add one to get started.
+                      </p>
+                    )}
+
+                    <p className="text-xs font-admin text-admin-400 leading-relaxed">
+                      Example: 0–5 km = KES 100 · 5–15 km = KES 250 · 15–∞ km = KES 400.
+                      Leave "To km" blank for unlimited.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

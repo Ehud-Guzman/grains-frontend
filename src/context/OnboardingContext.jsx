@@ -9,9 +9,11 @@ const STORAGE_KEYS = {
   public: 'onboarding_public_v1_done',
   customer: 'onboarding_customer_v1_done',
   admin: 'onboarding_admin_v1_done',
+  superadmin: 'onboarding_superadmin_v1_done',
   checklist: {
     customer: 'onboarding_customer_checklist_v1',
     admin: 'onboarding_admin_checklist_v1',
+    superadmin: 'onboarding_superadmin_checklist_v1',
   },
   tips: 'onboarding_contextual_tips_v1',
   milestones: 'onboarding_guest_milestones_v1',
@@ -120,6 +122,36 @@ const CHECKLIST_DEFINITIONS = {
       helper: 'Confirm operational rules like delivery and payments.',
       href: '/admin/settings',
       cta: 'Settings',
+    },
+  ],
+  superadmin: [
+    {
+      id: 'dashboard',
+      label: 'Review the platform dashboard',
+      helper: 'System-wide stats, branches, and live audit trail.',
+      href: '/admin/dashboard',
+      cta: 'Open',
+    },
+    {
+      id: 'branches',
+      label: 'Open branch management',
+      helper: 'Create branches, assign staff, and configure each location.',
+      href: '/admin/branches',
+      cta: 'Branches',
+    },
+    {
+      id: 'users',
+      label: 'Review user accounts',
+      helper: 'Manage staff roles, permissions, and passwords across branches.',
+      href: '/admin/users',
+      cta: 'Users',
+    },
+    {
+      id: 'logs',
+      label: 'Check the activity log',
+      helper: 'Full audit trail of every action across all branches.',
+      href: '/admin/logs',
+      cta: 'Logs',
     },
   ],
 }
@@ -233,6 +265,42 @@ const TOUR_DEFINITIONS = {
       },
     ],
   },
+  superadmin: {
+    route: '/admin/dashboard',
+    welcome: {
+      eyebrow: 'Superadmin',
+      title: 'Platform Control Center',
+      body: 'We will walk you through the system-wide dashboard — platform stats, branch management, system controls, and the audit log.',
+      cta: 'Start Tour',
+    },
+    steps: [
+      {
+        target: 'superadmin-header',
+        title: 'Platform Control Center',
+        body: 'This is your system-wide command post. Every branch, staff account, and transaction across the platform flows through here.',
+      },
+      {
+        target: 'superadmin-platform-stats',
+        title: 'Platform-wide stats',
+        body: 'Active branches, staff headcount, all-time orders, and system revenue — all updated live every 60 seconds.',
+      },
+      {
+        target: 'superadmin-branches',
+        title: 'Branch overview',
+        body: 'See all branches at a glance. Check active status, default branch, and jump directly into management.',
+      },
+      {
+        target: 'superadmin-system-controls',
+        title: 'System controls',
+        body: 'Quick access to branch setup, user accounts, the full audit log, backups, and global settings — the tools only you can reach.',
+      },
+      {
+        target: 'superadmin-activity',
+        title: 'System-wide activity log',
+        body: 'Every action across all branches is captured here. Use it to audit behaviour, investigate issues, and stay in control.',
+      },
+    ],
+  },
 }
 
 const DEFAULT_NUDGE_BODY = 'You just unlocked another part of the onboarding journey.'
@@ -266,6 +334,22 @@ const MILESTONE_CONFIG = {
     title: 'First approval completed',
     body: 'That first approval milestone is now saved. Your help center can guide the rest of the operations flow whenever needed.',
   },
+  'superadmin:dashboard': {
+    title: 'Platform dashboard activated',
+    body: 'Your system-wide view is now part of your onboarding progress.',
+  },
+  'superadmin:branches': {
+    title: 'Branch management discovered',
+    body: 'From here you can create branches, assign staff, and configure each location independently.',
+  },
+  'superadmin:users': {
+    title: 'User accounts reviewed',
+    body: 'Staff roles and permissions across all branches are managed from the users page.',
+  },
+  'superadmin:logs': {
+    title: 'Audit log checked',
+    body: 'The activity log is your source of truth for everything happening across the platform.',
+  },
 }
 
 function readStoredMap(key) {
@@ -287,7 +371,9 @@ function readStoredBoolean(key) {
 
 function roleToTourName(user) {
   if (!user) return 'public'
-  return user.role === 'customer' ? 'customer' : 'admin'
+  if (user.role === 'customer') return 'customer'
+  if (user.role === 'superadmin') return 'superadmin'
+  return 'admin'
 }
 
 function onboardingPayload({
@@ -300,6 +386,8 @@ function onboardingPayload({
 }) {
   const roleChecklist = role === 'customer'
     ? checklistProgress.customer
+    : role === 'superadmin'
+    ? checklistProgress.superadmin
     : checklistProgress.admin
 
   return {
@@ -322,12 +410,14 @@ export function OnboardingProvider({ children }) {
   const [checklistProgress, setChecklistProgress] = useState(() => ({
     customer: readStoredMap(STORAGE_KEYS.checklist.customer),
     admin: readStoredMap(STORAGE_KEYS.checklist.admin),
+    superadmin: readStoredMap(STORAGE_KEYS.checklist.superadmin),
   }))
   const [dismissedTips, setDismissedTips] = useState(() => readStoredMap(STORAGE_KEYS.tips))
   const [toursCompleted, setToursCompleted] = useState(() => ({
     public: readStoredBoolean(STORAGE_KEYS.public),
     customer: readStoredBoolean(STORAGE_KEYS.customer),
     admin: readStoredBoolean(STORAGE_KEYS.admin),
+    superadmin: readStoredBoolean(STORAGE_KEYS.superadmin),
   }))
   const [milestones, setMilestones] = useState(() => {
     const stored = readStoredMap(STORAGE_KEYS.milestones)
@@ -343,14 +433,9 @@ export function OnboardingProvider({ children }) {
   const hasAnnouncedMilestonesRef = useRef(false)
 
   useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEYS.checklist.customer,
-      JSON.stringify(checklistProgress.customer || {})
-    )
-    localStorage.setItem(
-      STORAGE_KEYS.checklist.admin,
-      JSON.stringify(checklistProgress.admin || {})
-    )
+    localStorage.setItem(STORAGE_KEYS.checklist.customer,   JSON.stringify(checklistProgress.customer   || {}))
+    localStorage.setItem(STORAGE_KEYS.checklist.admin,      JSON.stringify(checklistProgress.admin      || {}))
+    localStorage.setItem(STORAGE_KEYS.checklist.superadmin, JSON.stringify(checklistProgress.superadmin || {}))
   }, [checklistProgress])
 
   useEffect(() => {
@@ -358,9 +443,10 @@ export function OnboardingProvider({ children }) {
   }, [dismissedTips])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.public, toursCompleted.public ? 'true' : 'false')
-    localStorage.setItem(STORAGE_KEYS.customer, toursCompleted.customer ? 'true' : 'false')
-    localStorage.setItem(STORAGE_KEYS.admin, toursCompleted.admin ? 'true' : 'false')
+    localStorage.setItem(STORAGE_KEYS.public,      toursCompleted.public      ? 'true' : 'false')
+    localStorage.setItem(STORAGE_KEYS.customer,    toursCompleted.customer    ? 'true' : 'false')
+    localStorage.setItem(STORAGE_KEYS.admin,       toursCompleted.admin       ? 'true' : 'false')
+    localStorage.setItem(STORAGE_KEYS.superadmin,  toursCompleted.superadmin  ? 'true' : 'false')
   }, [toursCompleted])
 
   useEffect(() => {
@@ -384,13 +470,15 @@ export function OnboardingProvider({ children }) {
         const role = roleToTourName(user)
         const checklistForRole = data.checklistProgress || {}
         const nextChecklist = {
-          customer: role === 'customer' ? checklistForRole : {},
-          admin: role === 'admin' ? checklistForRole : {},
+          customer:   role === 'customer'   ? checklistForRole : {},
+          admin:      role === 'admin'      ? checklistForRole : {},
+          superadmin: role === 'superadmin' ? checklistForRole : {},
         }
 
         setChecklistProgress(current => ({
-          customer: role === 'customer' ? nextChecklist.customer : current.customer,
-          admin: role === 'admin' ? nextChecklist.admin : current.admin,
+          customer:   role === 'customer'   ? nextChecklist.customer   : current.customer,
+          admin:      role === 'admin'      ? nextChecklist.admin      : current.admin,
+          superadmin: role === 'superadmin' ? nextChecklist.superadmin : current.superadmin,
         }))
         setDismissedTips((data.dismissedTips || []).reduce((acc, tipId) => {
           acc[tipId] = true
@@ -398,8 +486,9 @@ export function OnboardingProvider({ children }) {
         }, {}))
         setToursCompleted(current => ({
           ...current,
-          customer: role === 'customer' ? (data.toursCompleted || []).includes('customer') : current.customer,
-          admin: role === 'admin' ? (data.toursCompleted || []).includes('admin') : current.admin,
+          customer:   role === 'customer'   ? (data.toursCompleted || []).includes('customer')   : current.customer,
+          admin:      role === 'admin'      ? (data.toursCompleted || []).includes('admin')      : current.admin,
+          superadmin: role === 'superadmin' ? (data.toursCompleted || []).includes('superadmin') : current.superadmin,
         }))
         setMilestones(data.milestones || [])
         setHelpCenterOpenedCount(data.helpCenterOpenedCount || 0)
@@ -407,16 +496,18 @@ export function OnboardingProvider({ children }) {
         lastSyncedPayloadRef.current = JSON.stringify(onboardingPayload({
           role,
           checklistProgress: {
-            customer: role === 'customer' ? nextChecklist.customer : {},
-            admin: role === 'admin' ? nextChecklist.admin : {},
+            customer:   role === 'customer'   ? nextChecklist.customer   : {},
+            admin:      role === 'admin'      ? nextChecklist.admin      : {},
+            superadmin: role === 'superadmin' ? nextChecklist.superadmin : {},
           },
           dismissedTips: (data.dismissedTips || []).reduce((acc, tipId) => {
             acc[tipId] = true
             return acc
           }, {}),
           toursCompleted: {
-            customer: (data.toursCompleted || []).includes('customer'),
-            admin: (data.toursCompleted || []).includes('admin'),
+            customer:   (data.toursCompleted || []).includes('customer'),
+            admin:      (data.toursCompleted || []).includes('admin'),
+            superadmin: (data.toursCompleted || []).includes('superadmin'),
           },
           milestones: data.milestones || [],
           helpCenterOpenedCount: data.helpCenterOpenedCount || 0,
@@ -576,6 +667,14 @@ export function OnboardingProvider({ children }) {
       if (location.pathname === '/shop') markChecklistItem('customer', 'browse')
       if (location.pathname === '/track') markChecklistItem('customer', 'track')
       if (location.pathname === '/profile') markChecklistItem('customer', 'profile')
+      return
+    }
+
+    if (user?.role === 'superadmin') {
+      if (location.pathname === '/admin/dashboard') markChecklistItem('superadmin', 'dashboard')
+      if (location.pathname === '/admin/branches')  markChecklistItem('superadmin', 'branches')
+      if (location.pathname === '/admin/users')     markChecklistItem('superadmin', 'users')
+      if (location.pathname === '/admin/logs')      markChecklistItem('superadmin', 'logs')
       return
     }
 

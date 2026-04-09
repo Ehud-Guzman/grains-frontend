@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS = {
   shopName: DEFAULT_SHOP_INFO.name,
   shopTagline: DEFAULT_SHOP_INFO.tagline,
   shopPhone: DEFAULT_SHOP_INFO.phone,
+  shopPhones: [],
   shopEmail: DEFAULT_SHOP_INFO.email,
   shopHours: DEFAULT_SHOP_INFO.hours,
   shopLocation: DEFAULT_SHOP_INFO.location,
@@ -19,6 +20,12 @@ const DEFAULT_SETTINGS = {
   allowMpesa: true,
   maintenanceMode: false,
   maintenanceMessage: 'We are currently undergoing maintenance. Please check back soon.',
+  deliveryPricingMode: 'flat',
+  hasDeliveryZones: false,
+  vatEnabled: false,
+  vatRate: 16,
+  kraPin: '',
+  receiptFooterNote: '',
 }
 
 const normalizeSettings = (settings = {}) => {
@@ -30,6 +37,7 @@ const normalizeSettings = (settings = {}) => {
       name: merged.shopName,
       tagline: merged.shopTagline,
       phone: merged.shopPhone,
+      phones: merged.shopPhones,
       email: merged.shopEmail,
       hours: merged.shopHours,
       location: merged.shopLocation,
@@ -42,7 +50,15 @@ const normalizeSettings = (settings = {}) => {
       allowCashOnDelivery: merged.allowCashOnDelivery !== false,
       allowPayOnPickup: merged.allowPayOnPickup !== false,
       allowMpesa: merged.allowMpesa !== false,
+      // Distance-based delivery pricing
+      deliveryPricingMode: merged.deliveryPricingMode || 'flat',
+      hasDeliveryZones: merged.hasDeliveryZones === true,
+      // Tax
+      vatEnabled: merged.vatEnabled === true,
+      vatRate: Number(merged.vatRate) || 16,
     },
+    kraPin: merged.kraPin || '',
+    receiptFooterNote: merged.receiptFooterNote || '',
   }
 }
 

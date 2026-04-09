@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
+import { useAppSettings } from '../../context/AppSettingsContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES } from '../../utils/helpers'
@@ -8,7 +9,11 @@ import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartPage() {
   const { items, subtotal: total, removeItem, updateQuantity } = useCart()
+  const { orderSettings } = useAppSettings()
   const { dismissedTips, dismissTip } = useOnboarding()
+  const vatEnabled = orderSettings.vatEnabled === true
+  const vatRate    = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
+  const vatAmount  = vatEnabled ? Math.round(total * vatRate) / 100 : 0
   const showCartTip = !dismissedTips['customer-cart-tip']
 
   if (items.length === 0) return (
@@ -152,6 +157,12 @@ export default function CartPage() {
                   {formatKES(total)}
                 </span>
               </div>
+              {vatEnabled && (
+                <div className="flex justify-between text-sm font-body mb-1">
+                  <span className="text-earth-500">VAT ({vatRate}%)</span>
+                  <span className="text-earth-700">{formatKES(vatAmount)}</span>
+                </div>
+              )}
               <p className="text-xs text-earth-400 font-body mb-5">
                 Delivery fee calculated at checkout
               </p>

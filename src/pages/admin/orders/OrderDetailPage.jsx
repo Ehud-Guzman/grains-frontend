@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { adminOrderService } from '../../../services/admin/order.service'
+import { adminDriverService } from '../../../services/admin/driver.service'
 import { useOnboarding } from '../../../context/OnboardingContext'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { OrderStatusTimeline } from '../../../components/orders/OrderStatusTimeline'
@@ -74,6 +75,9 @@ export default function AdminOrderDetailPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectForm, setShowRejectForm] = useState(false)
   const [showReceipt, setShowReceipt]   = useState(false)
+  const [drivers, setDrivers]           = useState([])
+  const [selectedDriver, setSelectedDriver] = useState('')
+  const [assigningDriver, setAssigningDriver] = useState(false)
 
   const fetchOrder = async () => {
     try {
@@ -84,6 +88,26 @@ export default function AdminOrderDetailPage() {
   }
 
   useEffect(() => { fetchOrder() }, [id])
+
+  useEffect(() => {
+    if (!isSuperAdmin) {
+      adminDriverService.getAll({ available: 'true' })
+        .then(res => setDrivers(res.data.data || []))
+        .catch(() => {})
+    }
+  }, [isSuperAdmin])
+
+  const handleAssignDriver = async () => {
+    if (!selectedDriver) return toast.error('Select a driver first')
+    setAssigningDriver(true)
+    try {
+      await adminDriverService.assignToOrder(id, selectedDriver)
+      toast.success('Driver assigned — order is now out for delivery')
+      fetchOrder()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign driver')
+    } finally { setAssigningDriver(false) }
+  }
 
   const handleApprove = async () => {
     setActionLoading(true)
@@ -417,6 +441,52 @@ export default function AdminOrderDetailPage() {
                 </DetailRow>
               </div>
             </Card>
+
+            {/* Assign Driver — delivery orders in preparing/out_for_delivery */}
+            {!isSuperAdmin && order.deliveryMethod === 'delivery' &&
+              ['preparing', 'out_for_delivery'].includes(order.status) && (
+              <Card title="Assign Driver">
+                <div className="p-4 space-y-3">
+                  {order.driverId && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
+                      <Truck size={13} className="text-green-600" />
+                      <span className="text-xs font-admin font-semibold text-green-700">
+                        Driver assigned
+                      </span>
+                    </div>
+                  )}
+                  <select
+                    value={selectedDriver}
+                    onChange={e => setSelectedDriver(e.target.value)}
+                    className="w-full border border-admin-200 rounded-xl px-3 py-2.5 text-sm
+                      font-admin text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400
+                      bg-admin-50">
+                    <option value="">
+                      {order.driverId ? 'Reassign driver…' : 'Select driver…'}
+                    </option>
+                    {drivers.map(d => (
+                      <option key={d._id} value={d._id}>
+                        {d.name} {d.vehicleInfo?.plate ? `· ${d.vehicleInfo.plate}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAssignDriver}
+                    disabled={assigningDriver || !selectedDriver}
+                    className="w-full py-2.5 bg-brand-500 text-white rounded-xl text-sm font-admin
+                      font-semibold hover:bg-brand-600 disabled:opacity-40 transition-colors
+                      flex items-center justify-center gap-2">
+                    <Truck size={14} />
+                    {assigningDriver ? 'Assigning…' : order.driverId ? 'Reassign Driver' : 'Assign Driver'}
+                  </button>
+                  {drivers.length === 0 && (
+                    <p className="text-xs font-admin text-admin-400 text-center">
+                      No available drivers. <a href="/admin/drivers" className="text-brand-600 hover:underline">Add drivers</a>
+                    </p>
+                  )}
+                </div>
+              </Card>
+            )}
 
             {/* Payment */}
             <Card title="Payment">

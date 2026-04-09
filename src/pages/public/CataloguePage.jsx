@@ -213,12 +213,13 @@ export default function CataloguePage() {
   return (
     <div className="min-h-screen bg-cream">
 
-      <StoryRail products={products} pagination={pagination} startTour={startTour} />
+      <div data-tour="public-shop-search">
+        <StoryRail products={products} pagination={pagination} startTour={startTour} />
 
-      <div className="container-page py-6">
+        <div className="container-page py-6">
 
-        {/* ── Search + controls ──────────────────────────────────── */}
-        <div className="flex gap-2 mb-4" data-tour="public-shop-search">
+          {/* ── Search + controls ──────────────────────────────────── */}
+          <div className="flex gap-2 mb-4">
           {/* Search with autocomplete */}
           <SearchAutocomplete
             value={searchInput}
@@ -390,6 +391,7 @@ export default function CataloguePage() {
           </div>
         </div>
       </div>
+      </div>{/* /data-tour */}
 
     </div>
   )
