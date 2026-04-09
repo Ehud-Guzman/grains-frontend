@@ -64,11 +64,13 @@ api.interceptors.response.use(
           { refreshToken }
         )
 
-        const newAccessToken = response.data.data.accessToken
-        const newRefreshToken = response.data.data.refreshToken
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken, user } = response.data.data
 
         sessionStorage.setItem('accessToken', newAccessToken)
         localStorage.setItem('refreshToken', newRefreshToken)
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user))
+        }
 
         processQueue(null, newAccessToken)
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`

@@ -97,7 +97,15 @@ export const AuthProvider = ({ children }) => {
       return { requiresBranchSelection: false, user: data.user }
     }
 
-    // Admin — return branch info to LoginPage for step 2
+    // Admin — clear any stale session before branch selection completes
+    sessionStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+    localStorage.removeItem('currentBranch')
+    setUser(null)
+    setCurrentBranch(null)
+
+    // Return branch info to LoginPage for step 2
     return {
       requiresBranchSelection: true,
       preAuthToken: data.preAuthToken,
