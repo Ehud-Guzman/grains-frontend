@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Eye, EyeOff, LogIn, Lock, X, ArrowLeft, CheckCircle, MapPin, Building2, ShoppingBag } from 'lucide-react'
+import { Eye, EyeOff, LogIn, Lock, X, ArrowLeft, CheckCircle, MapPin, Building2, ShoppingBag, Shield } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
@@ -54,18 +54,18 @@ function ChangePasswordModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-warm-lg w-full max-w-sm border border-earth-100">
+      <div className="bg-white rounded-2xl shadow-warm-lg w-full max-w-sm border border-earth-200">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-earth-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-earth-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Lock size={15} className="text-brand-600" />
+            <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+              <Lock size={15} className="text-brand-700" />
             </div>
             <h3 className="font-display font-semibold text-earth-900">Change Password</h3>
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-600 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-earth-200 text-earth-500 hover:text-earth-800 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -77,13 +77,13 @@ function ChangePasswordModal({ onClose }) {
                 <CheckCircle size={28} className="text-green-500" />
               </div>
               <p className="font-display font-semibold text-earth-900 mb-1">Password Updated</p>
-              <p className="text-earth-500 text-sm font-body">Your password has been changed successfully</p>
+              <p className="text-earth-600 text-sm font-body">Your password has been changed successfully</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Current password */}
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-600 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-body font-semibold text-earth-800 uppercase tracking-wide mb-1.5">
                   Current Password
                 </label>
                 <div className="relative">
@@ -94,12 +94,12 @@ function ChangePasswordModal({ onClose }) {
                     placeholder="Your current password"
                     required
                     autoFocus
-                    className="w-full border border-earth-200 rounded-xl px-4 py-2.5 pr-10 text-sm
-                      font-body text-earth-800 placeholder-earth-400 focus:outline-none
-                      focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-earth-50"
+                    className="w-full border border-earth-300 rounded-xl px-4 py-2.5 pr-10 text-sm
+                      font-body text-earth-900 placeholder-earth-400 focus:outline-none
+                      focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white"
                   />
                   <button type="button" onClick={() => toggle('current')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-600 p-0.5">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-700 p-0.5">
                     {show.current ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -107,7 +107,7 @@ function ChangePasswordModal({ onClose }) {
 
               {/* New password */}
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-600 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-body font-semibold text-earth-800 uppercase tracking-wide mb-1.5">
                   New Password
                 </label>
                 <div className="relative">
@@ -117,12 +117,12 @@ function ChangePasswordModal({ onClose }) {
                     onChange={e => setForm(f => ({ ...f, next: e.target.value }))}
                     placeholder="At least 8 characters"
                     required
-                    className="w-full border border-earth-200 rounded-xl px-4 py-2.5 pr-10 text-sm
-                      font-body text-earth-800 placeholder-earth-400 focus:outline-none
-                      focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-earth-50"
+                    className="w-full border border-earth-300 rounded-xl px-4 py-2.5 pr-10 text-sm
+                      font-body text-earth-900 placeholder-earth-400 focus:outline-none
+                      focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white"
                   />
                   <button type="button" onClick={() => toggle('next')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-600 p-0.5">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-700 p-0.5">
                     {show.next ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -133,7 +133,7 @@ function ChangePasswordModal({ onClose }) {
                       {[1,2,3,4,5].map(i => (
                         <div key={i}
                           className={`h-1 flex-1 rounded-full transition-all ${
-                            i <= strength.score ? strength.color : 'bg-earth-100'
+                            i <= strength.score ? strength.color : 'bg-earth-200'
                           }`}
                         />
                       ))}
@@ -150,7 +150,7 @@ function ChangePasswordModal({ onClose }) {
 
               {/* Confirm password */}
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-600 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-body font-semibold text-earth-800 uppercase tracking-wide mb-1.5">
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -161,17 +161,17 @@ function ChangePasswordModal({ onClose }) {
                     placeholder="Repeat new password"
                     required
                     className={`w-full border rounded-xl px-4 py-2.5 pr-10 text-sm font-body
-                      text-earth-800 placeholder-earth-400 focus:outline-none
-                      focus:ring-2 focus:border-transparent bg-earth-50 transition-colors ${
+                      text-earth-900 placeholder-earth-400 focus:outline-none
+                      focus:ring-2 focus:border-transparent bg-white transition-colors ${
                         form.confirm && form.next !== form.confirm
                           ? 'border-red-300 focus:ring-red-300'
                           : form.confirm && form.next === form.confirm
                           ? 'border-green-300 focus:ring-green-300'
-                          : 'border-earth-200 focus:ring-brand-400'
+                          : 'border-earth-300 focus:ring-brand-400'
                       }`}
                   />
                   <button type="button" onClick={() => toggle('confirm')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-600 p-0.5">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-700 p-0.5">
                     {show.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -192,8 +192,8 @@ function ChangePasswordModal({ onClose }) {
               )}
 
               <button type="submit" disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-earth-900 text-white
-                  rounded-xl text-sm font-body font-semibold hover:bg-earth-800 transition-all
+                className="w-full flex items-center justify-center gap-2 py-3 bg-brand-700 text-white
+                  rounded-xl text-sm font-body font-semibold hover:bg-brand-800 transition-all
                   disabled:opacity-60 active:scale-[0.98]">
                 {loading ? (
                   <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Updating…</>
@@ -228,14 +228,14 @@ function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack 
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-warm border border-earth-100 p-6">
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-          <Building2 size={15} className="text-brand-600" />
+    <div className="bg-white rounded-2xl shadow-warm-lg border border-earth-200 p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-9 h-9 bg-brand-100 rounded-xl flex items-center justify-center">
+          <Building2 size={16} className="text-brand-700" />
         </div>
         <div>
           <p className="font-display font-semibold text-earth-900 text-sm">Select Branch</p>
-          <p className="text-earth-500 text-xs font-body">Welcome, {pendingUser?.name}</p>
+          <p className="text-earth-600 text-xs font-body">Welcome, {pendingUser?.name}</p>
         </div>
       </div>
 
@@ -247,13 +247,13 @@ function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack 
             onClick={() => setSelected(branch._id)}
             className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
               selected === branch._id
-                ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-300'
-                : 'border-earth-200 hover:border-earth-300 bg-earth-50'
+                ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-300'
+                : 'border-earth-200 hover:border-earth-300 bg-earth-100'
             }`}
           >
             <p className="font-body font-semibold text-earth-900 text-sm">{branch.name}</p>
             {branch.location && (
-              <p className="text-earth-500 text-xs font-body flex items-center gap-1 mt-0.5">
+              <p className="text-earth-600 text-xs font-body flex items-center gap-1 mt-0.5">
                 <MapPin size={10} /> {branch.location}
               </p>
             )}
@@ -271,8 +271,8 @@ function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack 
         type="button"
         onClick={handleSelect}
         disabled={loading || !selected}
-        className="w-full flex items-center justify-center gap-2 py-3.5 bg-earth-900
-          text-white rounded-xl text-sm font-body font-semibold hover:bg-earth-800
+        className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-700
+          text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-800
           transition-all active:scale-[0.98] disabled:opacity-60 shadow-warm"
       >
         {loading ? (
@@ -285,7 +285,7 @@ function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack 
       <button
         type="button"
         onClick={onBack}
-        className="w-full mt-3 text-center text-sm text-earth-500 hover:text-earth-700 font-body transition-colors"
+        className="w-full mt-3 text-center text-sm text-earth-600 hover:text-earth-900 font-body transition-colors"
       >
         ← Back to login
       </button>
@@ -307,7 +307,7 @@ export default function LoginPage() {
   const [showChangePassword, setShowChangePassword] = useState(false)
 
   // Step 2: branch selection (admin only)
-  const [branchStep, setBranchStep] = useState(null) // { preAuthToken, branches, user }
+  const [branchStep, setBranchStep] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -322,7 +322,6 @@ export default function LoginPage() {
         return
       }
 
-      // Route by role
       const userData = result.user
       if (ADMIN_ROLES.includes(userData.role)) {
         window.location.replace('/admin/dashboard')
@@ -351,55 +350,38 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-cream flex flex-col">
+      {/* ── Page: warm off-white background ─────────────────────────────────── */}
+      <div className="min-h-screen bg-[#F5F2EF] flex flex-col">
 
-        {/* ── Top brand strip ──────────────────────────────────────────── */}
-        <div className="bg-earth-900 py-3 px-4">
-          <div className="max-w-sm mx-auto">
+        {/* ── Top nav strip ─────────────────────────────────────────────────── */}
+        <div className="bg-white border-b border-earth-200 py-3 px-4">
+          <div className="max-w-sm mx-auto flex items-center justify-between">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 rounded-full border border-earth-700
-                bg-earth-800/80 px-3.5 py-2 text-sm font-body font-medium text-earth-200
-                hover:bg-earth-700 hover:text-cream transition-all shadow-sm"
+              className="inline-flex items-center gap-1.5 text-sm font-body font-medium
+                text-earth-600 hover:text-brand-700 transition-colors"
             >
               <ArrowLeft size={15} />
               <span>Back to {shopInfo.name}</span>
             </Link>
+            <span className="flex items-center gap-1.5 text-xs font-body text-earth-500">
+              <Shield size={12} className="text-brand-600" />
+              Secure Login
+            </span>
           </div>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-4 py-10">
           <div className="w-full max-w-sm">
 
-            {/* Branch selection step (admin only) */}
-            {branchStep && (
-              <>
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-earth-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-warm overflow-hidden">
-                    <img src="/Vittorios-logo.jpeg" alt="Vittorios" className="w-full h-full object-cover"
-                      onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
-                    <div className="w-full h-full items-center justify-center hidden">
-                      <span className="text-white font-display font-bold text-2xl">V</span>
-                    </div>
-                  </div>
-                  <h1 className="font-display text-2xl font-bold text-earth-900">Choose Branch</h1>
-                  <p className="text-earth-500 text-sm mt-1 font-body">Select the branch you're working at</p>
-                </div>
-                <BranchSelector
-                  branches={branchStep.branches}
-                  preAuthToken={branchStep.preAuthToken}
-                  pendingUser={branchStep.user}
-                  onSelect={handleBranchSelect}
-                  onBack={() => setBranchStep(null)}
-                />
-              </>
-            )}
-
-            {/* Credentials step */}
-            {!branchStep && <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-earth-900 rounded-2xl flex items-center justify-center
-                mx-auto mb-4 shadow-warm overflow-hidden">
-                <img src="/Vittorios-logo.jpeg" alt="Vittorios"
+            {/* ── Brand header ─────────────────────────────────────────────── */}
+            <div className="text-center mb-8">
+              {/* Logo badge — terracotta gradient */}
+              <div className="w-20 h-20 rounded-2xl mx-auto mb-5 shadow-warm-lg overflow-hidden
+                bg-gradient-to-br from-brand-500 to-brand-800 flex items-center justify-center">
+                <img
+                  src="/Vittorios-logo.jpeg"
+                  alt="Vittorios"
                   className="w-full h-full object-cover"
                   onError={e => {
                     e.target.style.display = 'none'
@@ -407,115 +389,153 @@ export default function LoginPage() {
                   }}
                 />
                 <div className="w-full h-full items-center justify-center hidden">
-                  <span className="text-white font-display font-bold text-2xl">V</span>
+                  <span className="text-white font-display font-bold text-3xl">V</span>
                 </div>
               </div>
-              <h1 className="font-display text-2xl font-bold text-earth-900">Welcome back</h1>
-              <p className="text-earth-500 text-sm mt-1 font-body">{shopInfo.name}</p>
-            </div>}
 
-            {/* Credentials card */}
-            {!branchStep && <div className="bg-white rounded-2xl shadow-warm border border-earth-100 p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {branchStep ? (
+                <>
+                  <h1 className="font-display text-2xl font-bold text-earth-900">Choose Branch</h1>
+                  <p className="text-earth-600 text-sm mt-1 font-body">Select the branch you're working at</p>
+                </>
+              ) : (
+                <>
+                  <h1 className="font-display text-2xl font-bold text-earth-900">Welcome back</h1>
+                  <p className="text-earth-600 text-sm mt-1 font-body">{shopInfo.name}</p>
+                </>
+              )}
+            </div>
 
-                <div>
-                  <label className="block text-xs font-body font-semibold text-earth-600
-                    uppercase tracking-wide mb-1.5">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
-                    placeholder="0712 345 678"
-                    className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm font-body
-                      text-earth-800 placeholder-earth-400 focus:outline-none focus:ring-2
-                      focus:ring-brand-400 focus:border-transparent bg-earth-50 transition-all"
-                    required
-                    autoFocus
-                  />
-                </div>
+            {/* ── Branch selection step ─────────────────────────────────────── */}
+            {branchStep && (
+              <BranchSelector
+                branches={branchStep.branches}
+                preAuthToken={branchStep.preAuthToken}
+                pendingUser={branchStep.user}
+                onSelect={handleBranchSelect}
+                onBack={() => setBranchStep(null)}
+              />
+            )}
 
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-body font-semibold text-earth-600 uppercase tracking-wide">
-                      Password
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowChangePassword(true)}
-                      className="text-xs text-brand-600 hover:text-brand-700 font-body transition-colors"
-                    >
-                      Change password
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                      placeholder="Your password"
-                      className="w-full border border-earth-200 rounded-xl px-4 py-3 pr-12 text-sm
-                        font-body text-earth-800 placeholder-earth-400 focus:outline-none
-                        focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-earth-50 transition-all"
-                      required
-                    />
-                    <button type="button" onClick={() => setShowPass(s => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400
-                        hover:text-earth-600 p-1 transition-colors">
-                      {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 text-sm
-                    text-red-700 font-body">
-                    {error}
-                  </div>
-                )}
-
-                <button type="submit" disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-earth-900
-                    text-white rounded-xl text-sm font-body font-semibold hover:bg-earth-800
-                    transition-all active:scale-[0.98] disabled:opacity-60 shadow-warm mt-2">
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Signing in…
-                    </>
-                  ) : (
-                    <>
-                      <LogIn size={17} />
-                      Sign In
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <div className="border-t border-earth-100 mt-5 pt-5 text-center">
-                <p className="text-sm text-earth-500 font-body">
-                  Don't have an account?{' '}
-                  <Link to="/register" className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
-                    Create one
-                  </Link>
-                </p>
-              </div>
-            </div>}
-
+            {/* ── Credentials card ──────────────────────────────────────────── */}
             {!branchStep && (
-              <div className="mt-5">
+              <div className="bg-white rounded-2xl shadow-warm-lg border border-earth-200 overflow-hidden">
+                {/* Premium top accent */}
+                <div className="h-1 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400" />
+
+                <div className="p-6">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+
+                    <div>
+                      <label className="block text-xs font-body font-semibold text-earth-800
+                        uppercase tracking-wide mb-1.5">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                        placeholder="0712 345 678"
+                        className="w-full border border-earth-300 rounded-xl px-4 py-3 text-sm font-body
+                          text-earth-900 placeholder-earth-400 focus:outline-none focus:ring-2
+                          focus:ring-brand-400 focus:border-transparent bg-white transition-all"
+                        required
+                        autoFocus
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-body font-semibold text-earth-800 uppercase tracking-wide">
+                          Password
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowChangePassword(true)}
+                          className="text-xs text-brand-600 hover:text-brand-800 font-body font-medium transition-colors"
+                        >
+                          Change password
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showPass ? 'text' : 'password'}
+                          value={form.password}
+                          onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                          placeholder="Your password"
+                          className="w-full border border-earth-300 rounded-xl px-4 py-3 pr-12 text-sm
+                            font-body text-earth-900 placeholder-earth-400 focus:outline-none
+                            focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white transition-all"
+                          required
+                        />
+                        <button type="button" onClick={() => setShowPass(s => !s)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400
+                            hover:text-earth-700 p-1 transition-colors">
+                          {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 text-sm
+                        text-red-700 font-body">
+                        {error}
+                      </div>
+                    )}
+
+                    <button type="submit" disabled={loading}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-700
+                        text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-800
+                        transition-all active:scale-[0.98] disabled:opacity-60 shadow-warm mt-2">
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Signing in…
+                        </>
+                      ) : (
+                        <>
+                          <LogIn size={17} />
+                          Sign In
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="border-t border-earth-200 mt-5 pt-5 text-center">
+                    <p className="text-sm text-earth-600 font-body">
+                      Don't have an account?{' '}
+                      <Link to="/register" className="text-brand-700 hover:text-brand-900 font-semibold transition-colors">
+                        Create one
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Continue browsing ─────────────────────────────────────────── */}
+            {!branchStep && (
+              <div className="mt-4">
                 <Link
                   to="/shop"
                   className="flex items-center justify-center gap-2 rounded-2xl border border-earth-200
                     bg-white px-4 py-3 text-sm font-body font-medium text-earth-700 shadow-warm
-                    hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all"
+                    hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 transition-all"
                 >
                   <ShoppingBag size={16} />
                   <span>Continue Browsing</span>
                 </Link>
               </div>
             )}
+
+            {/* ── Trust badge ───────────────────────────────────────────────── */}
+            {!branchStep && (
+              <p className="text-center text-xs text-earth-500 font-body mt-5 flex items-center justify-center gap-1.5">
+                <Shield size={11} className="text-brand-500" />
+                Your data is safe and encrypted
+              </p>
+            )}
+
           </div>
         </div>
       </div>

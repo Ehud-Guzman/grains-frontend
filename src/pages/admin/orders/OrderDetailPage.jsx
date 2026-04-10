@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../../context/AuthContext'
 import { adminOrderService } from '../../../services/admin/order.service'
 import { adminDriverService } from '../../../services/admin/driver.service'
+import { adminPaymentService } from '../../../services/admin/payment.service'
 import { useOnboarding } from '../../../context/OnboardingContext'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { OrderStatusTimeline } from '../../../components/orders/OrderStatusTimeline'
@@ -67,6 +68,7 @@ function DetailRow({ icon: Icon, label, children }) {
 export default function AdminOrderDetailPage() {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
+  const canConfirmPayment = ['supervisor', 'admin'].includes(user?.role)
   const { markChecklistItem, markMilestone } = useOnboarding()
   const { id } = useParams()
   const [order, setOrder]               = useState(null)
@@ -78,6 +80,7 @@ export default function AdminOrderDetailPage() {
   const [drivers, setDrivers]           = useState([])
   const [selectedDriver, setSelectedDriver] = useState('')
   const [assigningDriver, setAssigningDriver] = useState(false)
+  const [confirmingPayment, setConfirmingPayment] = useState(false)
 
   const fetchOrder = async () => {
     try {
@@ -144,6 +147,17 @@ export default function AdminOrderDetailPage() {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed')
     } finally { setActionLoading(false) }
+  }
+
+  const handleConfirmPayment = async () => {
+    setConfirmingPayment(true)
+    try {
+      await adminPaymentService.confirmManual(id)
+      toast.success('Payment marked as received')
+      fetchOrder()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm payment')
+    } finally { setConfirmingPayment(false) }
   }
 
   // ── LOADING / NOT FOUND ───────────────────────────────────────────────────
@@ -518,6 +532,22 @@ export default function AdminOrderDetailPage() {
                      order.paymentStatus === 'failed' ? 'Failed'  : 'Pending'}
                   </span>
                 </div>
+
+                {/* Confirm cash payment — supervisor/admin only */}
+                {canConfirmPayment &&
+                  ['pickup', 'delivery'].includes(order.paymentMethod) &&
+                  order.paymentStatus === 'pending' && (
+                  <button
+                    onClick={handleConfirmPayment}
+                    disabled={confirmingPayment}
+                    className="flex items-center justify-center gap-2 w-full mt-3 py-2.5
+                      bg-green-600 text-white rounded-xl text-sm font-admin font-semibold
+                      hover:bg-green-700 disabled:opacity-50 transition-all active:scale-[0.98]
+                      shadow-sm">
+                    <Check size={14} />
+                    {confirmingPayment ? 'Confirming…' : 'Confirm Payment Received'}
+                  </button>
+                )}
               </div>
             </Card>
 

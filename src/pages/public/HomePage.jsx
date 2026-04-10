@@ -81,12 +81,14 @@ export default function HomePage() {
     <div>
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="relative bg-earth-900 text-cream overflow-hidden">
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'1\'/%3E%3Ccircle cx=\'33\' cy=\'33\' r=\'1\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+      <section className="relative bg-white overflow-hidden border-b border-earth-100">
+
+        {/* Subtle dot pattern */}
+        <div className="absolute inset-0 opacity-[0.04]"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'1\'/%3E%3Ccircle cx=\'33\' cy=\'33\' r=\'1\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
 
         {/* Glow blob */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-400/15 rounded-full
           blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
 
         <div className="container-page py-16 sm:py-24 relative">
@@ -94,13 +96,13 @@ export default function HomePage() {
 
             {/* Left: text + CTAs */}
             <div>
-           
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-cream
+
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-earth-900
                 leading-tight mb-6">
                 Quality Grains,
-                <span className="text-brand-400 block">Delivered Fresh</span>
+                <span className="text-brand-500 block">Delivered Fresh</span>
               </h1>
-              <p className="font-body text-earth-300 text-lg mb-8 leading-relaxed max-w-xl">
+              <p className="font-body text-earth-600 text-lg mb-8 leading-relaxed max-w-xl">
                 {shopInfo.tagline}. Premium maize, beans, rice and more are available for pickup
                 or delivery from {shopInfo.location}.
               </p>
@@ -112,32 +114,32 @@ export default function HomePage() {
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link to="/track"
-                  className="btn-outline border-earth-600 text-earth-200 hover:bg-earth-800
-                    hover:border-earth-500 text-base px-8 py-4">
+                  className="btn-outline text-base px-8 py-4">
                   Track Order
                 </Link>
                 <button
                   onClick={() => startTour('public', { force: true })}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8
-                    px-6 py-4 text-base font-body font-semibold text-cream transition-all hover:bg-white/12"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-earth-200
+                    bg-earth-50 px-6 py-4 text-base font-body font-semibold text-earth-700
+                    transition-all hover:bg-earth-100"
                 >
-                  <Sparkles size={17} className="text-brand-300" />
+                  <Sparkles size={17} className="text-brand-500" />
                   Take Tour
                 </button>
               </div>
             </div>
 
-            {/* Right: 2×2 product image mosaic — muted so it doesn't compete with the spotlight popup */}
+            {/* Right: 2×2 product image mosaic */}
             <div className="hidden lg:block relative select-none">
-              {/* Fade edges into the dark background */}
-              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-earth-900 to-transparent z-10 pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-earth-900 to-transparent z-10 pointer-events-none" />
+              {/* Fade edges into white background */}
+              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
 
               <div className="grid grid-cols-2 gap-3">
                 {loading
                   ? [0, 1, 2, 3].map(i => (
                       <div key={i}
-                        className={`aspect-square rounded-2xl bg-earth-800 animate-pulse ${i % 2 === 1 ? 'mt-5' : ''}`}
+                        className={`aspect-square rounded-2xl bg-earth-100 animate-pulse ${i % 2 === 1 ? 'mt-5' : ''}`}
                       />
                     ))
                   : (() => {
@@ -146,25 +148,20 @@ export default function HomePage() {
                         .filter(p => p.img)
                         .slice(0, 4)
 
-                      // Pad to 4 slots so the grid stays full
                       const slots = [...heroImgs, ...Array(4 - heroImgs.length).fill(null)]
 
                       return slots.map((item, i) => (
                         <div key={i}
-                          className={`relative aspect-square rounded-2xl overflow-hidden bg-earth-800 ${i % 2 === 1 ? 'mt-5' : ''}`}
+                          className={`relative aspect-square rounded-2xl overflow-hidden bg-earth-100 border border-earth-200 ${i % 2 === 1 ? 'mt-5' : ''}`}
                         >
                           {item && (
-                            <>
-                              <img
-                                src={getOptimizedImageUrl(item.img, { width: 400, height: 400 })}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                                loading="eager"
-                                decoding="async"
-                              />
-                              {/* Dark veil keeps images subdued */}
-                              <div className="absolute inset-0 bg-earth-900/50" />
-                            </>
+                            <img
+                              src={getOptimizedImageUrl(item.img, { width: 400, height: 400 })}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              loading="eager"
+                              decoding="async"
+                            />
                           )}
                         </div>
                       ))
@@ -175,10 +172,6 @@ export default function HomePage() {
 
           </div>
         </div>
-
-        {/* Wave */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-cream"
-          style={{ clipPath: 'ellipse(55% 100% at 50% 100%)' }} />
       </section>
 
       {/* ── Trust badges ─────────────────────────────────────────────── */}
@@ -312,17 +305,15 @@ export default function HomePage() {
         <section className="py-12 bg-earth-50">
           <div className="container-page">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] items-start">
-              <div className="bg-earth-900 text-cream rounded-[2rem] p-8 sm:p-10 overflow-hidden relative">
-                <div className="absolute inset-0 opacity-10"
-                  style={{ backgroundImage: 'radial-gradient(circle at top left, rgba(255,255,255,0.35), transparent 42%)' }} />
+              <div className="bg-earth-50 border border-earth-200 rounded-[2rem] p-8 sm:p-10 overflow-hidden relative">
                 <div className="relative">
-                  <p className="text-brand-300 text-xs font-body font-semibold uppercase tracking-[0.22em] mb-4">
+                  <p className="text-brand-600 text-xs font-body font-semibold uppercase tracking-[0.22em] mb-4">
                     More to explore
                   </p>
-                  <h3 className="font-display text-3xl sm:text-4xl font-bold leading-tight mb-4">
+                  <h3 className="font-display text-3xl sm:text-4xl font-bold text-earth-900 leading-tight mb-4">
                     A fuller look at what we stock every day.
                   </h3>
-                  <p className="text-earth-300 font-body leading-relaxed max-w-md">
+                  <p className="text-earth-600 font-body leading-relaxed max-w-md">
                     Browse more grains, cereals, legumes, and feed options straight from the homepage,
                     then open the full catalogue when you want every product in one place.
                   </p>
@@ -332,8 +323,8 @@ export default function HomePage() {
                     </Link>
                     <Link
                       to="/shop?inStock=true"
-                      className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/8 px-6 py-3
-                        text-sm font-body font-semibold text-cream transition-all hover:bg-white/12"
+                      className="inline-flex items-center justify-center rounded-xl border border-earth-300 bg-white px-6 py-3
+                        text-sm font-body font-semibold text-earth-700 transition-all hover:bg-earth-100"
                     >
                       In-Stock Picks
                     </Link>

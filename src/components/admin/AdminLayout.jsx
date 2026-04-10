@@ -148,7 +148,7 @@ export default function AdminLayout() {
 
   // ── SIDEBAR ────────────────────────────────────────────────────────────────
   const SidebarContent = () => (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#0a0f1a' }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#1C0E08' }}>
 
       {/* Logo */}
       <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
@@ -262,7 +262,7 @@ export default function AdminLayout() {
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 border-r border-white/5"
-        style={{ backgroundColor: '#0a0f1a' }}>
+        style={{ backgroundColor: '#1C0E08' }}>
         <SidebarContent />
       </aside>
 
@@ -273,7 +273,7 @@ export default function AdminLayout() {
             onClick={() => setSidebarOpen(false)} />
           <aside className="fixed left-0 top-0 h-full w-64 z-50 lg:hidden flex flex-col
             border-r border-white/10 shadow-2xl"
-            style={{ backgroundColor: '#0a0f1a', animation: 'slideInLeft 0.22s ease-out' }}>
+            style={{ backgroundColor: '#1C0E08', animation: 'slideInLeft 0.22s ease-out' }}>
             <SidebarContent />
           </aside>
         </>

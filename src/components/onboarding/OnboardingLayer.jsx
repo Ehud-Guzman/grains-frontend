@@ -434,7 +434,7 @@ function HelpCenter() {
     <>
       <button
         onClick={openHelpCenter}
-        className="fixed bottom-5 right-5 z-[110] inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#101826] px-4 py-3 text-sm font-body font-semibold text-white shadow-[0_18px_45px_rgba(0,0,0,0.35)] transition-all hover:-translate-y-0.5 hover:bg-[#152033]"
+        className="fixed bottom-5 right-5 z-[110] inline-flex items-center gap-2 rounded-full border border-brand-300 bg-white px-4 py-3 text-sm font-body font-semibold text-brand-700 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all hover:-translate-y-0.5 hover:bg-brand-50"
       >
         <LifeBuoy size={16} />
         Help
@@ -445,46 +445,45 @@ function HelpCenter() {
           {/* Backdrop */}
           <button
             onClick={closeHelpCenter}
-            className="absolute inset-0 bg-[#05070c]/55 backdrop-blur-none sm:backdrop-blur-sm"
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
           />
 
           {/* Panel */}
-          <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#0f1725] text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-            <div className="absolute inset-0 pointer-events-none opacity-70">
-              <div className="absolute -top-16 right-0 h-44 w-44 rounded-full bg-brand-500/15 blur-3xl" />
-              <div className="absolute bottom-10 left-0 h-44 w-44 rounded-full bg-amber-300/10 blur-3xl" />
-            </div>
+          <div className="relative h-full w-full max-w-md overflow-y-auto border-l border-earth-200 bg-white text-earth-900 shadow-[0_30px_80px_rgba(0,0,0,0.15)]">
 
             <div className="relative p-6">
               {/* Header */}
               <div className="flex items-start justify-between gap-3 mb-6">
                 <div>
-                  <TourBadge>Help Center</TourBadge>
-                  <h3 className="font-display text-3xl font-bold text-white mt-4 mb-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-body font-semibold uppercase tracking-[0.2em] text-brand-700">
+                    <LifeBuoy size={12} />
+                    Help Center
+                  </div>
+                  <h3 className="font-display text-3xl font-bold text-earth-900 mt-4 mb-2">
                     How can we help?
                   </h3>
-                  <p className="text-sm font-body leading-relaxed text-white/70">
+                  <p className="text-sm font-body leading-relaxed text-earth-500">
                     Guides, tips, and your onboarding progress — all in one place.
                   </p>
                 </div>
                 <button
                   onClick={closeHelpCenter}
-                  className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                  className="rounded-full border border-earth-200 bg-earth-50 p-2 text-earth-400 transition-colors hover:bg-earth-100 hover:text-earth-700"
                 >
                   <X size={16} />
                 </button>
               </div>
 
               {/* Tabs */}
-              <div className="flex gap-1 rounded-2xl border border-white/10 bg-white/5 p-1 mb-6">
+              <div className="flex gap-1 rounded-2xl border border-earth-200 bg-earth-50 p-1 mb-6">
                 {tabs.map(t => (
                   <button
                     key={t.id}
                     onClick={() => setTab(t.id)}
                     className={`flex-1 rounded-xl py-2 text-xs font-body font-semibold transition-all ${
                       tab === t.id
-                        ? 'bg-brand-500 text-white shadow-sm'
-                        : 'text-white/50 hover:text-white/80'
+                        ? 'bg-brand-700 text-white shadow-sm'
+                        : 'text-earth-500 hover:text-earth-800'
                     }`}
                   >
                     {t.label}
@@ -495,24 +494,24 @@ function HelpCenter() {
               {/* ── Get Started tab ── */}
               {tab === 'start' && (
                 <>
-                  <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 mb-5">
+                  <div className="rounded-[1.5rem] border border-brand-200 bg-brand-50 p-5 mb-5">
                     <div className="flex items-center justify-between gap-4 mb-3">
                       <div>
-                        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] text-white/45">
+                        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] text-earth-400">
                           Current Experience
                         </p>
-                        <p className="font-display text-2xl font-bold capitalize text-white mt-2">
+                        <p className="font-display text-2xl font-bold capitalize text-earth-900 mt-2">
                           {currentExperience}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display text-3xl font-bold text-white">{progress}%</p>
-                        <p className="text-xs font-body text-white/50">progress</p>
+                        <p className="font-display text-3xl font-bold text-brand-700">{progress}%</p>
+                        <p className="text-xs font-body text-earth-400">progress</p>
                       </div>
                     </div>
                     <button
                       onClick={() => startTour(currentExperience, { force: true })}
-                      className="inline-flex items-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 text-sm font-body font-semibold text-white transition-all hover:bg-brand-600"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-sm font-body font-semibold text-white transition-all hover:bg-brand-800"
                     >
                       <Compass size={15} />
                       Replay Tour
@@ -521,20 +520,20 @@ function HelpCenter() {
 
                   <div className="space-y-3">
                     {items.map(item => (
-                      <div key={item.id} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+                      <div key={item.id} className="rounded-[1.35rem] border border-earth-200 bg-white p-4">
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-white/10 text-white'}`}>
+                          <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-earth-100 text-earth-400'}`}>
                             <CheckCircle2 size={18} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-body font-semibold text-white">{item.label}</p>
-                            <p className="text-xs font-body text-white/55 mt-1">{item.helper}</p>
+                            <p className="text-sm font-body font-semibold text-earth-800">{item.label}</p>
+                            <p className="text-xs font-body text-earth-400 mt-1">{item.helper}</p>
                           </div>
                           {!item.done && item.href && (
                             <Link
                               to={item.href}
                               onClick={closeHelpCenter}
-                              className="flex-shrink-0 text-xs font-body font-semibold text-brand-300 hover:text-brand-200"
+                              className="flex-shrink-0 text-xs font-body font-semibold text-brand-600 hover:text-brand-700"
                             >
                               {item.cta || 'Open'}
                             </Link>
@@ -552,23 +551,23 @@ function HelpCenter() {
                   {HOW_TO_BUY_STEPS.map((step, i) => {
                     const Icon = step.icon
                     return (
-                      <div key={i} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+                      <div key={i} className="rounded-[1.35rem] border border-earth-200 bg-white p-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/20 text-brand-300">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
                             <Icon size={17} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-body font-bold uppercase tracking-widest text-white/30">Step {i + 1}</span>
+                              <span className="text-[10px] font-body font-bold uppercase tracking-widest text-earth-400">Step {i + 1}</span>
                             </div>
-                            <p className="text-sm font-body font-semibold text-white">{step.title}</p>
-                            <p className="text-xs font-body text-white/55 mt-1 leading-relaxed">{step.body}</p>
+                            <p className="text-sm font-body font-semibold text-earth-800">{step.title}</p>
+                            <p className="text-xs font-body text-earth-500 mt-1 leading-relaxed">{step.body}</p>
                           </div>
                           {step.href && step.cta && (
                             <Link
                               to={step.href}
                               onClick={closeHelpCenter}
-                              className="flex-shrink-0 text-xs font-body font-semibold text-brand-300 hover:text-brand-200 whitespace-nowrap"
+                              className="flex-shrink-0 text-xs font-body font-semibold text-brand-600 hover:text-brand-700 whitespace-nowrap"
                             >
                               {step.cta}
                             </Link>
@@ -586,14 +585,14 @@ function HelpCenter() {
                   {TIPS.map((tip, i) => {
                     const Icon = tip.icon
                     return (
-                      <div key={i} className="rounded-[1.35rem] border border-white/10 bg-white/5 p-4">
+                      <div key={i} className="rounded-[1.35rem] border border-earth-200 bg-white p-4">
                         <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-300/15 text-amber-300">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                             <Icon size={17} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-body font-semibold text-white">{tip.title}</p>
-                            <p className="text-xs font-body text-white/55 mt-1 leading-relaxed">{tip.body}</p>
+                            <p className="text-sm font-body font-semibold text-earth-800">{tip.title}</p>
+                            <p className="text-xs font-body text-earth-500 mt-1 leading-relaxed">{tip.body}</p>
                           </div>
                         </div>
                       </div>

@@ -104,14 +104,14 @@ export default function TrackOrderPage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <div className="bg-earth-900 text-cream pt-10 pb-16">
+      <div className="bg-white border-b border-earth-200 pt-10 pb-16">
         <div className="container-page max-w-2xl text-center">
-          <div className="w-14 h-14 bg-brand-500/20 border border-brand-500/30 rounded-2xl
+          <div className="w-14 h-14 bg-brand-100 border border-brand-200 rounded-2xl
             flex items-center justify-center mx-auto mb-4">
-            <Package size={26} className="text-brand-400" />
+            <Package size={26} className="text-brand-700" />
           </div>
-          <h1 className="font-display text-3xl font-bold mb-2">Track Your Order</h1>
-          <p className="text-earth-400 font-body text-sm">
+          <h1 className="font-display text-3xl font-bold text-earth-900 mb-2">Track Your Order</h1>
+          <p className="text-earth-500 font-body text-sm">
             Enter your phone number and order reference to see the latest status
           </p>
         </div>
@@ -165,8 +165,8 @@ export default function TrackOrderPage() {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-earth-900
-                text-cream rounded-xl font-body font-semibold text-sm hover:bg-earth-800
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-700
+                text-white rounded-xl font-body font-semibold text-sm hover:bg-brand-800
                 active:scale-[0.99] transition-all disabled:opacity-60">
               {loading ? (
                 <>
@@ -270,8 +270,8 @@ export default function TrackOrderPage() {
                   <p className="text-earth-400 text-xs mt-0.5">Our team is available {shopInfo.hours}</p>
                 </div>
                 <a href={`tel:${shopInfo.phone}`}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-earth-900 text-cream
-                    rounded-xl text-sm font-body font-semibold hover:bg-earth-800 transition-colors
+                  className="flex items-center gap-2 px-5 py-2.5 bg-brand-700 text-white
+                    rounded-xl text-sm font-body font-semibold hover:bg-brand-800 transition-colors
                     whitespace-nowrap flex-shrink-0">
                   <Phone size={15} />
                   Call Us

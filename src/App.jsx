@@ -80,7 +80,7 @@ export default function App() {
                     borderRadius: "10px",
                     padding: "12px 16px",
                   },
-                  success: { iconTheme: { primary: "#C8912A", secondary: "#F8FAFC" } },
+                  success: { iconTheme: { primary: "#833D19", secondary: "#F8FAFC" } },
                   error:   { iconTheme: { primary: "#EF4444", secondary: "#F8FAFC" } },
                 }}
               />

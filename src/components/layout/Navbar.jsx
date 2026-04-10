@@ -46,7 +46,7 @@ function NavSearchBar({ onClose, autoFocus = false, size = 'md' }) {
       onChange={setQ}
       onSearch={handleSearch}
       placeholder="Search maize, beans, rice, flour…"
-      darkMode={size !== 'hero'}
+      darkMode={false}
       autoFocus={autoFocus}
       className="w-full"
     />
@@ -86,7 +86,7 @@ function AllCategoriesMenu({ categories }) {
 
       {open && (
         <div className="absolute left-0 top-full w-72 bg-white border border-earth-200
-          shadow-[0_16px_48px_rgba(0,0,0,0.14)] z-50 overflow-hidden
+          shadow-[0_16px_48px_rgba(0,0,0,0.10)] z-50 overflow-hidden
           animate-in fade-in slide-in-from-top-1 duration-150">
 
           {categories.length === 0 ? (
@@ -162,15 +162,15 @@ function CategoryStrip({ categories }) {
       {/* Left fade + arrow */}
       <div className={`absolute left-0 top-0 bottom-0 z-10 flex items-center
         transition-opacity duration-200 pointer-events-none ${canLeft ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="w-10 h-full bg-gradient-to-r from-earth-800/90 to-transparent" />
+        <div className="w-10 h-full bg-gradient-to-r from-white to-transparent" />
       </div>
       {canLeft && (
         <button
           onClick={() => scroll(-1)}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6
-            bg-earth-700 hover:bg-earth-600 text-earth-300 hover:text-cream
-            rounded-full flex items-center justify-center shadow-md transition-all
-            border border-earth-600/50"
+            bg-white hover:bg-earth-100 text-earth-600 hover:text-earth-900
+            rounded-full flex items-center justify-center shadow-sm transition-all
+            border border-earth-200"
           aria-label="Scroll left"
         >
           <ChevronLeft size={13} />
@@ -191,8 +191,8 @@ function CategoryStrip({ categories }) {
               `flex items-center gap-1.5 px-3.5 h-full text-sm font-body font-medium
               whitespace-nowrap transition-all border-b-2 ${
                 isActive
-                  ? 'text-brand-400 border-brand-400'
-                  : 'text-earth-400 border-transparent hover:text-cream hover:border-earth-500'
+                  ? 'text-brand-600 border-brand-500'
+                  : 'text-earth-600 border-transparent hover:text-earth-900 hover:border-earth-400'
               }`
             }
           >
@@ -205,15 +205,15 @@ function CategoryStrip({ categories }) {
       {/* Right fade + arrow */}
       <div className={`absolute right-0 top-0 bottom-0 z-10 flex items-center justify-end
         transition-opacity duration-200 pointer-events-none ${canRight ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="w-10 h-full bg-gradient-to-l from-earth-800/90 to-transparent" />
+        <div className="w-10 h-full bg-gradient-to-l from-white to-transparent" />
       </div>
       {canRight && (
         <button
           onClick={() => scroll(1)}
           className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6
-            bg-earth-700 hover:bg-earth-600 text-earth-300 hover:text-cream
-            rounded-full flex items-center justify-center shadow-md transition-all
-            border border-earth-600/50"
+            bg-white hover:bg-earth-100 text-earth-600 hover:text-earth-900
+            rounded-full flex items-center justify-center shadow-sm transition-all
+            border border-earth-200"
           aria-label="Scroll right"
         >
           <ChevronRight size={13} />
@@ -226,18 +226,18 @@ function CategoryStrip({ categories }) {
 // ── TopBar ────────────────────────────────────────────────────────────────────
 function TopBar({ shopInfo }) {
   return (
-    <div className="bg-earth-900 border-b border-earth-700/40 hidden sm:block">
+    <div className="bg-earth-50 border-b border-earth-200 hidden sm:block">
       <div className="container-page">
         <div className="flex items-center justify-between h-8 text-[11px] font-body text-earth-500">
 
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-1.5">
-              <Truck size={11} className="text-brand-400 flex-shrink-0" />
-              <span>Free delivery on orders over <span className="text-earth-300 font-semibold">KES 50,000</span></span>
+              <Truck size={11} className="text-brand-500 flex-shrink-0" />
+              <span>Free delivery on orders over <span className="text-earth-800 font-semibold">KES 50,000</span></span>
             </div>
             {shopInfo?.location && (
               <div className="hidden lg:flex items-center gap-1.5">
-                <MapPin size={10} className="text-earth-600" />
+                <MapPin size={10} className="text-earth-400" />
                 <span>{shopInfo.location}</span>
               </div>
             )}
@@ -248,7 +248,7 @@ function TopBar({ shopInfo }) {
               <a
                 href={`https://wa.me/${shopInfo.whatsapp.replace(/\D/g, '')}`}
                 target="_blank" rel="noreferrer"
-                className="flex items-center gap-1.5 hover:text-green-400 transition-colors"
+                className="flex items-center gap-1.5 hover:text-green-600 transition-colors"
               >
                 <MessageCircle size={11} />
                 <span>WhatsApp</span>
@@ -257,7 +257,7 @@ function TopBar({ shopInfo }) {
             {shopInfo?.phone && (
               <a
                 href={`tel:${shopInfo.phone.replace(/\s/g, '')}`}
-                className="flex items-center gap-1.5 hover:text-brand-400 transition-colors"
+                className="flex items-center gap-1.5 hover:text-brand-600 transition-colors"
               >
                 <Phone size={10} />
                 <span>{shopInfo.phone}</span>
@@ -338,11 +338,11 @@ export default function Navbar() {
 
       {/* ── Sticky wrapper ──────────────────────────────────────── */}
       <div ref={headerRef} className={`sticky top-0 z-40 transition-shadow duration-300 ${
-        scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.35)]' : ''
+        scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.10)]' : ''
       }`}>
 
         {/* ── Row 1: Logo + Search + Cart/Account ─────────────── */}
-        <div className="bg-earth-900">
+        <div className="bg-white border-b border-earth-200">
           <div className="container-page">
             <div className="flex items-center gap-3 h-[68px]">
 
@@ -352,13 +352,13 @@ export default function Navbar() {
                   <img
                     src="/Vittorios-logo.jpeg"
                     alt={shopInfo.name}
-                    className="w-full h-full object-cover rounded-lg border border-earth-700
+                    className="w-full h-full object-cover rounded-lg border border-earth-200
                       group-hover:border-brand-400 transition-colors"
                   />
                 </div>
                 <div className="hidden lg:block">
-                  <p className="font-display font-bold text-cream text-[15px] leading-tight
-                    group-hover:text-brand-300 transition-colors whitespace-nowrap">
+                  <p className="font-display font-bold text-earth-900 text-[15px] leading-tight
+                    group-hover:text-brand-600 transition-colors whitespace-nowrap">
                     {shopInfo.name}
                   </p>
                   <p className="text-earth-500 text-[10px] leading-tight font-body">{shopInfo.tagline}</p>
@@ -377,7 +377,7 @@ export default function Navbar() {
                 <button
                   onClick={() => setSearchOpen(o => !o)}
                   className={`md:hidden p-2.5 rounded-lg transition-all ${
-                    searchOpen ? 'bg-earth-700 text-cream' : 'text-earth-400 hover:text-cream hover:bg-earth-800'
+                    searchOpen ? 'bg-earth-100 text-earth-900' : 'text-earth-500 hover:text-earth-900 hover:bg-earth-100'
                   }`}
                   aria-label="Search"
                 >
@@ -389,15 +389,15 @@ export default function Navbar() {
                   <Link
                     to="/login"
                     data-tour="public-signin-link"
-                    className="inline-flex items-center gap-2 rounded-xl border border-brand-400/35
-                      bg-brand-500/15 px-3 sm:px-4 py-2.5 text-brand-100 shadow-[0_10px_28px_rgba(0,0,0,0.18)]
-                      transition-all hover:border-brand-300 hover:bg-brand-500 hover:text-white active:scale-[0.98]"
+                    className="inline-flex items-center gap-2 rounded-xl border border-brand-400
+                      bg-brand-50 px-3 sm:px-4 py-2.5 text-brand-700
+                      transition-all hover:border-brand-500 hover:bg-brand-100 active:scale-[0.98]"
                   >
                     <User size={16} />
                     <span className="text-sm font-body font-semibold leading-none whitespace-nowrap">
                       Sign In
                     </span>
-                    <span className="hidden lg:inline text-[11px] font-body text-brand-200/90 leading-none whitespace-nowrap">
+                    <span className="hidden lg:inline text-[11px] font-body text-brand-500 leading-none whitespace-nowrap">
                       My Account
                     </span>
                   </Link>
@@ -406,11 +406,11 @@ export default function Navbar() {
                     <button
                       onClick={() => setUserMenuOpen(o => !o)}
                       className={`flex flex-col items-center px-3 py-1.5 rounded-lg transition-all ${
-                        userMenuOpen ? 'bg-earth-800 text-cream' : 'text-earth-400 hover:text-cream hover:bg-earth-800'
+                        userMenuOpen ? 'bg-earth-100 text-earth-900' : 'text-earth-600 hover:text-earth-900 hover:bg-earth-100'
                       }`}
                     >
                       <div className="w-6 h-6 rounded-full overflow-hidden bg-brand-500
-                        flex items-center justify-center border border-earth-600">
+                        flex items-center justify-center border border-earth-200">
                         <AvatarInner size="sm" />
                       </div>
                       <span className="text-[10px] font-body mt-0.5 leading-none max-w-[56px] truncate">
@@ -420,17 +420,17 @@ export default function Navbar() {
 
                     {userMenuOpen && (
                       <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl
-                        shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-earth-100
+                        shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-earth-200
                         overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
 
-                        <div className="px-4 py-3 bg-gradient-to-br from-earth-900 to-earth-800 flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full overflow-hidden bg-brand-500
-                            flex items-center justify-center border-2 border-earth-600 flex-shrink-0">
+                        <div className="px-4 py-3 bg-gradient-to-br from-brand-500 to-brand-600 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full overflow-hidden bg-white/20
+                            flex items-center justify-center border-2 border-white/30 flex-shrink-0">
                             <AvatarInner size="md" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-body font-semibold text-cream truncate">{user?.name}</p>
-                            <p className="text-[10px] text-earth-400 font-body mt-0.5">Customer Account</p>
+                            <p className="text-sm font-body font-semibold text-white truncate">{user?.name}</p>
+                            <p className="text-[10px] text-brand-100 font-body mt-0.5">Customer Account</p>
                           </div>
                         </div>
 
@@ -490,7 +490,7 @@ export default function Navbar() {
                     )}
                   </div>
                   <div className="hidden sm:block text-left leading-none">
-                    <p className="text-[10px] text-brand-200 font-body">
+                    <p className="text-[10px] text-brand-100 font-body">
                       {itemCount === 0 ? 'Your cart' : `${itemCount} item${itemCount > 1 ? 's' : ''}`}
                     </p>
                     <p className="text-[13px] font-body font-bold">
@@ -503,7 +503,7 @@ export default function Navbar() {
                 <button
                   onClick={() => setMenuOpen(o => !o)}
                   className={`md:hidden p-2.5 rounded-lg transition-all ${
-                    menuOpen ? 'bg-earth-700 text-cream' : 'text-earth-400 hover:text-cream hover:bg-earth-800'
+                    menuOpen ? 'bg-earth-100 text-earth-900' : 'text-earth-500 hover:text-earth-900 hover:bg-earth-100'
                   }`}
                   aria-label="Menu"
                 >
@@ -517,13 +517,13 @@ export default function Navbar() {
 
         {/* ── Mobile search panel ─────────────────────────────── */}
         {searchOpen && (
-          <div className="md:hidden bg-earth-900 border-t border-earth-800 px-3 py-2.5">
+          <div className="md:hidden bg-white border-t border-earth-200 px-3 py-2.5">
             <NavSearchBar autoFocus onClose={() => setSearchOpen(false)} />
           </div>
         )}
 
         {/* ── Row 2: Category nav (desktop only) ──────────────── */}
-        <div className="hidden md:block bg-earth-800/90 border-t border-earth-700/50">
+        <div className="hidden md:block bg-white border-t border-earth-100 border-b border-earth-200">
           <div className="container-page">
             <div className="flex items-stretch h-10 gap-0">
 
@@ -531,13 +531,13 @@ export default function Navbar() {
               <AllCategoriesMenu categories={categories} />
 
               {/* Divider */}
-              <div className="w-px bg-earth-700/50 mx-1 flex-shrink-0" />
+              <div className="w-px bg-earth-200 mx-1 flex-shrink-0" />
 
               {/* Category quick-links — scrollable with arrows */}
               <CategoryStrip categories={categories} />
 
               {/* Right side nav */}
-              <div className="flex items-center gap-0.5 flex-shrink-0 border-l border-earth-700/50 pl-2 ml-1">
+              <div className="flex items-center gap-0.5 flex-shrink-0 border-l border-earth-200 pl-2 ml-1">
                 <NavLink
                   to="/"
                   end
@@ -545,8 +545,8 @@ export default function Navbar() {
                     `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
                     transition-colors whitespace-nowrap ${
                       isActive
-                        ? 'text-brand-400 border-b-2 border-brand-400'
-                        : 'text-earth-400 hover:text-cream'
+                        ? 'text-brand-600 border-b-2 border-brand-500'
+                        : 'text-earth-600 hover:text-earth-900'
                     }`
                   }
                 >
@@ -560,8 +560,8 @@ export default function Navbar() {
                     `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
                     transition-colors whitespace-nowrap ${
                       isActive
-                        ? 'text-brand-400 border-b-2 border-brand-400'
-                        : 'text-earth-400 hover:text-cream'
+                        ? 'text-brand-600 border-b-2 border-brand-500'
+                        : 'text-earth-600 hover:text-earth-900'
                     }`
                   }
                 >
@@ -575,8 +575,8 @@ export default function Navbar() {
                     `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
                     transition-colors whitespace-nowrap ${
                       isActive
-                        ? 'text-brand-400 border-b-2 border-brand-400'
-                        : 'text-earth-400 hover:text-cream'
+                        ? 'text-brand-600 border-b-2 border-brand-500'
+                        : 'text-earth-600 hover:text-earth-900'
                     }`
                   }
                 >
@@ -595,44 +595,44 @@ export default function Navbar() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/60 z-50 md:hidden"
+            className="fixed inset-0 bg-black/40 z-50 md:hidden"
             onClick={() => setMenuOpen(false)}
           />
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-full w-[82vw] max-w-xs bg-earth-900 z-50
+          <div className="fixed top-0 left-0 h-full w-[82vw] max-w-xs bg-white z-50
             md:hidden flex flex-col shadow-2xl overflow-y-auto"
             style={{ animation: 'slideInLeft 0.22s ease-out' }}
           >
             {/* Drawer header */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-earth-800">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-earth-200">
               <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3">
                 <img src="/Vittorios-logo.jpeg" alt={shopInfo.name}
-                  className="w-9 h-9 rounded-lg object-cover border border-earth-700" />
+                  className="w-9 h-9 rounded-lg object-cover border border-earth-200" />
                 <div>
-                  <p className="font-display font-bold text-cream text-sm leading-tight">{shopInfo.name}</p>
+                  <p className="font-display font-bold text-earth-900 text-sm leading-tight">{shopInfo.name}</p>
                   <p className="text-earth-500 text-[10px] font-body">{shopInfo.tagline}</p>
                 </div>
               </Link>
               <button onClick={() => setMenuOpen(false)}
-                className="p-2 rounded-lg text-earth-500 hover:text-cream hover:bg-earth-800 transition-all">
+                className="p-2 rounded-lg text-earth-400 hover:text-earth-900 hover:bg-earth-100 transition-all">
                 <X size={20} />
               </button>
             </div>
 
             {/* Account strip */}
             {isAuthenticated ? (
-              <div className="px-4 py-3 bg-earth-800/60 border-b border-earth-800 flex items-center gap-3">
+              <div className="px-4 py-3 bg-earth-50 border-b border-earth-200 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full overflow-hidden bg-brand-500
-                  flex items-center justify-center border-2 border-earth-600 flex-shrink-0">
+                  flex items-center justify-center border-2 border-earth-200 flex-shrink-0">
                   <AvatarInner size="md" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-cream text-sm font-body font-semibold leading-tight truncate">{user?.name}</p>
+                  <p className="text-earth-900 text-sm font-body font-semibold leading-tight truncate">{user?.name}</p>
                   <p className="text-earth-500 text-[10px] font-body mt-0.5">Customer Account</p>
                 </div>
               </div>
             ) : (
-              <div className="px-4 py-3 border-b border-earth-800">
+              <div className="px-4 py-3 border-b border-earth-200">
                 <Link to="/login" onClick={() => setMenuOpen(false)}
                   className="flex items-center justify-center gap-2 w-full py-3 bg-brand-500
                     text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-600
@@ -645,7 +645,7 @@ export default function Navbar() {
 
             {/* Categories */}
             <div className="px-4 pt-4 pb-2">
-              <p className="text-[10px] font-body font-bold text-earth-500 uppercase tracking-widest mb-2">
+              <p className="text-[10px] font-body font-bold text-earth-400 uppercase tracking-widest mb-2">
                 Shop by Category
               </p>
               <div className="space-y-0.5">
@@ -655,29 +655,29 @@ export default function Navbar() {
                     to={`/shop?category=${encodeURIComponent(cat)}`}
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body
-                      text-earth-300 hover:text-cream hover:bg-earth-800 transition-all"
+                      text-earth-700 hover:text-earth-900 hover:bg-earth-100 transition-all"
                   >
                     <span className="text-base w-6 text-center flex-shrink-0">{getCategoryIcon(cat)}</span>
                     <span className="flex-1 font-medium">{cat}</span>
-                    <ChevronRight size={13} className="text-earth-600" />
+                    <ChevronRight size={13} className="text-earth-300" />
                   </Link>
                 ))}
               </div>
             </div>
 
-            <div className="mx-4 my-2 border-t border-earth-800" />
+            <div className="mx-4 my-2 border-t border-earth-200" />
 
             {/* Nav links */}
             <div className="px-4 pb-2 space-y-0.5">
               <NavLink to="/" end onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body font-medium transition-all ${
-                    isActive ? 'bg-brand-500 text-white' : 'text-earth-300 hover:text-cream hover:bg-earth-800'
+                    isActive ? 'bg-brand-500 text-white' : 'text-earth-700 hover:text-earth-900 hover:bg-earth-100'
                   }`
                 }>
                 {({ isActive }) => (
                   <>
-                    <Home size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
+                    <Home size={16} className={isActive ? 'text-white' : 'text-earth-400'} />
                     Home
                   </>
                 )}
@@ -685,12 +685,12 @@ export default function Navbar() {
               <NavLink to="/shop" end onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body font-medium transition-all ${
-                    isActive ? 'bg-brand-500 text-white' : 'text-earth-300 hover:text-cream hover:bg-earth-800'
+                    isActive ? 'bg-brand-500 text-white' : 'text-earth-700 hover:text-earth-900 hover:bg-earth-100'
                   }`
                 }>
                 {({ isActive }) => (
                   <>
-                    <ShoppingBag size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
+                    <ShoppingBag size={16} className={isActive ? 'text-white' : 'text-earth-400'} />
                     Shop All Products
                   </>
                 )}
@@ -698,12 +698,12 @@ export default function Navbar() {
               <NavLink to="/track" onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body font-medium transition-all ${
-                    isActive ? 'bg-brand-500 text-white' : 'text-earth-300 hover:text-cream hover:bg-earth-800'
+                    isActive ? 'bg-brand-500 text-white' : 'text-earth-700 hover:text-earth-900 hover:bg-earth-100'
                   }`
                 }>
                 {({ isActive }) => (
                   <>
-                    <MapPin size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
+                    <MapPin size={16} className={isActive ? 'text-white' : 'text-earth-400'} />
                     Track My Order
                   </>
                 )}
@@ -713,26 +713,26 @@ export default function Navbar() {
             {/* Authenticated links */}
             {isAuthenticated && (
               <>
-                <div className="mx-4 my-2 border-t border-earth-800" />
+                <div className="mx-4 my-2 border-t border-earth-200" />
                 <div className="px-4 pb-2 space-y-0.5">
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body
-                      text-earth-300 hover:text-cream hover:bg-earth-800 transition-all">
-                    <Package size={16} className="text-earth-500 flex-shrink-0" />
+                      text-earth-700 hover:text-earth-900 hover:bg-earth-100 transition-all">
+                    <Package size={16} className="text-earth-400 flex-shrink-0" />
                     My Orders
                   </Link>
                   <Link to="/profile" onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body
-                      text-earth-300 hover:text-cream hover:bg-earth-800 transition-all">
-                    <UserCircle size={16} className="text-earth-500 flex-shrink-0" />
+                      text-earth-700 hover:text-earth-900 hover:bg-earth-100 transition-all">
+                    <UserCircle size={16} className="text-earth-400 flex-shrink-0" />
                     My Profile
                   </Link>
                 </div>
                 <div className="mx-4 mt-auto mb-4">
                   <button onClick={handleLogout}
                     className="flex items-center justify-center gap-2 w-full px-4 py-3
-                      rounded-xl text-sm font-body font-semibold text-red-400
-                      border border-red-900/40 hover:bg-red-900/20 transition-all">
+                      rounded-xl text-sm font-body font-semibold text-red-600
+                      border border-red-200 hover:bg-red-50 transition-all">
                     <LogOut size={15} />
                     Sign Out
                   </button>

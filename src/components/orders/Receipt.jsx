@@ -128,25 +128,25 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
     <div className="bg-white font-body" style={{ maxWidth: '600px', margin: '0 auto' }}>
 
       {/* ── HEADER ────────────────────────────────────────────────── */}
-      {/* Gold accent stripe */}
-      <div style={{ height: '4px', background: 'linear-gradient(90deg, #C8912A 0%, #E8B84B 50%, #C8912A 100%)' }} />
+      {/* Earth accent stripe */}
+      <div style={{ height: '4px', background: 'linear-gradient(90deg, #833D19 0%, #C4622D 50%, #833D19 100%)' }} />
 
-      <div style={{ background: '#FFFFFF', padding: '24px 32px 20px', borderBottom: '1px solid #E8DDD0' }}>
+      <div style={{ background: '#FFFFFF', padding: '24px 32px 20px', borderBottom: '1px solid #F3F4F6' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
 
           {/* Logo + name */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ width: '52px', height: '52px', borderRadius: '12px', overflow: 'hidden',
-              border: '1.5px solid #DDD0BA', flexShrink: 0 }}>
+              border: '1.5px solid #E5E7EB', flexShrink: 0 }}>
               <img src="/Vittorios-logo.jpeg" alt="Vittorios"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div>
-              <p style={{ color: '#1C1410', fontFamily: "'Playfair Display', Georgia, serif",
+              <p style={{ color: '#111827', fontFamily: "'Playfair Display', Georgia, serif",
                 fontWeight: 700, fontSize: '20px', lineHeight: 1.2, margin: 0 }}>
                 Vittorios
               </p>
-              <p style={{ color: '#C8912A', fontSize: '12px',
+              <p style={{ color: '#C4622D', fontSize: '12px',
                 letterSpacing: '0.06em', margin: '3px 0 0', fontWeight: 600 }}>
                 Grains &amp; Cereals
               </p>
@@ -155,11 +155,11 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
 
           {/* Order ref + date + status */}
           <div style={{ textAlign: 'right' }}>
-            <p style={{ color: '#1C1410', fontWeight: 700, fontSize: '16px',
+            <p style={{ color: '#111827', fontWeight: 700, fontSize: '16px',
               letterSpacing: '0.05em', margin: 0 }}>
               {order.orderRef}
             </p>
-            <p style={{ color: '#9E8E7A', fontSize: '12px', margin: '4px 0 8px' }}>
+            <p style={{ color: '#6B7280', fontSize: '12px', margin: '4px 0 8px' }}>
               {formatDate(order.createdAt)}
             </p>
             <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border ${statusCfg.cls}`}
@@ -171,12 +171,12 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
 
         {/* Receipt label + KRA PIN */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
-          <p style={{ color: '#C8912A', fontSize: '10px', letterSpacing: '0.2em',
+          <p style={{ color: '#833D19', fontSize: '10px', letterSpacing: '0.2em',
             textTransform: 'uppercase', margin: 0, fontWeight: 700 }}>
             TAX INVOICE
           </p>
           {kraPin && (
-            <p style={{ color: '#6B5E50', fontSize: '10px', letterSpacing: '0.12em',
+            <p style={{ color: '#4B5563', fontSize: '10px', letterSpacing: '0.12em',
               margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
               KRA PIN: {kraPin}
             </p>
@@ -190,22 +190,22 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
         {/* Customer + Order meta */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
           <div>
-            <p style={{ fontSize: '9px', fontWeight: 700, color: '#B0A090',
+            <p style={{ fontSize: '9px', fontWeight: 700, color: '#9CA3AF',
               letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>
               {isAdmin ? 'Customer' : 'Billed To'}
             </p>
-            <p style={{ fontWeight: 700, color: '#1C1410', fontSize: '13px', margin: '0 0 2px' }}>
+            <p style={{ fontWeight: 700, color: '#111827', fontSize: '13px', margin: '0 0 2px' }}>
               {customerName}
             </p>
-            <p style={{ color: '#6B5E50', fontSize: '12px', margin: '0 0 2px' }}>{customerPhone}</p>
+            <p style={{ color: '#4B5563', fontSize: '12px', margin: '0 0 2px' }}>{customerPhone}</p>
             {order.deliveryAddress && (
-              <p style={{ color: '#9E8E7A', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
+              <p style={{ color: '#6B7280', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
                 {order.deliveryAddress}
               </p>
             )}
           </div>
           <div>
-            <p style={{ fontSize: '9px', fontWeight: 700, color: '#B0A090',
+            <p style={{ fontSize: '9px', fontWeight: 700, color: '#9CA3AF',
               letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>
               Order Info
             </p>
@@ -218,8 +218,8 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
                   ['Delivery',  order.deliveryMethod === 'pickup' ? 'Pickup' : 'Home Delivery'],
                 ].map(([label, value]) => (
                   <tr key={label}>
-                    <td style={{ color: '#9E8E7A', paddingBottom: '3px', paddingRight: '12px', whiteSpace: 'nowrap' }}>{label}</td>
-                    <td style={{ color: '#1C1410', fontWeight: 600, paddingBottom: '3px' }}>{value}</td>
+                    <td style={{ color: '#6B7280', paddingBottom: '3px', paddingRight: '12px', whiteSpace: 'nowrap' }}>{label}</td>
+                    <td style={{ color: '#111827', fontWeight: 600, paddingBottom: '3px' }}>{value}</td>
                   </tr>
                 ))}
               </tbody>
@@ -228,15 +228,15 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
         </div>
 
         {/* Section rule */}
-        <div style={{ borderTop: '1px solid #E8DDD0', marginBottom: '20px' }} />
+        <div style={{ borderTop: '1px solid #F3F4F6', marginBottom: '20px' }} />
 
         {/* Items table */}
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #D0C4B0' }}>
+            <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
               {['Item', 'Qty', 'Unit Price', 'Total'].map((h, i) => (
                 <th key={h} style={{
-                  fontSize: '9px', fontWeight: 700, color: '#9E8E7A',
+                  fontSize: '9px', fontWeight: 700, color: '#6B7280',
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   padding: '0 0 8px', textAlign: i === 0 ? 'left' : 'right'
                 }}>
@@ -247,24 +247,24 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
           </thead>
           <tbody>
             {order.orderItems?.map((item, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid #F0EBE0' }}>
+              <tr key={i} style={{ borderBottom: '1px solid #F9FAFB' }}>
                 <td style={{ padding: '10px 16px 10px 0' }}>
-                  <p style={{ fontWeight: 600, color: '#1C1410', fontSize: '13px', margin: '0 0 1px' }}>
+                  <p style={{ fontWeight: 600, color: '#111827', fontSize: '13px', margin: '0 0 1px' }}>
                     {item.productName}
                   </p>
-                  <p style={{ color: '#9E8E7A', fontSize: '11px', margin: 0 }}>
+                  <p style={{ color: '#6B7280', fontSize: '11px', margin: 0 }}>
                     {item.variety} · {item.packaging}
                   </p>
                 </td>
-                <td style={{ textAlign: 'right', color: '#1C1410', fontSize: '13px',
+                <td style={{ textAlign: 'right', color: '#111827', fontSize: '13px',
                   fontWeight: 600, padding: '10px 0', whiteSpace: 'nowrap' }}>
                   {item.quantity}
                 </td>
-                <td style={{ textAlign: 'right', color: '#6B5E50', fontSize: '12px',
+                <td style={{ textAlign: 'right', color: '#4B5563', fontSize: '12px',
                   padding: '10px 0 10px 16px', whiteSpace: 'nowrap' }}>
                   {formatKES(item.unitPrice)}
                 </td>
-                <td style={{ textAlign: 'right', color: '#1C1410', fontWeight: 600,
+                <td style={{ textAlign: 'right', color: '#111827', fontWeight: 600,
                   fontSize: '13px', padding: '10px 0 10px 16px', whiteSpace: 'nowrap' }}>
                   {formatKES(item.lineTotal)}
                 </td>
@@ -282,17 +282,17 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
               ...(hasDelivery ? [{ label: 'Delivery Fee',              value: formatKES(order.deliveryFee) }] : []),
             ].map(row => (
               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                <span style={{ color: '#9E8E7A', fontSize: '12px' }}>{row.label}</span>
-                <span style={{ color: '#1C1410', fontSize: '12px' }}>{row.value}</span>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>{row.label}</span>
+                <span style={{ color: '#111827', fontSize: '12px' }}>{row.value}</span>
               </div>
             ))}
-            <div style={{ borderTop: '1px solid #1C1410', marginTop: '6px', paddingTop: '8px',
+            <div style={{ borderTop: '1px solid #111827', marginTop: '6px', paddingTop: '8px',
               display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ color: '#1C1410', fontSize: '11px', fontWeight: 700,
+              <span style={{ color: '#111827', fontSize: '11px', fontWeight: 700,
                 letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Total Amount Due
               </span>
-              <span style={{ color: '#1C1410', fontWeight: 800, fontSize: '16px',
+              <span style={{ color: '#111827', fontWeight: 800, fontSize: '16px',
                 fontFamily: "'Playfair Display', Georgia, serif" }}>
                 {formatKES(order.total)}
               </span>
@@ -301,7 +301,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
         </div>
 
         {/* Payment + Delivery — inline table, no cards */}
-        <div style={{ borderTop: '1px solid #E8DDD0', paddingTop: '16px', marginBottom: '16px',
+        <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '16px', marginBottom: '16px',
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           {[
             {
@@ -324,7 +324,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
             }
           ].map(col => (
             <div key={col.title}>
-              <p style={{ fontSize: '9px', fontWeight: 700, color: '#B0A090',
+              <p style={{ fontSize: '9px', fontWeight: 700, color: '#9CA3AF',
                 letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 6px' }}>
                 {col.title}
               </p>
@@ -332,7 +332,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
                 <p key={i} style={{
                   fontSize: '12px',
                   fontWeight: i === 0 ? 600 : 400,
-                  color: (i === 1 && col.paidLine) ? '#16a34a' : i === 0 ? '#1C1410' : '#9E8E7A',
+                  color: (i === 1 && col.paidLine) ? '#16a34a' : i === 0 ? '#111827' : '#6B7280',
                   margin: '0 0 2px', lineHeight: 1.4
                 }}>
                   {line}
@@ -344,12 +344,12 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
 
         {/* Special instructions — admin only */}
         {isAdmin && order.specialInstructions && (
-          <div style={{ borderTop: '1px solid #E8DDD0', paddingTop: '12px', marginBottom: '12px' }}>
-            <p style={{ fontSize: '9px', fontWeight: 700, color: '#B0A090',
+          <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '12px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '9px', fontWeight: 700, color: '#9CA3AF',
               letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px' }}>
               Special Instructions
             </p>
-            <p style={{ color: '#6B5E50', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+            <p style={{ color: '#4B5563', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
               {order.specialInstructions}
             </p>
           </div>
@@ -369,9 +369,9 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
         <div style={{ position: 'relative', paddingTop: '20px' }}>
           {/* Dashed divider */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-            backgroundImage: 'repeating-linear-gradient(90deg, #C8912A 0, #C8912A 8px, transparent 8px, transparent 16px)' }} />
+            backgroundImage: 'repeating-linear-gradient(90deg, #C4622D 0, #C4622D 8px, transparent 8px, transparent 16px)' }} />
 
-          <p style={{ textAlign: 'center', fontSize: '13px', color: '#6B5E50',
+          <p style={{ textAlign: 'center', fontSize: '13px', color: '#374151',
             fontWeight: 600, margin: '0 0 14px', fontFamily: "'Playfair Display', Georgia, serif" }}>
             {receiptFooterNote || 'Thank you for shopping with us!'}
           </p>
@@ -385,25 +385,25 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
               shopInfo.location && { label: 'Location', value: shopInfo.location },
             ].filter(Boolean).map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-                <span style={{ fontSize: '9px', fontWeight: 700, color: '#C8912A',
+                <span style={{ fontSize: '9px', fontWeight: 700, color: '#833D19',
                   letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
                   {item.label}
                 </span>
-                <span style={{ fontSize: '11px', color: '#9E8E7A', lineHeight: 1.4 }}>{item.value}</span>
+                <span style={{ fontSize: '11px', color: '#6B7280', lineHeight: 1.4 }}>{item.value}</span>
               </div>
             ))}
           </div>
 
           {/* KRA PIN — compliance footer */}
           {kraPin && (
-            <div style={{ marginTop: '12px', borderTop: '1px solid #F0E8D8', paddingTop: '10px',
+            <div style={{ marginTop: '12px', borderTop: '1px solid #F3F4F6', paddingTop: '10px',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '9px', fontWeight: 700, color: '#9E8E7A',
+              <span style={{ fontSize: '9px', fontWeight: 700, color: '#6B7280',
                 letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 KRA PIN
               </span>
               <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 700,
-                color: '#1C1410', letterSpacing: '0.08em' }}>
+                color: '#111827', letterSpacing: '0.08em' }}>
                 {kraPin}
               </span>
             </div>

@@ -29,12 +29,12 @@ function StoryRail({ products, pagination, startTour }) {
   const railItems = products.slice(0, 10)
 
   return (
-    <div className="bg-earth-900 text-cream border-b border-earth-800/70">
+    <div className="bg-white border-b border-earth-200">
       <div className="container-page py-4 sm:py-5">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold">Our Products</h1>
-            <p className="text-earth-400 font-body text-xs sm:text-sm mt-0.5">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-earth-900">Our Products</h1>
+            <p className="text-earth-500 font-body text-xs sm:text-sm mt-0.5">
               {pagination
                 ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
                 : 'Browse the latest stock'}
@@ -42,8 +42,8 @@ function StoryRail({ products, pagination, startTour }) {
           </div>
           <button
             onClick={() => startTour('public', { force: true })}
-            className="inline-flex items-center gap-2 rounded-full border border-brand-500/20 bg-brand-500/10 px-3.5 py-2
-              text-[11px] font-body font-semibold uppercase tracking-[0.16em] text-brand-200 transition-colors hover:bg-brand-500/15"
+            className="inline-flex items-center gap-2 rounded-full border border-brand-300 bg-brand-50 px-3.5 py-2
+              text-[11px] font-body font-semibold uppercase tracking-[0.16em] text-brand-700 transition-colors hover:bg-brand-100"
           >
             <Sparkles size={12} />
             Tour
@@ -61,8 +61,8 @@ function StoryRail({ products, pagination, startTour }) {
                     to={`/shop/${product._id}`}
                     className="group w-[92px] sm:w-[104px] flex-shrink-0"
                   >
-                    <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-br from-brand-400/80 via-brand-200/40 to-earth-300/20">
-                      <div className="w-full h-full rounded-full overflow-hidden bg-earth-800 border border-white/10">
+                    <div className="relative mx-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-br from-brand-600 via-brand-400 to-brand-200">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-earth-100 border border-white">
                         {imageURL ? (
                           <img
                             src={getOptimizedImageUrl(imageURL, { width: 192, height: 192 })}
@@ -78,7 +78,7 @@ function StoryRail({ products, pagination, startTour }) {
                         )}
                       </div>
                     </div>
-                    <p className="text-center text-[11px] sm:text-xs font-body font-medium text-earth-200 mt-2 leading-tight line-clamp-2 group-hover:text-white transition-colors">
+                    <p className="text-center text-[11px] sm:text-xs font-body font-medium text-earth-700 mt-2 leading-tight line-clamp-2 group-hover:text-brand-700 transition-colors">
                       {product.name}
                     </p>
                   </Link>

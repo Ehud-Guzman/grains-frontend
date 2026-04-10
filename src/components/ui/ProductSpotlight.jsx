@@ -106,27 +106,26 @@ export default function ProductSpotlight({ products = [] }) {
       <div className="bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-earth-100 overflow-hidden">
 
         {/* Header bar */}
-        <div className="bg-earth-900 px-4 py-2.5 flex items-center justify-between">
+        <div className="bg-brand-700 px-4 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Sparkles size={13} className="text-brand-400" />
-            <span className="text-xs font-admin font-semibold text-cream tracking-wide uppercase">
+            <Sparkles size={13} className="text-brand-200" />
+            <span className="text-xs font-admin font-semibold text-white tracking-wide uppercase">
               Today's Pick
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {/* Subtle dot indicators showing remaining re-shows */}
             <div className="flex gap-0.5">
               {Array.from({ length: MAX_DISMISSALS }).map((_, i) => (
                 <div key={i}
                   className={`w-1 h-1 rounded-full transition-colors ${
-                    i < dismissalsLeft ? 'bg-earth-500' : 'bg-earth-700'
+                    i < dismissalsLeft ? 'bg-brand-300' : 'bg-brand-900'
                   }`}
                 />
               ))}
             </div>
             <button
               onClick={handleDismiss}
-              className="p-1 rounded-full hover:bg-earth-700 text-earth-400 hover:text-cream transition-colors"
+              className="p-1 rounded-full hover:bg-brand-800 text-brand-200 hover:text-white transition-colors"
               title={dismissalsLeft <= 1 ? "Close (won't show again)" : `Close (${dismissalsLeft - 1} more time${dismissalsLeft - 1 !== 1 ? 's' : ''} remaining)`}
             >
               <X size={13} />
