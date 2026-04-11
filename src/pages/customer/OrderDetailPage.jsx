@@ -70,10 +70,10 @@ export default function CustomerOrderDetailPage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <div className="bg-earth-900 pt-8 pb-16 px-4">
+      <div className="bg-gradient-to-br from-brand-800 to-brand-900 pt-8 pb-16 px-4">
         <div className="container-page max-w-2xl">
           <Link to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-earth-400 hover:text-cream
+            className="inline-flex items-center gap-1.5 text-white/70 hover:text-white
               text-sm font-body transition-colors mb-5">
             <ArrowLeft size={15} /> My Orders
           </Link>
@@ -82,7 +82,7 @@ export default function CustomerOrderDetailPage() {
               <h1 className="font-display text-2xl font-bold text-cream mb-1">
                 {order.orderRef}
               </h1>
-              <p className="text-earth-400 text-sm font-body">{formatDate(order.createdAt)}</p>
+              <p className="text-white/70 text-sm font-body">{formatDate(order.createdAt)}</p>
             </div>
             {canViewReceipt && (
               <button onClick={() => setShowReceipt(true)}
@@ -161,7 +161,7 @@ export default function CustomerOrderDetailPage() {
         {/* ── Items ───────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-earth-100 shadow-warm overflow-hidden">
           <div className="px-5 py-4 border-b border-earth-50">
-            <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide">
+            <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide">
               Items Ordered
             </p>
           </div>
@@ -172,7 +172,7 @@ export default function CustomerOrderDetailPage() {
                   <p className="font-body font-semibold text-earth-800 text-sm">
                     {item.productName}
                   </p>
-                  <p className="text-earth-400 text-xs mt-0.5 font-body">
+                  <p className="text-earth-600 text-xs mt-0.5 font-body">
                     {item.variety} · {item.packaging} × {item.quantity}
                   </p>
                 </div>
@@ -192,7 +192,7 @@ export default function CustomerOrderDetailPage() {
 
         {/* ── Delivery + Payment ──────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-5">
-          <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-4">
+          <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-4">
             Order Details
           </p>
           <div className="grid grid-cols-2 gap-4">
@@ -203,12 +203,12 @@ export default function CustomerOrderDetailPage() {
                 <Truck size={15} className="text-earth-400 mt-0.5 flex-shrink-0" />
               )}
               <div>
-                <p className="text-xs text-earth-400 font-body mb-0.5">Delivery</p>
+                <p className="text-xs text-earth-600 font-body mb-0.5">Delivery</p>
                 <p className="text-sm font-body font-semibold text-earth-800">
                   {order.deliveryMethod === 'pickup' ? 'Pickup from shop' : 'Home delivery'}
                 </p>
                 {order.deliveryAddress && (
-                  <p className="text-xs text-earth-500 font-body mt-0.5 leading-relaxed">
+                  <p className="text-xs text-earth-600 font-body mt-0.5 leading-relaxed">
                     {order.deliveryAddress}
                   </p>
                 )}
@@ -217,7 +217,7 @@ export default function CustomerOrderDetailPage() {
             <div className="flex items-start gap-2.5">
               <CreditCard size={15} className="text-earth-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-xs text-earth-400 font-body mb-0.5">Payment</p>
+                <p className="text-xs text-earth-600 font-body mb-0.5">Payment</p>
                 <p className="text-sm font-body font-semibold text-earth-800">
                   {PAYMENT_LABELS[order.paymentMethod]}
                 </p>
@@ -234,7 +234,7 @@ export default function CustomerOrderDetailPage() {
         {/* ── Timeline ────────────────────────────────────────────── */}
         {order.statusHistory?.length > 0 && (
           <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-5">
-            <p className="text-xs font-body font-semibold text-earth-500 uppercase
+            <p className="text-xs font-body font-semibold text-earth-700 uppercase
               tracking-wide mb-4">
               Status Timeline
             </p>
@@ -279,8 +279,8 @@ export default function CustomerOrderDetailPage() {
             )
           )}
           <a href={`tel:${shopInfo.phone}`}
-            className="flex items-center justify-center gap-2 w-full py-3.5 bg-earth-900
-              text-cream rounded-xl text-sm font-body font-semibold hover:bg-earth-800
+            className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
+              text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-800
               transition-colors">
             <Phone size={16} /> Call Us — {shopInfo.phone}
           </a>

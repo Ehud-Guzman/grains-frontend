@@ -102,7 +102,7 @@ export default function CataloguePage() {
   const [searchInput, setSearchInput]   = useState(searchParams.get('search') || '')
   const [search, setSearch]             = useState(searchParams.get('search') || '')
   const [filtersOpen, setFiltersOpen]   = useState(false)
-  const [compact, setCompact]           = useState(() => localStorage.getItem('gridCompact') === 'true')
+  const [compact, setCompact]           = useState(() => localStorage.getItem('gridCompact') !== 'false')
 
   const filters = {
     category:      searchParams.get('category')     || '',

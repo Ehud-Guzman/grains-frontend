@@ -50,9 +50,9 @@ export default function HomePage() {
   const [moreProducts, setMoreProducts] = useState([])
   const [spotlight, setSpotlight]       = useState([])
   const [loading, setLoading]           = useState(true)
-  const [compact, setCompact]           = useState(false)
+  const [compact, setCompact]           = useState(true)
 
-  // Persist grid preference
+  // Persist grid preference (default true = 2-col mobile)
   useEffect(() => {
     const saved = localStorage.getItem('gridCompact')
     if (saved !== null) setCompact(saved === 'true')

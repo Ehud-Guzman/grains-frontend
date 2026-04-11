@@ -30,7 +30,7 @@ const STEPS = [
 // ── UI ATOMS ──────────────────────────────────────────────────────────────────
 const Field = ({ label, error, required, children }) => (
   <div>
-    <label className="block text-xs font-body font-semibold text-earth-600 uppercase
+    <label className="block text-xs font-body font-semibold text-earth-800 uppercase
       tracking-wide mb-1.5">
       {label}{required && <span className="text-red-400 normal-case font-normal ml-0.5">*</span>}
     </label>
@@ -63,7 +63,7 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge }) => (
         : 'border-earth-200 hover:border-earth-300 bg-white'
     }`}>
     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-      checked ? 'bg-brand-500 text-white' : 'bg-earth-100 text-earth-500'
+      checked ? 'bg-brand-500 text-white' : 'bg-earth-100 text-earth-600'
     }`}>
       <Icon size={18} />
     </div>
@@ -79,7 +79,7 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge }) => (
           </span>
         )}
       </div>
-      <p className="text-earth-500 text-xs mt-0.5 font-body">{desc}</p>
+      <p className="text-earth-700 text-xs mt-0.5 font-body">{desc}</p>
     </div>
     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
       flex-shrink-0 mt-0.5 transition-all ${
@@ -179,7 +179,7 @@ export default function CheckoutPage() {
             <ShoppingBag size={28} className="text-earth-400" />
           </div>
           <h2 className="font-display text-xl text-earth-800 mb-2">Your cart is empty</h2>
-          <p className="text-earth-500 text-sm font-body mb-6">
+          <p className="text-earth-700 text-sm font-body mb-6">
             Add some products before checking out
           </p>
           <Link to="/shop" className="btn-primary">Browse Products</Link>
@@ -250,7 +250,7 @@ export default function CheckoutPage() {
             <User size={28} className="text-earth-500" />
           </div>
           <h2 className="font-display text-2xl text-earth-900 mb-2">Sign In Required</h2>
-          <p className="text-earth-500 text-sm font-body leading-relaxed mb-6">
+          <p className="text-earth-700 text-sm font-body leading-relaxed mb-6">
             Guest checkout is currently disabled. Please sign in or create an account to place your order.
           </p>
           <div className="space-y-3">
@@ -461,11 +461,11 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Header + Stepper ─────────────────────────────────────────── */}
-      <div className="bg-earth-900 text-cream py-6">
+      <div className="bg-brand-800 text-white py-6">
         <div className="container-page max-w-3xl">
           <div className="flex items-center gap-3 mb-5">
             <Link to="/cart"
-              className="text-earth-400 hover:text-cream transition-colors p-1">
+              className="text-white/70 hover:text-white transition-colors p-1">
               <ArrowLeft size={18} />
             </Link>
             <h1 className="font-display text-xl font-semibold">Checkout</h1>
@@ -486,16 +486,16 @@ export default function CheckoutPage() {
                       text-xs font-semibold border-2 transition-all flex-shrink-0 ${
                         done   ? 'bg-brand-500 border-brand-500 text-white' :
                         active ? 'bg-white border-brand-400 text-brand-600' :
-                                 'bg-transparent border-earth-700 text-earth-500'
+                                 'bg-transparent border-white/30 text-white/40'
                       }`}>
                       {done ? <Check size={12} /> : i + 1}
                     </div>
                     <span className={`text-xs font-body hidden sm:block ${
-                      active ? 'text-cream font-medium' : done ? 'text-earth-300' : 'text-earth-600'
+                      active ? 'text-white font-medium' : done ? 'text-white/70' : 'text-white/40'
                     }`}>{s.label}</span>
                   </button>
                   {i < STEPS.length - 1 && (
-                    <div className="flex-1 h-px mx-2 bg-earth-700">
+                    <div className="flex-1 h-px mx-2 bg-white/20">
                       <div className={`h-full bg-brand-500 transition-all duration-500 ${
                         done ? 'w-full' : 'w-0'
                       }`} />
@@ -534,7 +534,7 @@ export default function CheckoutPage() {
                     <h2 className="font-display text-xl text-earth-900 font-semibold">
                       Contact Details
                     </h2>
-                    <p className="text-earth-500 text-sm font-body mt-1">
+                    <p className="text-earth-700 text-sm font-body mt-1">
                       We'll use this to confirm your order
                     </p>
                   </div>
@@ -561,7 +561,7 @@ export default function CheckoutPage() {
                     <h2 className="font-display text-xl text-earth-900 font-semibold">
                       Delivery Method
                     </h2>
-                    <p className="text-earth-500 text-sm font-body mt-1">
+                    <p className="text-earth-700 text-sm font-body mt-1">
                       How would you like to receive your order?
                     </p>
                   </div>
@@ -593,11 +593,11 @@ export default function CheckoutPage() {
                                   <p className="text-sm font-body font-semibold text-earth-800">
                                     {formatKES(locationFeeData.fee)}
                                     {locationFeeData.zoneName && (
-                                      <span className="text-earth-500 font-normal"> · {locationFeeData.zoneName}</span>
+                                      <span className="text-earth-600 font-normal"> · {locationFeeData.zoneName}</span>
                                     )}
                                   </p>
                                   {locationFeeData.distanceKm != null && (
-                                    <p className="text-xs font-body text-earth-500">
+                                    <p className="text-xs font-body text-earth-700">
                                       ~{locationFeeData.distanceKm} km from our shop
                                     </p>
                                   )}
@@ -614,7 +614,7 @@ export default function CheckoutPage() {
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              <p className="text-xs font-body text-earth-500">
+                              <p className="text-xs font-body text-earth-700">
                                 Share your location to get the exact delivery fee for your area.
                               </p>
                               <button
@@ -682,7 +682,7 @@ export default function CheckoutPage() {
                     <h2 className="font-display text-xl text-earth-900 font-semibold">
                       Payment Method
                     </h2>
-                    <p className="text-earth-500 text-sm font-body mt-1">
+                    <p className="text-earth-700 text-sm font-body mt-1">
                       How would you like to pay?
                     </p>
                   </div>
@@ -742,7 +742,7 @@ export default function CheckoutPage() {
                     <h2 className="font-display text-xl text-earth-900 font-semibold">
                       Review Order
                     </h2>
-                    <p className="text-earth-500 text-sm font-body mt-1">
+                    <p className="text-earth-700 text-sm font-body mt-1">
                       Check everything looks right before confirming
                     </p>
                   </div>
@@ -764,7 +764,7 @@ export default function CheckoutPage() {
                             {form.deliveryMethod === 'pickup' ? 'Pickup from shop' : 'Home delivery'}
                           </p>
                           {form.deliveryAddress && (
-                            <p className="text-xs text-earth-500 mt-0.5 font-body">
+                            <p className="text-xs text-earth-700 mt-0.5 font-body">
                               {form.deliveryAddress}
                             </p>
                           )}
@@ -779,7 +779,7 @@ export default function CheckoutPage() {
                             {PAYMENT_LABELS[form.paymentMethod]}
                           </p>
                           {form.paymentMethod === 'mpesa' && (
-                            <p className="text-xs text-earth-500 mt-0.5 font-body">
+                            <p className="text-xs text-earth-700 mt-0.5 font-body">
                               STK push to {form.mpesaPhone}
                             </p>
                           )}
@@ -789,7 +789,7 @@ export default function CheckoutPage() {
                   ].map(row => (
                     <div key={row.label} className="bg-earth-50 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-body font-semibold text-earth-500
+                        <span className="text-xs font-body font-semibold text-earth-700
                           uppercase tracking-wide">
                           {row.label}
                         </span>
@@ -804,7 +804,7 @@ export default function CheckoutPage() {
                   ))}
 
                   <div>
-                    <p className="text-xs font-body font-semibold text-earth-500 uppercase
+                    <p className="text-xs font-body font-semibold text-earth-700 uppercase
                       tracking-wide mb-3">
                       Items ({items.length})
                     </p>
@@ -815,7 +815,7 @@ export default function CheckoutPage() {
                             <span className="text-earth-800 font-body font-medium">
                               {item.productName}
                             </span>
-                            <span className="text-earth-500 font-body">
+                            <span className="text-earth-700 font-body">
                               {' '}· {item.variety} · {item.packaging} ×{item.quantity}
                             </span>
                           </div>
@@ -849,12 +849,12 @@ export default function CheckoutPage() {
                   </div>
                   <div className="bg-earth-50 rounded-xl p-4 text-left space-y-2">
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-earth-500">Subtotal</span>
+                      <span className="text-earth-700">Subtotal</span>
                       <span className="text-earth-700">{formatKES(total)}</span>
                     </div>
                     {form.deliveryMethod === 'delivery' && (
                       <div className="flex justify-between text-sm font-body">
-                        <span className="text-earth-500">
+                        <span className="text-earth-700">
                           Delivery Fee
                           {locationFeeData?.distanceKm != null && (
                             <span className="text-earth-400 text-xs ml-1">
@@ -867,12 +867,12 @@ export default function CheckoutPage() {
                     )}
                     {vatEnabled && (
                       <div className="flex justify-between text-sm font-body">
-                        <span className="text-earth-500">VAT ({vatRate}%)</span>
+                        <span className="text-earth-700">VAT ({vatRate}%)</span>
                         <span className="text-earth-700">{formatKES(vatAmount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm font-body">
-                      <span className="text-earth-500">Payment</span>
+                      <span className="text-earth-700">Payment</span>
                       <span className="text-earth-700">{PAYMENT_LABELS[form.paymentMethod]}</span>
                     </div>
                     <div className="flex justify-between text-sm font-body border-t
@@ -917,16 +917,16 @@ export default function CheckoutPage() {
 
                 {step < 3 && (
                   <button onClick={next}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-earth-900 text-white
-                      rounded-xl text-sm font-body font-semibold hover:bg-earth-800
+                    className="flex items-center gap-2 px-6 py-2.5 bg-brand-700 text-white
+                      rounded-xl text-sm font-body font-semibold hover:bg-brand-800
                       transition-all active:scale-[0.98]">
                     Continue <ArrowRight size={15} />
                   </button>
                 )}
                 {step === 3 && (
                   <button onClick={next}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-earth-900 text-white
-                      rounded-xl text-sm font-body font-semibold hover:bg-earth-800
+                    className="flex items-center gap-2 px-6 py-2.5 bg-brand-700 text-white
+                      rounded-xl text-sm font-body font-semibold hover:bg-brand-800
                       transition-all active:scale-[0.98]">
                     Review & Confirm <ArrowRight size={15} />
                   </button>
@@ -981,7 +981,7 @@ export default function CheckoutPage() {
                       <p className="text-xs font-body font-medium text-earth-800 truncate">
                         {item.productName}
                       </p>
-                      <p className="text-xs text-earth-500 font-body">
+                      <p className="text-xs text-earth-700 font-body">
                         {item.variety} · {item.packaging}
                       </p>
                     </div>

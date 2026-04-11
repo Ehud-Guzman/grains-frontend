@@ -31,7 +31,7 @@ export function OrderConfirmPage() {
     <div className="min-h-screen bg-cream flex flex-col">
 
       {/* ── Success hero ────────────────────────────────────────────────── */}
-      <div className="bg-earth-900 pt-10 pb-20 text-center px-4">
+      <div className="bg-gradient-to-br from-brand-800 to-brand-900 pt-10 pb-20 text-center px-4">
         <div className="w-16 h-16 bg-green-500/20 border border-green-500/30 rounded-full
           flex items-center justify-center mx-auto mb-4">
           <CheckCircle size={32} className="text-green-400" />
@@ -39,7 +39,7 @@ export function OrderConfirmPage() {
         <h1 className="font-display text-3xl font-bold text-cream mb-2">
           Order Placed!
         </h1>
-        <p className="text-earth-400 font-body text-sm max-w-sm mx-auto">
+        <p className="text-white/80 font-body text-sm max-w-sm mx-auto">
           {name ? `Thank you, ${name.split(' ')[0]}. ` : 'Thank you! '}
           We'll confirm your order within 2 hours.
         </p>
@@ -52,7 +52,7 @@ export function OrderConfirmPage() {
           <div className="bg-white rounded-2xl shadow-warm-lg border border-earth-100 p-6 mb-4">
 
             {/* Big reference display */}
-            <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-widest text-center mb-3">
+            <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-widest text-center mb-3">
               Your Order Reference
             </p>
 
@@ -72,7 +72,7 @@ export function OrderConfirmPage() {
                 font-body font-semibold transition-all ${
                   copied
                     ? 'bg-green-500 text-white'
-                    : 'bg-earth-900 text-white hover:bg-earth-800 active:scale-[0.98]'
+                    : 'bg-brand-700 text-white hover:bg-brand-800 active:scale-[0.98]'
                 }`}
             >
               {copied ? (
@@ -82,7 +82,7 @@ export function OrderConfirmPage() {
               )}
             </button>
 
-            <p className="text-center text-earth-400 text-xs font-body mt-3">
+            <p className="text-center text-earth-600 text-xs font-body mt-3">
               📸 Screenshot this page or save the number above
             </p>
           </div>
@@ -90,20 +90,20 @@ export function OrderConfirmPage() {
 
         {/* ── Order summary ──────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-earth-100 shadow-sm p-5 mb-4">
-          <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-4">
+          <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-4">
             Order Summary
           </p>
 
           <div className="space-y-3">
             {total && (
               <div className="flex justify-between text-sm font-body">
-                <span className="text-earth-600">Total Amount</span>
+                <span className="text-earth-700">Total Amount</span>
                 <span className="font-display font-bold text-brand-600">{formatKES(total)}</span>
               </div>
             )}
             {paymentMethod && (
               <div className="flex justify-between text-sm font-body">
-                <span className="text-earth-600">Payment</span>
+                <span className="text-earth-700">Payment</span>
                 <span className="text-earth-800 font-medium capitalize">
                   {PAYMENT_LABELS[paymentMethod] || paymentMethod}
                 </span>
@@ -111,7 +111,7 @@ export function OrderConfirmPage() {
             )}
             {deliveryMethod && (
               <div className="flex justify-between text-sm font-body">
-                <span className="text-earth-600">Delivery</span>
+                <span className="text-earth-700">Delivery</span>
                 <span className="text-earth-800 font-medium capitalize">
                   {deliveryMethod === 'pickup' ? 'Pickup from shop' : 'Home Delivery'}
                 </span>
@@ -119,7 +119,7 @@ export function OrderConfirmPage() {
             )}
             {phone && (
               <div className="flex justify-between text-sm font-body">
-                <span className="text-earth-600">Contact</span>
+                <span className="text-earth-700">Contact</span>
                 <span className="text-earth-800 font-medium">{phone}</span>
               </div>
             )}
@@ -152,8 +152,8 @@ export function OrderConfirmPage() {
         <div className="space-y-3">
           {ref && (
             <Link to={`/track?ref=${ref}`}
-              className="flex items-center justify-center gap-2 w-full py-3.5 bg-earth-900
-                text-white rounded-xl text-sm font-body font-semibold hover:bg-earth-800
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
+                text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-800
                 transition-all active:scale-[0.99]">
               <Package size={17} />
               Track This Order
@@ -169,8 +169,8 @@ export function OrderConfirmPage() {
           </Link>
 
           <a href={`tel:${shopInfo.phone}`}
-            className="flex items-center justify-center gap-2 w-full py-3 text-earth-500
-              text-sm font-body hover:text-earth-700 transition-colors">
+            className="flex items-center justify-center gap-2 w-full py-3 text-earth-700
+              text-sm font-body hover:text-earth-900 transition-colors">
             <Phone size={15} />
             {shopInfo.phone}
           </a>

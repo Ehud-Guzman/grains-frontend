@@ -81,7 +81,7 @@ export default function CustomerDashboardPage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-     <div className="bg-earth-900 pt-8 pb-20 px-4">
+     <div className="bg-gradient-to-br from-brand-800 to-brand-900 pt-8 pb-20 px-4">
         <div className="container-page max-w-2xl">
           <div className="flex items-center justify-between gap-4" data-tour="customer-hero">
             <div className="flex items-center gap-4 min-w-0">
@@ -99,7 +99,7 @@ export default function CustomerDashboardPage() {
                 <h1 className="font-display text-2xl font-bold text-cream">
                   Hello, {user?.name?.split(' ')[0]}
                 </h1>
-                <p className="text-earth-400 text-sm font-body mt-0.5">
+                <p className="text-white/70 text-sm font-body mt-0.5">
                   {pagination.total} order{pagination.total !== 1 ? 's' : ''} placed
                 </p>
               </div>
@@ -115,8 +115,8 @@ export default function CustomerDashboardPage() {
               </button>
               <Link to="/profile"
                 data-tour="customer-profile-link"
-                className="flex items-center gap-1.5 text-earth-400 hover:text-cream
-                  text-xs font-body transition-colors px-3 py-2 rounded-lg hover:bg-earth-800">
+                className="flex items-center gap-1.5 text-white/70 hover:text-white
+                  text-xs font-body transition-colors px-3 py-2 rounded-lg hover:bg-white/10">
                 <UserCircle size={15} /> Profile
               </Link>
             </div>
@@ -146,7 +146,7 @@ export default function CustomerDashboardPage() {
               <ShoppingBag size={24} className="text-earth-300" />
             </div>
             <h3 className="font-display text-xl font-semibold text-earth-800 mb-2">No orders yet</h3>
-            <p className="text-earth-400 text-sm font-body mb-6">
+            <p className="text-earth-600 text-sm font-body mb-6">
               Browse our catalogue and place your first order.
             </p>
             <Link to="/shop" className="btn-primary">Browse Products</Link>
@@ -159,7 +159,7 @@ export default function CustomerDashboardPage() {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Clock size={14} className="text-brand-500" />
-                  <p className="text-xs font-body font-semibold text-earth-600 uppercase tracking-wide">
+                  <p className="text-xs font-body font-semibold text-earth-800 uppercase tracking-wide">
                     Active Orders
                   </p>
                   <span className="bg-brand-100 text-brand-700 text-xs font-body font-bold
@@ -180,14 +180,14 @@ export default function CustomerDashboardPage() {
                               <p className="font-display font-bold text-brand-700 tracking-wide">
                                 {order.orderRef}
                               </p>
-                              <p className="text-earth-400 text-xs font-body mt-0.5">
+                              <p className="text-earth-600 text-xs font-body mt-0.5">
                                 {formatDate(order.createdAt)} · {timeAgo(order.createdAt)}
                               </p>
                             </div>
                             <StatusPill status={order.status} />
                           </div>
 
-                          <p className="text-earth-500 text-sm font-body mb-1">
+                          <p className="text-earth-700 text-sm font-body mb-1">
                             {order.orderItems?.length} item{order.orderItems?.length !== 1 ? 's' : ''}
                             {order.orderItems?.length > 0 && (
                               <> · {order.orderItems.slice(0, 2).map(i => i.productName).join(', ')}
@@ -251,8 +251,8 @@ export default function CustomerDashboardPage() {
             {pastOrders.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Package size={14} className="text-earth-400" />
-                  <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide">
+                  <Package size={14} className="text-earth-500" />
+                  <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide">
                     Past Orders
                   </p>
                 </div>
@@ -269,11 +269,11 @@ export default function CustomerDashboardPage() {
                           </span>
                           <StatusPill status={order.status} />
                         </div>
-                        <p className="text-earth-400 text-xs font-body">{formatDate(order.createdAt)}</p>
+                        <p className="text-earth-600 text-xs font-body">{formatDate(order.createdAt)}</p>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="font-body font-bold text-earth-800 text-sm">{formatKES(order.total)}</p>
-                        <p className="text-earth-400 text-xs font-body">
+                        <p className="text-earth-600 text-xs font-body">
                           {order.orderItems?.length} item{order.orderItems?.length !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -294,7 +294,7 @@ export default function CustomerDashboardPage() {
                     disabled:cursor-not-allowed transition-colors">
                   ← Prev
                 </button>
-                <span className="text-sm font-body text-earth-500">{page} / {pagination.pages}</span>
+                <span className="text-sm font-body text-earth-700">{page} / {pagination.pages}</span>
                 <button onClick={() => setPage(p => p + 1)} disabled={page >= pagination.pages}
                   className="px-4 py-2 text-sm font-body border border-earth-200 bg-white
                     rounded-xl text-earth-600 hover:bg-earth-50 disabled:opacity-40
@@ -308,14 +308,14 @@ export default function CustomerDashboardPage() {
             <div className="flex gap-3">
               <Link to="/shop"
                 data-tour="customer-browse-link"
-                className="flex-1 text-center py-3 bg-earth-900 text-cream rounded-xl
-                  text-sm font-body font-medium hover:bg-earth-800 transition-colors">
+                className="flex-1 text-center py-3 bg-brand-700 text-white rounded-xl
+                  text-sm font-body font-medium hover:bg-brand-800 transition-colors">
                 Browse Shop
               </Link>
               <Link to="/track"
                 data-tour="customer-track-link"
                 className="flex-1 text-center py-3 bg-white border border-earth-200 rounded-xl
-                  text-sm font-body font-medium text-earth-600 hover:bg-earth-50 transition-colors">
+                  text-sm font-body font-medium text-earth-800 hover:bg-earth-50 transition-colors">
                 Track an Order
               </Link>
             </div>

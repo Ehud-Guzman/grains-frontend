@@ -16,7 +16,7 @@ import toast from 'react-hot-toast'
 const Field = ({ label, icon: Icon, error, children }) => (
   <div>
     <label className="flex items-center gap-1.5 text-xs font-body font-semibold
-      text-earth-600 uppercase tracking-wide mb-1.5">
+      text-earth-800 uppercase tracking-wide mb-1.5">
       {Icon && <Icon size={11} />}
       {label}
     </label>
@@ -98,7 +98,7 @@ function AvatarUploader({ avatarURL, name, onUpload }) {
         onClick={() => fileRef.current?.click()}
         disabled={uploading}
         className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand-500 rounded-full
-          flex items-center justify-center border-2 border-earth-900
+          flex items-center justify-center border-2 border-brand-900
           hover:bg-brand-600 transition-colors shadow-sm"
         title="Change photo"
       >
@@ -129,7 +129,7 @@ function AddressCard({ address, onRemove, onSetDefault }) {
         <MapPin size={14} className="text-earth-400 mt-0.5 flex-shrink-0" />
         <div>
           <p className="text-sm font-body font-semibold text-earth-800">{address.label}</p>
-          <p className="text-earth-500 text-xs mt-0.5 font-body leading-relaxed">{address.value}</p>
+          <p className="text-earth-600 text-xs mt-0.5 font-body leading-relaxed">{address.value}</p>
         </div>
       </div>
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-earth-100">
@@ -253,10 +253,10 @@ export default function CustomerProfilePage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <div className="bg-earth-900 pt-8 pb-16 px-4">
+      <div className="bg-gradient-to-br from-brand-800 to-brand-900 pt-8 pb-16 px-4">
         <div className="container-page max-w-2xl">
           <Link to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-earth-400 hover:text-cream
+            className="inline-flex items-center gap-1.5 text-white/70 hover:text-white
               text-sm font-body transition-colors mb-5">
             <ArrowLeft size={15} /> My Orders
           </Link>
@@ -269,10 +269,10 @@ export default function CustomerProfilePage() {
             />
             <div>
               <h1 className="font-display text-2xl font-bold text-cream">{profile?.name}</h1>
-              <p className="text-earth-400 text-sm font-body mt-0.5">
+              <p className="text-white/70 text-sm font-body mt-0.5">
                 Customer since {formatDate(profile?.createdAt)}
               </p>
-              <p className="text-earth-600 text-xs font-body mt-1">
+              <p className="text-white/50 text-xs font-body mt-1">
                 Tap photo to change
               </p>
             </div>
@@ -318,8 +318,8 @@ export default function CustomerProfilePage() {
                     error={errors.email} />
                 </Field>
                 <button onClick={handleSave} disabled={saving}
-                  className="flex items-center gap-2 px-5 py-3 bg-earth-900 text-white rounded-xl
-                    text-sm font-body font-semibold hover:bg-earth-800 transition-all
+                  className="flex items-center gap-2 px-5 py-3 bg-brand-700 text-white rounded-xl
+                    text-sm font-body font-semibold hover:bg-brand-800 transition-all
                     disabled:opacity-60 active:scale-[0.98]">
                   {saving ? (
                     <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving…</>
@@ -341,9 +341,9 @@ export default function CustomerProfilePage() {
                       <Icon size={15} className="text-earth-400" />
                     </div>
                     <div className="pt-0.5">
-                      <p className="text-xs text-earth-400 font-body uppercase tracking-wide mb-1">{label}</p>
+                      <p className="text-xs text-earth-600 font-body uppercase tracking-wide mb-1">{label}</p>
                       <p className="text-sm font-body font-semibold text-earth-800">{value}</p>
-                      {note && <p className="text-xs text-earth-400 font-body mt-0.5">{note}</p>}
+                      {note && <p className="text-xs text-earth-600 font-body mt-0.5">{note}</p>}
                     </div>
                   </div>
                 ))}
@@ -377,8 +377,8 @@ export default function CustomerProfilePage() {
                 <div className="w-10 h-10 bg-earth-50 rounded-full flex items-center justify-center mx-auto mb-3">
                   <MapPin size={18} className="text-earth-300" />
                 </div>
-                <p className="text-earth-500 text-sm font-body font-medium">No addresses saved</p>
-                <p className="text-earth-400 text-xs font-body mt-1 mb-4">
+                <p className="text-earth-700 text-sm font-body font-medium">No addresses saved</p>
+                <p className="text-earth-600 text-xs font-body mt-1 mb-4">
                   Save addresses to speed up checkout
                 </p>
                 <button onClick={() => setShowAddAddress(true)}
@@ -412,8 +412,8 @@ export default function CustomerProfilePage() {
                     focus:ring-brand-400 focus:border-transparent bg-earth-50 resize-none" />
                 <div className="flex gap-2">
                   <button onClick={addAddress}
-                    className="flex-1 py-2.5 bg-earth-900 text-white rounded-xl text-sm
-                      font-body font-semibold hover:bg-earth-800 transition-colors">
+                    className="flex-1 py-2.5 bg-brand-700 text-white rounded-xl text-sm
+                      font-body font-semibold hover:bg-brand-800 transition-colors">
                     Save Address
                   </button>
                   <button onClick={() => { setShowAddAddress(false); setNewAddress({ label: '', value: '' }) }}
@@ -436,7 +436,7 @@ export default function CustomerProfilePage() {
               </div>
               <div>
                 <p className="font-body font-bold text-earth-900 text-sm">Password</p>
-                <p className="text-earth-400 text-xs font-body mt-0.5">Keep your account secure</p>
+                <p className="text-earth-600 text-xs font-body mt-0.5">Keep your account secure</p>
               </div>
             </div>
             <Link to="/login"
@@ -456,13 +456,13 @@ export default function CustomerProfilePage() {
             <Package size={15} /> My Orders
           </Link>
           <Link to="/shop"
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-earth-900
-              text-cream rounded-xl text-sm font-body font-medium hover:bg-earth-800 transition-colors">
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-brand-700
+              text-white rounded-xl text-sm font-body font-medium hover:bg-brand-800 transition-colors">
             Browse Shop
           </Link>
         </div>
 
-        <p className="text-center text-xs text-earth-400 font-body">
+        <p className="text-center text-xs text-earth-600 font-body">
           Need help? Call us at{' '}
           <a href={`tel:${shopInfo.phone}`} className="text-brand-600 hover:underline font-semibold">
             {shopInfo.phone}

@@ -52,7 +52,7 @@ function SuggestedCard({ product }) {
           {product.name}
         </p>
         {firstVariety?.varietyName !== product.name && (
-          <p className="text-earth-400 text-xs font-body mt-0.5 line-clamp-1">
+          <p className="text-earth-600 text-xs font-body mt-0.5 line-clamp-1">
             {firstVariety?.varietyName}
           </p>
         )}
@@ -151,7 +151,7 @@ export default function ProductPage() {
       {/* ── Breadcrumb ────────────────────────────────────────────── */}
       <div className="border-b border-earth-100 bg-white">
         <div className="container-page py-3">
-          <div className="flex items-center gap-2 text-sm font-body text-earth-400">
+          <div className="flex items-center gap-2 text-sm font-body text-earth-600">
             <Link to="/shop" className="hover:text-brand-600 transition-colors flex items-center gap-1">
               <ArrowLeft size={14} /> Shop
             </Link>
@@ -210,28 +210,28 @@ export default function ProductPage() {
           {/* ── Details ─────────────────────────────────────────────── */}
           <div className="space-y-5">
             <div>
-              <p className="text-earth-400 text-xs font-body uppercase tracking-widest mb-1.5">
+              <p className="text-earth-600 text-xs font-body uppercase tracking-widest mb-1.5">
                 {product.category}
               </p>
               <h1 className="font-display text-3xl text-earth-900 font-bold leading-tight mb-2">
                 {product.name}
               </h1>
               {product.description && (
-                <p className="text-earth-500 font-body leading-relaxed">{product.description}</p>
+                <p className="text-earth-700 font-body leading-relaxed">{product.description}</p>
               )}
             </div>
 
             {/* Variety selector */}
             {product.varieties?.length > 1 && (
               <div>
-                <p className="text-xs font-body font-semibold text-earth-600 uppercase
+                <p className="text-xs font-body font-semibold text-earth-800 uppercase
                   tracking-wide mb-2">Variety</p>
                 <div className="flex flex-wrap gap-2">
                   {product.varieties.map((v, i) => (
                     <button key={v.varietyName} onClick={() => switchVariety(i)}
                       className={`px-4 py-2 rounded-xl border text-sm font-body font-medium
                         transition-all ${i === selectedVariety
-                          ? 'bg-earth-900 text-white border-earth-900 shadow-sm'
+                          ? 'bg-brand-700 text-white border-brand-700 shadow-sm'
                           : 'bg-white text-earth-700 border-earth-200 hover:border-earth-400'}`}>
                       {v.varietyName}
                     </button>
@@ -243,7 +243,7 @@ export default function ProductPage() {
             {/* Packaging selector */}
             {variety?.packaging?.length > 0 && (
               <div>
-                <p className="text-xs font-body font-semibold text-earth-600 uppercase
+                <p className="text-xs font-body font-semibold text-earth-800 uppercase
                   tracking-wide mb-2">Packaging Size</p>
                 <div className="flex flex-wrap gap-2">
                   {variety.packaging.map((pkg, i) => (
@@ -284,8 +284,8 @@ export default function ProductPage() {
             {/* Quote only CTA */}
             {isQuoteOnly ? (
               <a href={`tel:${shopInfo.phone}`}
-                className="flex items-center justify-center gap-2 w-full py-4 bg-earth-900
-                  text-cream rounded-xl font-body font-semibold hover:bg-earth-800 transition-all
+                className="flex items-center justify-center gap-2 w-full py-4 bg-brand-700
+                  text-white rounded-xl font-body font-semibold hover:bg-brand-800 transition-all
                   active:scale-[0.98] text-base">
                 <Phone size={18} /> Request a Quote
               </a>
@@ -314,12 +314,12 @@ export default function ProductPage() {
                     </button>
                   </div>
                   {packaging && inStock && (
-                    <p className="text-xs text-earth-400 font-body">{packaging.stock} available</p>
+                    <p className="text-xs text-earth-600 font-body">{packaging.stock} available</p>
                   )}
                 </div>
 
                 {inStock && packaging?.priceKES && (
-                  <p className="text-sm font-body text-earth-500">
+                  <p className="text-sm font-body text-earth-700">
                     Total: <span className="font-display font-bold text-earth-900 text-base">
                       {formatKES(packaging.priceKES * quantity)}
                     </span>
@@ -330,7 +330,7 @@ export default function ProductPage() {
                   className={`flex items-center justify-center gap-2 w-full py-4 rounded-xl
                     font-body font-semibold text-base transition-all active:scale-[0.98] ${
                       added ? 'bg-green-500 text-white'
-                      : inStock ? 'bg-earth-900 text-cream hover:bg-earth-800'
+                      : inStock ? 'bg-brand-700 text-white hover:bg-brand-800'
                       : 'bg-earth-100 text-earth-400 cursor-not-allowed'}`}>
                   {added
                     ? <><Check size={18} /> Added to Cart!</>
@@ -361,7 +361,7 @@ export default function ProductPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div>
-                <p className="text-xs font-body font-semibold text-earth-400 uppercase
+                <p className="text-xs font-body font-semibold text-earth-600 uppercase
                   tracking-widest mb-0.5">More from</p>
                 <h2 className="font-display text-xl font-bold text-earth-900">
                   {product.category}
@@ -391,7 +391,7 @@ export default function ProductPage() {
                   flex items-center justify-center mb-2 transition-colors">
                   <ChevronRight size={18} className="text-earth-400 group-hover:text-brand-600 transition-colors" />
                 </div>
-                <p className="text-xs font-body font-semibold text-earth-500
+                <p className="text-xs font-body font-semibold text-earth-700
                   group-hover:text-brand-600 transition-colors text-center px-2">
                   View all {product.category}
                 </p>

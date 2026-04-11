@@ -36,12 +36,12 @@ export default function CartPage() {
     <div className="min-h-screen bg-cream">
 
       {/* ── Header ───────────────────────────────────────────────────── */}
-      <div className="bg-earth-900 py-6 px-4">
+      <div className="bg-white border-b border-earth-200 py-6 px-4">
         <div className="container-page max-w-4xl">
-          <h1 className="font-display text-2xl font-bold text-cream">
+          <h1 className="font-display text-2xl font-bold text-earth-900">
             Your Cart
           </h1>
-          <p className="text-earth-400 text-sm font-body mt-0.5">
+          <p className="text-earth-600 text-sm font-body mt-0.5">
             {items.length} item{items.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function CartPage() {
                       <h3 className="font-body font-bold text-earth-900 text-sm truncate">
                         {item.productName}
                       </h3>
-                      <p className="text-earth-500 text-xs font-body mt-0.5">
+                      <p className="text-earth-700 text-xs font-body mt-0.5">
                         {item.variety} · {item.packaging}
                       </p>
                     </div>
@@ -141,7 +141,7 @@ export default function CartPage() {
               <div className="space-y-2 mb-4 pb-4 border-b border-earth-100">
                 {items.map(item => (
                   <div key={item.key} className="flex justify-between text-sm">
-                    <span className="text-earth-600 font-body truncate flex-1 pr-2">
+                    <span className="text-earth-700 font-body truncate flex-1 pr-2">
                       {item.productName} ×{item.quantity}
                     </span>
                     <span className="text-earth-900 font-body font-semibold flex-shrink-0">
@@ -152,31 +152,31 @@ export default function CartPage() {
               </div>
 
               <div className="flex justify-between items-center mb-1">
-                <span className="font-body text-earth-600">Subtotal</span>
+                <span className="font-body text-earth-700">Subtotal</span>
                 <span className="font-display font-bold text-earth-900 text-xl">
                   {formatKES(total)}
                 </span>
               </div>
               {vatEnabled && (
                 <div className="flex justify-between text-sm font-body mb-1">
-                  <span className="text-earth-500">VAT ({vatRate}%)</span>
+                  <span className="text-earth-700">VAT ({vatRate}%)</span>
                   <span className="text-earth-700">{formatKES(vatAmount)}</span>
                 </div>
               )}
-              <p className="text-xs text-earth-400 font-body mb-5">
+              <p className="text-xs text-earth-600 font-body mb-5">
                 Delivery fee calculated at checkout
               </p>
 
               <Link to="/checkout"
-                className="flex items-center justify-center gap-2 w-full py-3.5 bg-earth-900
-                  text-cream rounded-xl font-body font-semibold hover:bg-earth-800
+                className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
+                  text-white rounded-xl font-body font-semibold hover:bg-brand-800
                   transition-all active:scale-[0.98]">
                 Checkout <ArrowRight size={16} />
               </Link>
 
               <Link to="/shop"
                 className="flex items-center justify-center w-full py-3 text-sm font-body
-                  text-earth-500 hover:text-earth-700 transition-colors mt-2">
+                  text-earth-700 hover:text-earth-900 transition-colors mt-2">
                 ← Continue Shopping
               </Link>
             </div>
