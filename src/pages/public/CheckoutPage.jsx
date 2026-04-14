@@ -55,39 +55,48 @@ const Input = ({ error, ...props }) => (
   />
 )
 
-const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge }) => (
-  <label className={`flex items-start gap-4 p-4 border-2 rounded-xl cursor-pointer
-    transition-all ${
-      checked
-        ? 'border-brand-500 bg-brand-50 shadow-sm'
-        : 'border-earth-200 hover:border-earth-300 bg-white'
-    }`}>
+const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disabled, disabledReason }) => (
+  <label className={`flex items-start gap-4 p-4 border-2 rounded-xl transition-all ${
+    disabled
+      ? 'border-earth-100 bg-earth-50 opacity-60 cursor-not-allowed'
+      : checked
+        ? 'border-brand-500 bg-brand-50 shadow-sm cursor-pointer'
+        : 'border-earth-200 hover:border-earth-300 bg-white cursor-pointer'
+  }`}>
     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-      checked ? 'bg-brand-500 text-white' : 'bg-earth-100 text-earth-600'
+      disabled ? 'bg-earth-100 text-earth-400' : checked ? 'bg-brand-500 text-white' : 'bg-earth-100 text-earth-600'
     }`}>
       <Icon size={18} />
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2">
         <p className={`font-body font-semibold text-sm ${
-          checked ? 'text-brand-800' : 'text-earth-800'
+          disabled ? 'text-earth-400' : checked ? 'text-brand-800' : 'text-earth-800'
         }`}>{label}</p>
-        {badge && (
+        {badge && !disabled && (
           <span className="text-xs bg-green-100 text-green-700 font-body font-semibold
             px-2 py-0.5 rounded-full border border-green-200">
             {badge}
           </span>
         )}
+        {disabled && (
+          <span className="text-xs bg-red-50 text-red-500 font-body font-semibold
+            px-2 py-0.5 rounded-full border border-red-100">
+            Unavailable
+          </span>
+        )}
       </div>
-      <p className="text-earth-700 text-xs mt-0.5 font-body">{desc}</p>
+      <p className={`text-xs mt-0.5 font-body ${disabled ? 'text-earth-400' : 'text-earth-700'}`}>
+        {disabled && disabledReason ? disabledReason : desc}
+      </p>
     </div>
     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
       flex-shrink-0 mt-0.5 transition-all ${
-        checked ? 'border-brand-500 bg-brand-500' : 'border-earth-300'
+        disabled ? 'border-earth-200' : checked ? 'border-brand-500 bg-brand-500' : 'border-earth-300'
       }`}>
-      {checked && <div className="w-2 h-2 rounded-full bg-white" />}
+      {checked && !disabled && <div className="w-2 h-2 rounded-full bg-white" />}
     </div>
-    <input type="radio" checked={checked} onChange={onChange} className="sr-only" />
+    <input type="radio" checked={checked} onChange={disabled ? undefined : onChange} disabled={disabled} className="sr-only" />
   </label>
 )
 
@@ -161,6 +170,13 @@ export default function CheckoutPage() {
       setForm(current => ({ ...current, paymentMethod: availablePaymentOptions[0].value }))
     }
   }, [availablePaymentOptions, form.paymentMethod])
+
+  // Auto-switch to pickup when GPS confirms delivery is out of range
+  useEffect(() => {
+    if (locationFeeData?.deliveryAvailable === false && form.deliveryMethod === 'delivery') {
+      setForm(current => ({ ...current, deliveryMethod: 'pickup', paymentMethod: 'pickup' }))
+    }
+  }, [locationFeeData, form.deliveryMethod])
 
   if (settingsLoading && !hasLoaded) {
     return (
@@ -573,7 +589,9 @@ export default function CheckoutPage() {
                     <OptionCard icon={Truck} label="Home Delivery"
                       desc="We bring your order directly to your door"
                       checked={form.deliveryMethod === 'delivery'}
-                      onChange={() => handleDeliveryMethodChange('delivery')} />
+                      onChange={() => handleDeliveryMethodChange('delivery')}
+                      disabled={locationFeeData?.deliveryAvailable === false}
+                      disabledReason={`We don't deliver to your area (${locationFeeData?.distanceKm} km away) — you can still place a pickup order`} />
                   </div>
                   {form.deliveryMethod === 'delivery' && (
                     <>

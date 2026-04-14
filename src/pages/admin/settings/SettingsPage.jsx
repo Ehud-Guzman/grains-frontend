@@ -233,6 +233,7 @@ export default function SettingsPage() {
         deliveryPricingMode: 'flat',
         branchLat: null,
         branchLng: null,
+        maxDeliveryKm: null,
         deliveryZones: [],
         autoHideOutOfStock: false,
         allowProductReviews: false,
@@ -709,6 +710,17 @@ export default function SettingsPage() {
                     hint="Applied if customer location is unavailable or outside all bands">
                     <Input type="number" min="0" value={form.deliveryFee}
                       onChange={e => set('deliveryFee', Number(e.target.value))} />
+                  </Field>
+
+                  {/* Max delivery radius */}
+                  <Field label="Max Delivery Radius (km)"
+                    hint="Beyond this distance delivery is disabled — customer can still pick up. Leave blank for no limit.">
+                    <Input
+                      type="number" min="1" step="1"
+                      placeholder="e.g. 55 — leave blank for no limit"
+                      value={form.maxDeliveryKm ?? ''}
+                      onChange={e => set('maxDeliveryKm', e.target.value === '' ? null : Number(e.target.value))}
+                    />
                   </Field>
 
                   {/* Distance bands */}
