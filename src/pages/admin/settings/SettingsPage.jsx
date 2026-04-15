@@ -898,11 +898,19 @@ export default function SettingsPage() {
                 desc="Notify customer when their order is dispatched"
                 checked={form.notifyCustomerOnDelivery}
                 onChange={e => set('notifyCustomerOnDelivery', e.target.checked)} />
+            </div>
+
+            <Divider />
+            <SubHeading>Delivery Channels</SubHeading>
+            <div className="space-y-4">
               <Toggle label="SMS Notifications"
-                desc="Send notifications via SMS (requires Africa's Talking — Phase 2)"
+                desc="Send notifications via SMS using Africa's Talking. Add AT_USERNAME and AT_API_KEY to your backend .env to activate."
                 checked={form.smsEnabled}
-                onChange={e => set('smsEnabled', e.target.checked)}
-                disabled={true} />
+                onChange={e => set('smsEnabled', e.target.checked)} />
+              <Toggle label="Email Notifications"
+                desc="Send transactional emails via Brevo. Add BREVO_SMTP_USER and BREVO_SMTP_KEY to your backend .env to activate."
+                checked={form.emailEnabled}
+                onChange={e => set('emailEnabled', e.target.checked)} />
             </div>
           </Section>
 

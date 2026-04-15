@@ -46,6 +46,7 @@ export default function CustomerDashboardPage() {
   const [confirmCancel, setConfirmCancel] = useState(null)
   const [page, setPage] = useState(1)
   const checklistItems = getChecklist('customer')
+  const allChecklistDone = checklistItems.length > 0 && checklistItems.every(item => item.done)
 
   const fetchOrders = async (p = 1) => {
     setLoading(true)
@@ -125,16 +126,18 @@ export default function CustomerDashboardPage() {
       </div>
 
       <div className="container-page max-w-2xl -mt-0 pb-12">
-        <div className="mb-6">
-          <OnboardingChecklistCard
-            eyebrow="Phase 3 Onboarding"
-            title="Build your customer flow with confidence"
-            description="This checklist helps first-time customers settle in quickly without getting lost. Each milestone unlocks naturally as they move through the app."
-            items={checklistItems}
-            actionLabel="Replay Tour"
-            onAction={() => startTour('customer', { force: true })}
-          />
-        </div>
+        {!allChecklistDone && (
+          <div className="mb-6">
+            <OnboardingChecklistCard
+              eyebrow="Phase 3 Onboarding"
+              title="Build your customer flow with confidence"
+              description="This checklist helps first-time customers settle in quickly without getting lost. Each milestone unlocks naturally as they move through the app."
+              items={checklistItems}
+              actionLabel="Replay Tour"
+              onAction={() => startTour('customer', { force: true })}
+            />
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">
