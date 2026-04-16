@@ -908,7 +908,7 @@ export default function SettingsPage() {
                 checked={form.smsEnabled}
                 onChange={e => set('smsEnabled', e.target.checked)} />
               <Toggle label="Email Notifications"
-                desc="Send transactional emails via Brevo. Add BREVO_SMTP_USER and BREVO_SMTP_KEY to your backend .env to activate."
+                desc="Send transactional emails via Gmail. Add GMAIL_USER and GMAIL_APP_PASSWORD to your backend .env to activate."
                 checked={form.emailEnabled}
                 onChange={e => set('emailEnabled', e.target.checked)} />
             </div>
