@@ -49,6 +49,7 @@ export default function CustomerDashboardPage() {
   const [orders, setOrders] = useState([])
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [cancelling, setCancelling] = useState(null)
   const [confirmCancel, setConfirmCancel] = useState(null)
   const [page, setPage] = useState(1)
@@ -57,13 +58,17 @@ export default function CustomerDashboardPage() {
 
   const fetchOrders = async (p = 1) => {
     setLoading(true)
+    setFetchError(false)
     try {
       const res = await orderService.getMyOrders({ page: p, limit: 10 })
       const fetchedOrders = res.data.data.orders || []
       setOrders(fetchedOrders)
       setPagination(res.data.data.pagination || { page: 1, pages: 1, total: 0 })
       if (fetchedOrders.length > 0) markChecklistItem('customer', 'first_order')
-    } catch {}
+    } catch (err) {
+      setFetchError(true)
+      toast.error(err.response?.data?.message || 'Failed to load orders')
+    }
     finally { setLoading(false) }
   }
 
@@ -108,14 +113,16 @@ export default function CustomerDashboardPage() {
                 Hello, {user?.name?.split(' ')[0]}
               </p>
               <p className="text-earth-400 text-xs font-body mt-0.5">
-                {loading ? '…' : (
-                  <>
-                    {pagination.total} order{pagination.total !== 1 ? 's' : ''}
-                    {activeOrders.length > 0 && (
-                      <span className="text-brand-500 font-semibold"> · {activeOrders.length} active</span>
-                    )}
-                  </>
-                )}
+                {loading ? '…' : fetchError ? (
+                <span className="text-red-400">Couldn't load orders</span>
+              ) : (
+                <>
+                  {pagination.total || orders.length} order{(pagination.total || orders.length) !== 1 ? 's' : ''}
+                  {activeOrders.length > 0 && (
+                    <span className="text-brand-500 font-semibold"> · {activeOrders.length} active</span>
+                  )}
+                </>
+              )}
               </p>
             </div>
           </div>
@@ -178,6 +185,19 @@ export default function CustomerDashboardPage() {
         {loading ? (
           <div className="space-y-2.5">
             {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+          </div>
+        ) : fetchError ? (
+          <div className="bg-white rounded-2xl border border-red-100 p-10 text-center">
+            <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <ShoppingBag size={22} className="text-red-300" />
+            </div>
+            <h3 className="font-body font-semibold text-earth-800 mb-1">Couldn't load your orders</h3>
+            <p className="text-earth-500 text-xs font-body mb-4">Check your connection and try again.</p>
+            <button onClick={() => fetchOrders(page)}
+              className="px-5 py-2.5 bg-brand-700 text-white rounded-xl text-sm font-body
+                font-semibold hover:bg-brand-800 transition-colors">
+              Retry
+            </button>
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-12 text-center">
