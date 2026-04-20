@@ -24,8 +24,6 @@ const DEFAULT_SETTINGS = {
   hasDeliveryZones: false,
   vatEnabled: false,
   vatRate: 16,
-  kraPin: '',
-  receiptFooterNote: '',
 }
 
 const normalizeSettings = (settings = {}) => {
@@ -57,8 +55,6 @@ const normalizeSettings = (settings = {}) => {
       vatEnabled: merged.vatEnabled === true,
       vatRate: Number(merged.vatRate) || 16,
     },
-    kraPin: merged.kraPin || '',
-    receiptFooterNote: merged.receiptFooterNote || '',
   }
 }
 

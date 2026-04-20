@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Printer, CheckCircle, Download } from 'lucide-react'
 import { formatKES, formatDate } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import { useAppSettings } from '../../context/AppSettingsContext'
+import { publicSettingsService } from '../../services/admin/settings.service'
 
 const STATUS_CFG = {
   pending:          { label: 'Pending',          cls: 'bg-amber-50  text-amber-700  border-amber-200'  },
@@ -15,8 +16,17 @@ const STATUS_CFG = {
 }
 
 export default function Receipt({ order, variant = 'customer', onClose }) {
-  const { shopInfo, kraPin, receiptFooterNote } = useAppSettings()
+  const { shopInfo } = useAppSettings()
   const isAdmin       = variant === 'admin'
+  const [receiptConfig, setReceiptConfig] = useState({ kraPin: '', receiptFooterNote: '' })
+
+  useEffect(() => {
+    publicSettingsService.getReceiptConfig()
+      .then(res => setReceiptConfig(res.data?.data || {}))
+      .catch(() => {})
+  }, [])
+
+  const { kraPin, receiptFooterNote } = receiptConfig
   const customerName  = order.userId?.name  || order.guestId?.name  || order.name  || '—'
   const customerPhone = order.userId?.phone || order.guestId?.phone || order.phone || '—'
   const statusCfg     = STATUS_CFG[order.status] || STATUS_CFG.pending
