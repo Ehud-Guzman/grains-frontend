@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, Plus } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, Plus, Lock, Unlock } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { adminCustomerService } from '../../../services/admin/customer.service'
 import { formatKES, formatDate, getStatusBadgeClass, getStatusLabel } from '../../../utils/helpers'
@@ -16,6 +16,7 @@ export default function CustomerProfilePage() {
   const [loading, setLoading] = useState(true)
   const [note, setNote] = useState('')
   const [savingNote, setSavingNote] = useState(false)
+  const [lockLoading, setLockLoading] = useState(false)
 
   const fetchProfile = async () => {
     try {
@@ -26,6 +27,22 @@ export default function CustomerProfilePage() {
   }
 
   useEffect(() => { fetchProfile() }, [id])
+
+  const handleToggleLock = async () => {
+    setLockLoading(true)
+    try {
+      if (customer.isLocked) {
+        await adminCustomerService.unlock(id)
+        toast.success('Account unlocked')
+      } else {
+        await adminCustomerService.lock(id)
+        toast.success('Account locked')
+      }
+      fetchProfile()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Action failed')
+    } finally { setLockLoading(false) }
+  }
 
   const handleAddNote = async () => {
     if (!note.trim()) return
@@ -59,9 +76,16 @@ export default function CustomerProfilePage() {
               <div className="w-14 h-14 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-brand-700 text-xl font-bold font-admin">{customer.name?.charAt(0).toUpperCase()}</span>
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h1 className="font-admin font-bold text-admin-900">{customer.name}</h1>
-                <p className="text-admin-400 text-xs mt-0.5 capitalize">{customer.role}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-admin-400 text-xs capitalize">{customer.role}</p>
+                  {customer.isLocked && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-admin font-medium bg-red-100 text-red-700">
+                      <Lock size={10} /> Locked
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="space-y-2 text-sm font-admin">
@@ -76,6 +100,25 @@ export default function CustomerProfilePage() {
                 </a>
               )}
             </div>
+            {customer.isLocked ? (
+              isSuperAdmin && (
+                <button
+                  onClick={handleToggleLock}
+                  disabled={lockLoading}
+                  className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-admin font-medium transition-colors disabled:opacity-50 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                >
+                  <Unlock size={14} /> Unlock Account
+                </button>
+              )
+            ) : (
+              <button
+                onClick={handleToggleLock}
+                disabled={lockLoading}
+                className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-admin font-medium transition-colors disabled:opacity-50 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+              >
+                <Lock size={14} /> Lock Account
+              </button>
+            )}
           </div>
 
           {/* Stats */}
