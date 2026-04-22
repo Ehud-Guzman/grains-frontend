@@ -1,4 +1,13 @@
 node_modules/
 dist/
+
+# Environment files — never commit secrets
 .env
 .env.*
+
+# Claude Code settings
+.claude/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
