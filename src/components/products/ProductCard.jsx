@@ -218,16 +218,23 @@ export default function ProductCard({ product, compact = false }) {
   const [added, setAdded] = useState(false)
 
   const firstVariety = product.varieties?.[0]
-  const firstPkg     = firstVariety?.packaging?.find(p => !p.quoteOnly && p.stock > 0)
   const imageURL     = firstVariety?.imageURLs?.[0] || product.imageURLs?.[0]
   const inStock      = product.varieties?.some(v => v.packaging?.some(p => p.stock > 0 && !p.quoteOnly))
+
+  // Search all varieties (not just the first) for the first available package
+  const firstAvail   = product.varieties?.reduce((found, v) => {
+    if (found) return found
+    const pkg = v.packaging?.find(p => !p.quoteOnly && p.stock > 0)
+    return pkg ? { variety: v, pkg } : null
+  }, null)
+  const firstPkg     = firstAvail?.pkg
   const stockStatus  = getStockStatus(firstPkg?.stock || 0, firstPkg?.lowStockThreshold || 10)
 
   const handleQuickAdd = (e) => {
     e.preventDefault()
-    if (!firstVariety || !firstPkg || adding) return
+    if (!firstAvail || adding) return
     setAdding(true)
-    addItem(product, firstVariety, firstPkg, 1)
+    addItem(product, firstAvail.variety, firstAvail.pkg, 1)
     setAdded(true)
     setTimeout(() => { setAdding(false); setAdded(false) }, 1400)
   }
