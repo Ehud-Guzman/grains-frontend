@@ -3,7 +3,9 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' }
+  headers: { 'Content-Type': 'application/json' },
+  // Required so the browser sends the HttpOnly refreshToken cookie on auth requests
+  withCredentials: true,
 })
 
 // ── REQUEST INTERCEPTOR ───────────────────────────────────────────────────────
@@ -61,18 +63,17 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken')
-        if (!refreshToken) throw new Error('No refresh token')
-
+        // Refresh token is sent automatically as an HttpOnly cookie.
+        // No body payload needed; withCredentials ensures the cookie is included.
         const response = await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
-          { refreshToken }
+          {},
+          { withCredentials: true }
         )
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken, user } = response.data.data
+        const { accessToken: newAccessToken, user } = response.data.data
 
         sessionStorage.setItem('accessToken', newAccessToken)
-        localStorage.setItem('refreshToken', newRefreshToken)
         if (user) {
           localStorage.setItem('user', JSON.stringify(user))
         }
@@ -83,10 +84,10 @@ api.interceptors.response.use(
 
       } catch (refreshError) {
         processQueue(refreshError, null)
-        // Clear tokens and redirect to login
+        // Clear local state and redirect to login
         sessionStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
+        localStorage.removeItem('currentBranch')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {

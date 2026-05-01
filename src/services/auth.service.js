@@ -12,10 +12,12 @@ export const authService = {
   // Superadmin switches branch context while logged in (branchId = null for global view)
   switchBranch: (branchId) => api.post('/auth/switch-branch', { branchId }),
 
-  // Send refreshToken in body so server blacklists it on logout
-  logout: (refreshToken) => api.post('/auth/logout', { refreshToken }),
+  // refreshToken is an HttpOnly cookie — the browser sends it automatically.
+  // No body payload needed; withCredentials on the axios instance handles it.
+  logout: () => api.post('/auth/logout'),
 
-  refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  // refreshToken sent as cookie; empty body is intentional
+  refresh: () => api.post('/auth/refresh'),
 
   changePassword: (currentPassword, newPassword) =>
     api.post('/auth/change-password', { currentPassword, newPassword }),
