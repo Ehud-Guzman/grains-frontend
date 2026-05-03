@@ -77,6 +77,7 @@ export default function AdminDashboardPage() {
   const [kpis, setKpis]         = useState(null)
   const [lowStock, setLowStock]   = useState([])
   const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
   const adminChecklist = getChecklist('admin').filter(item => {
@@ -90,6 +91,7 @@ export default function AdminDashboardPage() {
     if (!silent) setLoading(true)
     else setRefreshing(true)
     try {
+      setError('')
       const [kpiRes, stockRes] = await Promise.all([
         adminReportService.getKPIs(),
         adminStockService.getLowStock()
@@ -97,7 +99,9 @@ export default function AdminDashboardPage() {
       setKpis(kpiRes.data.data)
       setLowStock(stockRes.data.data?.slice(0, 8) || [])
       setLastRefreshed(new Date())
-    } catch {}
+    } catch {
+      setError('Could not load dashboard metrics right now. Try refreshing.')
+    }
     finally { setLoading(false); setRefreshing(false) }
   }
 
@@ -135,6 +139,12 @@ export default function AdminDashboardPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-admin text-red-700">
+          {error}
+        </div>
+      )}
 
       {showAdminChecklist && (
         <div className="mb-6">

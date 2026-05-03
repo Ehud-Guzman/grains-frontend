@@ -1,5 +1,16 @@
 import axios from 'axios'
 
+// ── IN-MEMORY TOKEN STORE ─────────────────────────────────────────────────────
+// Storing the access token in sessionStorage exposes it to XSS. Keeping it in a
+// module-level variable means it lives only in JS heap — inaccessible to injected
+// scripts. On page reload the token is gone, so the interceptor calls /auth/refresh
+// which reads the HttpOnly refreshToken cookie to issue a new access token.
+let _accessToken = null
+
+export const setToken  = (token) => { _accessToken = token }
+export const clearToken = ()      => { _accessToken = null  }
+export const getToken  = ()       => _accessToken
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 15000,
@@ -16,7 +27,7 @@ api.interceptors.request.use(
       delete config.headers['Content-Type']
     }
 
-    const token = sessionStorage.getItem('accessToken')
+    const token = _accessToken
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -73,7 +84,7 @@ api.interceptors.response.use(
 
         const { accessToken: newAccessToken, user } = response.data.data
 
-        sessionStorage.setItem('accessToken', newAccessToken)
+        setToken(newAccessToken)
         if (user) {
           localStorage.setItem('user', JSON.stringify(user))
         }
@@ -85,7 +96,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
         // Clear local state and redirect to login
-        sessionStorage.removeItem('accessToken')
+        clearToken()
         localStorage.removeItem('user')
         localStorage.removeItem('currentBranch')
         window.location.href = '/login'

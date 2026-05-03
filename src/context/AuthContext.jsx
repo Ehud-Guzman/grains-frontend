@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { authService } from '../services/auth.service'
+import { setToken, clearToken } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -13,23 +14,34 @@ export const AuthProvider = ({ children }) => {
   const inactivityTimer = useRef(null)
 
   useEffect(() => {
-    try {
+    // On mount, the in-memory token is always gone (page reload clears JS heap).
+    // Try to restore the session via the HttpOnly refreshToken cookie.
+    // If the cookie is present and valid the server returns a fresh access token.
+    const restore = async () => {
       const stored       = localStorage.getItem('user')
       const storedBranch = localStorage.getItem('currentBranch')
-      const accessToken  = sessionStorage.getItem('accessToken')
-      // refreshToken is now an HttpOnly cookie — not readable from JS.
-      // Restore session if we have a user record and an in-memory access token.
-      if (stored && accessToken) {
-        setUser(JSON.parse(stored))
-        if (storedBranch) setCurrentBranch(JSON.parse(storedBranch))
+      if (!stored) {
+        setIsLoading(false)
+        return
       }
-    } catch {
-      sessionStorage.removeItem('accessToken')
-      localStorage.removeItem('user')
-      localStorage.removeItem('currentBranch')
-    } finally {
-      setIsLoading(false)
+      try {
+        const res = await authService.refresh()
+        const { accessToken, user: freshUser } = res.data.data
+        setToken(accessToken)
+        const userData = freshUser || JSON.parse(stored)
+        localStorage.setItem('user', JSON.stringify(userData))
+        setUser(userData)
+        if (storedBranch) setCurrentBranch(JSON.parse(storedBranch))
+      } catch {
+        // Refresh failed (cookie expired or revoked) — clear stale local state
+        clearToken()
+        localStorage.removeItem('user')
+        localStorage.removeItem('currentBranch')
+      } finally {
+        setIsLoading(false)
+      }
     }
+    restore()
   }, [])
 
   // ── ADMIN INACTIVITY TIMEOUT ──────────────────────────────────────────────
@@ -46,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     inactivityTimer.current = setTimeout(async () => {
       // Cookie is sent automatically by the browser; no token arg needed
       try { await authService.logout() } catch {}
-      sessionStorage.removeItem('accessToken')
+      clearToken()
       localStorage.removeItem('user')
       localStorage.removeItem('currentBranch')
       setUser(null)
@@ -70,7 +82,7 @@ export const AuthProvider = ({ children }) => {
   // ── PERSIST TOKENS + USER ─────────────────────────────────────────────────
   // refreshToken is stored as an HttpOnly cookie by the backend — never touch it here.
   const persistSession = (userData, accessToken, branch = null) => {
-    sessionStorage.setItem('accessToken', accessToken)
+    setToken(accessToken)
     localStorage.setItem('user', JSON.stringify(userData))
     if (branch) {
       localStorage.setItem('currentBranch', JSON.stringify(branch))
@@ -124,7 +136,7 @@ export const AuthProvider = ({ children }) => {
   const switchBranch = useCallback(async (branchId) => {
     const res = await authService.switchBranch(branchId)
     const data = res.data.data
-    sessionStorage.setItem('accessToken', data.accessToken)
+    setToken(data.accessToken)
     const branch = data.branch || null
     if (branch) {
       localStorage.setItem('currentBranch', JSON.stringify(branch))
@@ -148,7 +160,7 @@ export const AuthProvider = ({ children }) => {
       await authService.logout()
     } catch {}
     clearInactivityTimer()
-    sessionStorage.removeItem('accessToken')
+    clearToken()
     localStorage.removeItem('user')
     localStorage.removeItem('currentBranch')
     setUser(null)

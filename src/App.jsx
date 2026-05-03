@@ -9,6 +9,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import OnboardingLayer from "./components/onboarding/OnboardingLayer";
 import Spinner from "./components/ui/Spinner";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Layouts
 import PublicLayout from "./components/layout/PublicLayout";
@@ -63,6 +64,7 @@ const SUPERADMIN_ROLES   = ["superadmin"];
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <AppSettingsProvider>
@@ -248,5 +250,6 @@ export default function App() {
         </AppSettingsProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }

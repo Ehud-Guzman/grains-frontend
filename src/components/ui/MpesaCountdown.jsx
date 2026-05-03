@@ -10,6 +10,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
   const [secondsLeft, setSecondsLeft] = useState(120)
   const [status, setStatus]           = useState('pending') // pending | paid | failed | timeout
   const [message, setMessage]         = useState('')
+  const [consecutiveErrors, setConsecutiveErrors] = useState(0)
   const pollRef    = useRef(null)
   const countdownRef = useRef(null)
   const startTime  = useRef(Date.now())
@@ -19,6 +20,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
     const poll = async () => {
       try {
         const res = await paymentService.getStatus(orderId)
+        setConsecutiveErrors(0)
         const paymentStatus = res.data.data.paymentStatus
 
         if (paymentStatus === 'paid') {
@@ -47,7 +49,8 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
           onFailure?.('timeout')
         }
       } catch {
-        // Network error — keep polling
+        // Network error — keep polling and show warning after repeated failures
+        setConsecutiveErrors(prev => prev + 1)
       }
     }
 
@@ -168,6 +171,12 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
         <div className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
         Checking payment status…
       </div>
+
+      {consecutiveErrors >= 3 && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-body text-amber-700">
+          Having trouble checking payment status due to network issues. We are still retrying.
+        </div>
+      )}
     </div>
   )
 }
