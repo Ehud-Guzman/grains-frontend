@@ -65,6 +65,10 @@ export const STOCK_CONFIG = {
   out: { dot: 'bg-red-400',   text: 'text-red-500',   label: 'Out of Stock', badge: 'bg-red-50 text-red-600 border-red-200'        },
 }
 
+export const MPESA_POLL_TIMEOUT_SECONDS = 60
+export const MPESA_SUCCESS_REDIRECT_DELAY_MS = 1200
+export const CART_FEEDBACK_DELAY_MS = 1800
+
 export const ORDER_STATUS_CONFIG = {
   pending:          { dot: 'bg-amber-400',  text: 'text-amber-700',  badge: 'bg-amber-50  border-amber-200',  stripe: 'bg-amber-400',  bg: 'bg-amber-50',  border: 'border-amber-200',  label: 'Pending'         },
   approved:         { dot: 'bg-blue-400',   text: 'text-blue-700',   badge: 'bg-blue-50   border-blue-200',   stripe: 'bg-blue-400',   bg: 'bg-blue-50',   border: 'border-blue-200',   label: 'Approved'        },

@@ -2,31 +2,37 @@ import { useState, useEffect, useRef } from 'react'
 import { Smartphone, RefreshCw, XCircle } from 'lucide-react'
 import api from '../../services/api'
 import { formatKES } from '../../utils/helpers'
+import { MPESA_POLL_TIMEOUT_SECONDS, MPESA_SUCCESS_REDIRECT_DELAY_MS } from '../../utils/constants'
 
 export default function MpesaCountdown({ orderId, phone, amount, orderRef, onSuccess, onFailure }) {
-  const [seconds, setSeconds] = useState(60)
+  const [seconds, setSeconds] = useState(MPESA_POLL_TIMEOUT_SECONDS)
   const [status, setStatus] = useState('waiting') // waiting | paid | failed
+  const [pollError, setPollError] = useState(false)
   const pollRef = useRef(null)
   const timerRef = useRef(null)
+  const consecutiveErrors = useRef(0)
 
   useEffect(() => {
     // Poll every 5 seconds
     pollRef.current = setInterval(async () => {
       try {
         const res = await api.get(`/payments/status/${orderId}`)
+        consecutiveErrors.current = 0
+        setPollError(false)
         const paymentStatus = res.data.data?.paymentStatus
         if (paymentStatus === 'paid') {
           clearInterval(pollRef.current)
           clearInterval(timerRef.current)
           setStatus('paid')
-          setTimeout(() => onSuccess(), 1200)
+          setTimeout(() => onSuccess(), MPESA_SUCCESS_REDIRECT_DELAY_MS)
         } else if (paymentStatus === 'failed') {
           clearInterval(pollRef.current)
           clearInterval(timerRef.current)
           setStatus('failed')
         }
       } catch {
-        // keep polling
+        consecutiveErrors.current += 1
+        if (consecutiveErrors.current >= 3) setPollError(true)
       }
     }, 5000)
 
@@ -111,6 +117,12 @@ export default function MpesaCountdown({ orderId, phone, amount, orderRef, onSuc
         </div>
         <span className="text-earth-400 text-sm">seconds remaining</span>
       </div>
+
+      {pollError && (
+        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+          Having trouble checking payment status. Your payment will still be confirmed if you completed it.
+        </p>
+      )}
 
       <p className="text-xs text-earth-400">
         Polling for payment confirmation every 5 seconds…

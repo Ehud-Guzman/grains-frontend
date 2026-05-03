@@ -5,7 +5,7 @@ import { productService } from '../../services/product.service'
 import { useCart } from '../../context/CartContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES } from '../../utils/helpers'
-import { STOCK_CONFIG } from '../../utils/constants'
+import { STOCK_CONFIG, CART_FEEDBACK_DELAY_MS } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import { getOptimizedImageUrl } from '../../utils/image'
 
@@ -135,7 +135,7 @@ export default function ProductPage() {
     if (!variety || !packaging || isQuoteOnly || !inStock || added) return
     addItem(product, variety, packaging, quantity)
     setAdded(true)
-    setTimeout(() => setAdded(false), 1800)
+    setTimeout(() => setAdded(false), CART_FEEDBACK_DELAY_MS)
   }
 
   const switchVariety = (i) => {
