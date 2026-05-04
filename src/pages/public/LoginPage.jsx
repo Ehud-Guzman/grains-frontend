@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, LogIn, Lock, X, ArrowLeft, CheckCircle, MapPin, Building2, ShoppingBag, Shield } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -297,6 +297,7 @@ export default function LoginPage() {
   const shopInfo = useShopInfo()
   const { login, selectBranch } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const from = location.state?.from?.pathname || '/dashboard'
 
   // Step 1: credentials
@@ -324,12 +325,12 @@ export default function LoginPage() {
 
       const userData = result.user
       if (ADMIN_ROLES.includes(userData.role)) {
-        window.location.replace('/admin/dashboard')
+        navigate('/admin/dashboard', { replace: true })
       } else if (userData.role === 'driver') {
-        window.location.replace('/driver/dashboard')
+        navigate('/driver/dashboard', { replace: true })
       } else {
         const customerTarget = ['/login', '/register', '/'].includes(from) ? '/dashboard' : from
-        window.location.replace(customerTarget)
+        navigate(customerTarget, { replace: true })
       }
     } catch (err) {
       setLoading(false)
@@ -345,7 +346,7 @@ export default function LoginPage() {
 
   const handleBranchSelect = async (preAuthToken, branchId) => {
     await selectBranch(preAuthToken, branchId)
-    window.location.replace('/admin/dashboard')
+    navigate('/admin/dashboard', { replace: true })
   }
 
   return (
