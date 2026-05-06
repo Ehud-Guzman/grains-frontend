@@ -208,7 +208,7 @@ export default function CataloguePage() {
   // Grid classes
   const gridClass = compact
     ? 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-4'
-    : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+    : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
 
   return (
     <div className="min-h-screen bg-cream">
