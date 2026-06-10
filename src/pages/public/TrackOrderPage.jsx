@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { Search, Phone, Package, CheckCircle, Clock, XCircle, Truck, ChevronRight } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
@@ -75,20 +75,24 @@ function OrderProgress({ status }) {
 
 export default function TrackOrderPage() {
   const shopInfo = useShopInfo()
-  const [phone, setPhone] = useState('')
-  const [ref, setRef] = useState('')
+  const { state } = useLocation()
+  const [searchParams] = useSearchParams()
+  const initialRef = (searchParams.get('ref') || '').toUpperCase()
+  const [phone, setPhone] = useState(state?.phone || '')
+  const [ref, setRef] = useState(initialRef)
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleTrack = async (e) => {
     e.preventDefault()
-    if (!phone.trim() || !ref.trim()) return
+    const normalizedRef = ref.trim().toUpperCase()
+    if (!phone.trim() || !normalizedRef) return
     setLoading(true)
     setError('')
     setOrder(null)
     try {
-      const res = await orderService.trackOrder(phone.trim(), ref.trim().toUpperCase())
+      const res = await orderService.trackOrder(phone.trim(), normalizedRef)
       setOrder(res.data.data)
     } catch (err) {
       setError(err.response?.data?.message || 'Order not found. Check your phone number and reference.')

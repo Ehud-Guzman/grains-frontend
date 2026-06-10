@@ -242,7 +242,7 @@ export function OrderConfirmPage() {
         {/* ── Actions ────────────────────────────────────────────────────── */}
         <div className="space-y-3 pt-1">
           {ref && (
-            <Link to={`/track?ref=${ref}`}
+            <Link to={`/track?ref=${ref}`} state={{ phone }}
               className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
                 text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-800
                 transition-all active:scale-[0.99]">
