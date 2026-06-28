@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   GitBranch, Users, ShoppingCart, Package, TrendingUp, Shield,
   Settings2, Activity, RefreshCw, ArrowUpRight, CheckCircle,
-  AlertCircle, Clock, DollarSign, Eye, Layers, UserCog, Archive, Sparkles,
+  AlertCircle, Clock, DollarSign, Eye, Layers, UserCog, Archive,
 } from 'lucide-react'
 import { adminBranchService } from '../../services/admin/branch.service'
 import { adminUserService } from '../../services/admin/user.service'
@@ -110,7 +110,7 @@ function Skel({ w = 'w-20', h = 'h-4' }) {
 }
 
 export default function SuperAdminDashboardPage() {
-  const { startTour, getChecklist } = useOnboarding()
+  const { getChecklist } = useOnboarding()
   const [branches, setBranches]   = useState([])
   const [users, setUsers]         = useState([])
   const [kpis, setKpis]           = useState(null)
@@ -169,14 +169,6 @@ export default function SuperAdminDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => startTour('superadmin', { force: true })}
-            className="flex items-center gap-2 px-3 py-2 bg-brand-500/10 border border-brand-500/20 rounded-lg
-              text-sm font-admin font-semibold text-brand-700 hover:bg-brand-500/15 transition-colors shadow-admin"
-          >
-            <Sparkles size={14} />
-            <span className="hidden sm:inline">Tour</span>
-          </button>
           <button onClick={() => fetchAll(true)} disabled={refreshing}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
               text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
@@ -193,8 +185,6 @@ export default function SuperAdminDashboardPage() {
             title="Get familiar with the control center"
             description="These steps cover the key areas of the superadmin workspace so you can manage the platform with confidence."
             items={superadminChecklist}
-            actionLabel="Replay Tour"
-            onAction={() => startTour('superadmin', { force: true })}
             theme="admin"
           />
         </div>

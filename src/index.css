@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Cube-flip ticker — used by the Today's Prices strip on the home hero */
+@keyframes cubeTickerOut {
+  0%   { transform: rotateX(0deg);   opacity: 1;   }
+  100% { transform: rotateX(90deg);  opacity: 0.1; }
+}
+@keyframes cubeTickerIn {
+  0%   { transform: rotateX(-90deg); opacity: 0.1; }
+  100% { transform: rotateX(0deg);   opacity: 1;   }
+}
+.cube-ticker-out {
+  animation: cubeTickerOut 220ms ease-in forwards;
+  transform-origin: bottom center;
+}
+.cube-ticker-in {
+  animation: cubeTickerIn 220ms ease-out forwards;
+  transform-origin: top center;
+}
+
 @layer base {
   html {
     font-family: 'DM Sans', system-ui, sans-serif;
@@ -30,7 +53,7 @@
     background: #F3F4F6;
   }
   ::-webkit-scrollbar-thumb {
-    background: #C4622D;
+    background: #A34E22;
     border-radius: 3px;
   }
 }
@@ -38,8 +61,8 @@
 @layer components {
   /* Buttons */
   .btn-primary {
-    @apply bg-brand-700 text-white font-body font-medium px-6 py-3 rounded-lg
-           hover:bg-brand-800 active:bg-brand-900 transition-colors duration-200
+    @apply bg-brand-600 text-white font-body font-medium px-6 py-3 rounded-lg
+           hover:bg-brand-700 active:bg-brand-800 transition-colors duration-200
            disabled:opacity-50 disabled:cursor-not-allowed
            min-h-[44px] inline-flex items-center justify-center gap-2;
   }

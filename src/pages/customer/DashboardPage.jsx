@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Package, ChevronRight, ShoppingBag, Clock,
-  UserCircle, Sparkles, AlertTriangle, MapPin
+  UserCircle, AlertTriangle, MapPin, RotateCcw, TrendingUp, TrendingDown, List
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import { useOnboarding } from '../../context/OnboardingContext'
+import { useCart } from '../../context/CartContext'
+import { useAppSettings } from '../../context/AppSettingsContext'
 import { orderService } from '../../services/order.service'
 import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../utils/helpers'
@@ -43,9 +45,26 @@ function SkeletonCard() {
   )
 }
 
+const LOYALTY_TIERS = {
+  gold:   { label: 'Gold',   emoji: '🥇', color: 'text-yellow-700', bg: 'bg-yellow-50', border: 'border-yellow-200' },
+  silver: { label: 'Silver', emoji: '🥈', color: 'text-slate-600',  bg: 'bg-slate-50',  border: 'border-slate-200' },
+  bronze: { label: 'Bronze', emoji: '🥉', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200' },
+  none:   { label: null,     emoji: null,  color: '',                bg: '',              border: '' },
+}
+
+const getLoyaltyTier = (totalSpend, settings) => {
+  if (!settings?.loyaltyEnabled) return LOYALTY_TIERS.none
+  if (totalSpend >= (settings.loyaltyGoldThreshold   || 75000)) return LOYALTY_TIERS.gold
+  if (totalSpend >= (settings.loyaltySilverThreshold || 25000)) return LOYALTY_TIERS.silver
+  if (totalSpend >= (settings.loyaltyBronzeThreshold || 5000))  return LOYALTY_TIERS.bronze
+  return LOYALTY_TIERS.none
+}
+
 export default function CustomerDashboardPage() {
   const { user } = useAuth()
-  const { startTour, getChecklist, markChecklistItem } = useOnboarding()
+  const { getChecklist, markChecklistItem } = useOnboarding()
+  const { reorderItems, openCart } = useCart()
+  const appSettings = useAppSettings()
   const [orders, setOrders] = useState([])
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 })
   const [loading, setLoading] = useState(true)
@@ -53,8 +72,15 @@ export default function CustomerDashboardPage() {
   const [cancelling, setCancelling] = useState(null)
   const [confirmCancel, setConfirmCancel] = useState(null)
   const [page, setPage] = useState(1)
+  const [stats, setStats] = useState(null)
   const checklistItems = getChecklist('customer')
   const allChecklistDone = checklistItems.length > 0 && checklistItems.every(item => item.done)
+
+  const handleReorder = (order) => {
+    if (!order?.orderItems?.length) return
+    reorderItems(order.orderItems)
+    openCart()
+  }
 
   const fetchOrders = async (p = 1) => {
     setLoading(true)
@@ -73,6 +99,12 @@ export default function CustomerDashboardPage() {
   }
 
   useEffect(() => { fetchOrders(page) }, [page])
+
+  useEffect(() => {
+    orderService.getMyStats()
+      .then(res => setStats(res.data?.data || null))
+      .catch(() => {})
+  }, [])
 
   const handleCancel = async (id) => {
     setCancelling(id)
@@ -129,13 +161,6 @@ export default function CustomerDashboardPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={() => startTour('customer', { force: true })}
-              title="Take a tour"
-              className="p-2 rounded-lg text-earth-400 hover:text-earth-700 hover:bg-earth-100
-                transition-colors">
-              <Sparkles size={16} />
-            </button>
             <Link to="/profile"
               data-tour="customer-profile-link"
               className="flex items-center gap-1.5 text-xs text-earth-600 hover:text-earth-900
@@ -158,26 +183,118 @@ export default function CustomerDashboardPage() {
               title="Build your customer flow with confidence"
               description="Each step unlocks naturally as you move through the app."
               items={checklistItems}
-              actionLabel="Replay Tour"
-              onAction={() => startTour('customer', { force: true })}
             />
           </div>
         )}
 
+        {/* ── Spending summary ──────────────────────────────────────── */}
+        {stats && (
+          <div className="grid grid-cols-2 gap-2.5 mb-5">
+            <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-4">
+              <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-1">
+                This Month
+              </p>
+              <p className="font-display font-bold text-earth-900 text-lg leading-none">
+                {formatKES(stats.thisMonth.total)}
+              </p>
+              <p className="text-earth-400 text-xs font-body mt-1">
+                {stats.thisMonth.orderCount} order{stats.thisMonth.orderCount !== 1 ? 's' : ''}
+                {stats.lastMonth.total > 0 && (
+                  <span className={`ml-1.5 font-semibold ${
+                    stats.thisMonth.total >= stats.lastMonth.total ? 'text-green-600' : 'text-red-500'
+                  }`}>
+                    {stats.thisMonth.total >= stats.lastMonth.total ? '↑' : '↓'}
+                    {' '}{Math.round(Math.abs((stats.thisMonth.total - stats.lastMonth.total) / (stats.lastMonth.total || 1)) * 100)}%
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-4">
+              <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-1">
+                All Time
+              </p>
+              <p className="font-display font-bold text-earth-900 text-lg leading-none">
+                {formatKES(stats.allTime.total)}
+              </p>
+              <p className="text-earth-400 text-xs font-body mt-1">
+                {stats.allTime.orderCount} order{stats.allTime.orderCount !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Loyalty tier card ────────────────────────────────── */}
+        {stats && appSettings.loyaltyEnabled && (() => {
+          const tier = getLoyaltyTier(stats.allTime.total, appSettings)
+          const nextTier = tier === LOYALTY_TIERS.none
+            ? { threshold: appSettings.loyaltyBronzeThreshold || 5000, name: 'Bronze' }
+            : tier === LOYALTY_TIERS.bronze
+            ? { threshold: appSettings.loyaltySilverThreshold || 25000, name: 'Silver' }
+            : tier === LOYALTY_TIERS.silver
+            ? { threshold: appSettings.loyaltyGoldThreshold || 75000, name: 'Gold' }
+            : null
+          const progress = nextTier
+            ? Math.min(100, Math.round((stats.allTime.total / nextTier.threshold) * 100))
+            : 100
+          if (tier === LOYALTY_TIERS.none && stats.allTime.total === 0) return null
+          return (
+            <div className={`mb-4 rounded-2xl border p-4 ${tier.bg || 'bg-white'} ${tier.border || 'border-earth-100'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {tier.emoji && <span className="text-lg">{tier.emoji}</span>}
+                  <div>
+                    <p className={`font-body font-bold text-sm ${tier.color || 'text-earth-800'}`}>
+                      {tier.label ? `${tier.label} Member` : 'Loyalty Programme'}
+                    </p>
+                    <p className="text-earth-400 text-xs font-body">
+                      {formatKES(stats.allTime.total)} lifetime spend
+                    </p>
+                  </div>
+                </div>
+                {tier.label && (
+                  <Link to="/shop"
+                    className="text-xs font-body font-semibold text-brand-600 hover:underline">
+                    Shop more
+                  </Link>
+                )}
+              </div>
+              {nextTier && (
+                <>
+                  <div className="w-full bg-earth-100 rounded-full h-1.5 mb-1">
+                    <div
+                      className={`h-1.5 rounded-full ${tier === LOYALTY_TIERS.none ? 'bg-amber-600' : tier.color.replace('text-', 'bg-')}`}
+                      style={{ width: `${progress}%` }} />
+                  </div>
+                  <p className="text-earth-400 text-xs font-body">
+                    {formatKES(nextTier.threshold - stats.allTime.total)} more to reach {nextTier.name}
+                  </p>
+                </>
+              )}
+              {!nextTier && <p className="text-xs font-body text-yellow-700 font-semibold">You've reached the top tier! Thank you.</p>}
+            </div>
+          )
+        })()}
+
         {/* Quick actions row */}
-        <div className="flex gap-2.5 mb-5">
+        <div className="grid grid-cols-3 gap-2 mb-5">
           <Link to="/shop"
             data-tour="customer-browse-link"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-brand-700
+            className="flex items-center justify-center gap-1.5 py-2.5 bg-brand-700
               text-white rounded-xl text-xs font-body font-semibold hover:bg-brand-800 transition-colors">
-            <ShoppingBag size={13} /> Browse Shop
+            <ShoppingBag size={13} /> Shop
           </Link>
           <Link to="/track"
             data-tour="customer-track-link"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white border
+            className="flex items-center justify-center gap-1.5 py-2.5 bg-white border
               border-earth-200 rounded-xl text-xs font-body font-semibold text-earth-700
               hover:bg-earth-50 transition-colors">
-            <MapPin size={13} /> Track Order
+            <MapPin size={13} /> Track
+          </Link>
+          <Link to="/lists"
+            className="flex items-center justify-center gap-1.5 py-2.5 bg-white border
+              border-earth-200 rounded-xl text-xs font-body font-semibold text-earth-700
+              hover:bg-earth-50 transition-colors">
+            <List size={13} /> My Lists
           </Link>
         </div>
 
@@ -320,27 +437,39 @@ export default function CustomerDashboardPage() {
                 <div className="bg-white rounded-2xl border border-earth-100 shadow-warm
                   divide-y divide-earth-50 overflow-hidden">
                   {pastOrders.map(order => (
-                    <Link key={order._id} to={`/orders/${order._id}`}
-                      className="flex items-center gap-3 px-4 py-3.5 hover:bg-earth-50
-                        transition-colors group">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="font-body font-semibold text-earth-700 text-sm">
-                            {order.orderRef}
-                          </span>
-                          <StatusPill status={order.status} />
+                    <div key={order._id}
+                      className="flex items-center gap-3 px-4 py-3.5 hover:bg-earth-50 transition-colors group">
+                      <Link to={`/orders/${order._id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="font-body font-semibold text-earth-700 text-sm">
+                              {order.orderRef}
+                            </span>
+                            <StatusPill status={order.status} />
+                          </div>
+                          <p className="text-earth-400 text-xs font-body">{formatDate(order.createdAt)}</p>
                         </div>
-                        <p className="text-earth-400 text-xs font-body">{formatDate(order.createdAt)}</p>
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-body font-bold text-earth-800 text-sm">{formatKES(order.total)}</p>
+                          <p className="text-earth-400 text-xs font-body">
+                            {order.orderItems?.length} item{order.orderItems?.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </Link>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => handleReorder(order)}
+                          title="Reorder"
+                          className="p-1.5 text-earth-300 hover:text-brand-600 hover:bg-brand-50
+                            rounded-lg transition-colors">
+                          <RotateCcw size={14} />
+                        </button>
+                        <Link to={`/orders/${order._id}`}
+                          className="p-1.5 text-earth-200 group-hover:text-earth-400 transition-colors">
+                          <ChevronRight size={15} />
+                        </Link>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-body font-bold text-earth-800 text-sm">{formatKES(order.total)}</p>
-                        <p className="text-earth-400 text-xs font-body">
-                          {order.orderItems?.length} item{order.orderItems?.length !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <ChevronRight size={15}
-                        className="text-earth-200 group-hover:text-earth-400 transition-colors flex-shrink-0" />
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>

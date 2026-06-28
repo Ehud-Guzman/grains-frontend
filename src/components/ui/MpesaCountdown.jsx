@@ -19,7 +19,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
   useEffect(() => {
     const poll = async () => {
       try {
-        const res = await paymentService.getStatus(orderId)
+        const res = await paymentService.getStatus(orderId, phone)
         setConsecutiveErrors(0)
         const paymentStatus = res.data.data.paymentStatus
 

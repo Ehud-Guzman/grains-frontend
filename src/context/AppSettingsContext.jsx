@@ -24,6 +24,10 @@ const DEFAULT_SETTINGS = {
   hasDeliveryZones: false,
   vatEnabled: false,
   vatRate: 16,
+  loyaltyEnabled: true,
+  loyaltyBronzeThreshold: 5000,
+  loyaltySilverThreshold: 25000,
+  loyaltyGoldThreshold: 75000,
 }
 
 const normalizeSettings = (settings = {}) => {

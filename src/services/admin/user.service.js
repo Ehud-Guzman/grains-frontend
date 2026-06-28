@@ -6,4 +6,5 @@ export const adminUserService = {
   lock: (id) => api.patch(`/admin/users/${id}/lock`),
   unlock: (id) => api.patch(`/admin/users/${id}/unlock`),
   resetPassword: (id, password) => api.patch(`/admin/users/${id}/reset-password`, { password }),
+  setPermissions: (id, data) => api.patch(`/admin/users/${id}/permissions`, data),
 }

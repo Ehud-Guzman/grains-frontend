@@ -6,8 +6,24 @@ import { formatKES, getPriceRange, getStockStatus } from '../../utils/helpers'
 import { STOCK_CONFIG as stockConfig } from '../../utils/constants'
 import { getOptimizedImageUrl } from '../../utils/image'
 
+// ── PRICE CHANGE BADGE ────────────────────────────────────────────────────────
+function PriceChangeBadge({ priceChange }) {
+  if (!priceChange) return null
+  const up = priceChange.direction === 'up'
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-[10px] font-body font-bold
+      px-1.5 py-0.5 rounded-full ${
+        up
+          ? 'bg-red-50 text-red-600 border border-red-100'
+          : 'bg-green-50 text-green-700 border border-green-100'
+      }`}>
+      {up ? '▲' : '▼'} {priceChange.pct}%
+    </span>
+  )
+}
+
 // ── FULL CARD (default) ───────────────────────────────────────────────────────
-function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added }) {
+function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added, priceChange }) {
   const cfg = stockConfig[stockStatus] || stockConfig.out
 
   return (
@@ -87,11 +103,12 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
         )}
 
         {/* Price */}
-        <div className="flex items-center gap-1.5 mt-auto mb-3">
+        <div className="flex items-center gap-1.5 mt-auto mb-3 flex-wrap">
           <Tag size={13} className="text-brand-400 flex-shrink-0" />
           <span className="font-display text-brand-600 font-semibold text-sm">
             {getPriceRange(product)}
           </span>
+          <PriceChangeBadge priceChange={priceChange} />
         </div>
 
         {/* In stock dot */}
@@ -128,7 +145,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
 }
 
 // ── COMPACT CARD (2-column grid) ──────────────────────────────────────────────
-function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added }) {
+function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added, priceChange }) {
   const cfg = stockConfig[stockStatus] || stockConfig.out
 
   return (
@@ -198,10 +215,13 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto">
-          <span className="font-display text-brand-600 font-bold text-sm">
-            {getPriceRange(product)}
-          </span>
+        <div className="flex items-center justify-between mt-auto gap-1 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-display text-brand-600 font-bold text-sm">
+              {getPriceRange(product)}
+            </span>
+            <PriceChangeBadge priceChange={priceChange} />
+          </div>
           {stockStatus === 'in' && (
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
           )}
@@ -212,7 +232,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
 }
 
 // ── MAIN EXPORT ───────────────────────────────────────────────────────────────
-export default function ProductCard({ product, compact = false }) {
+export default function ProductCard({ product, compact = false, priceChange }) {
   const { addItem } = useCart()
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
@@ -239,7 +259,7 @@ export default function ProductCard({ product, compact = false }) {
     setTimeout(() => { setAdding(false); setAdded(false) }, 1400)
   }
 
-  const props = { product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd: handleQuickAdd, adding, added }
+  const props = { product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd: handleQuickAdd, adding, added, priceChange }
 
   return compact ? <CompactCard {...props} /> : <FullCard {...props} />
 }

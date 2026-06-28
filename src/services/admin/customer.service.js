@@ -6,4 +6,5 @@ export const adminCustomerService = {
   getSegments: () => api.get('/admin/customers/segments'),
   lock: (id) => api.patch(`/admin/customers/${id}/lock`),
   unlock: (id) => api.patch(`/admin/customers/${id}/unlock`),
+  toggleB2B: (id) => api.patch(`/admin/customers/${id}/b2b`),
 }

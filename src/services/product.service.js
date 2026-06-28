@@ -30,5 +30,11 @@ export const productService = {
 
     return categoriesPromise
   },
-  getSuggestions: (q) => api.get('/products/suggestions', { params: { q } })
+  getSuggestions: (q) => api.get('/products/suggestions', { params: { q } }),
+  getPriceHistory: (id, variety, packaging) =>
+    api.get(`/products/${id}/price-history`, { params: { variety, packaging } }),
+  getBestTimeBadge: (id, variety, packaging, price) =>
+    api.get(`/products/${id}/best-time`, { params: { variety, packaging, price } }),
+  getPriceChanges: (ids) =>
+    api.get('/products/price-changes', { params: { ids: ids.join(',') } }),
 }

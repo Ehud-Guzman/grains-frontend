@@ -83,7 +83,7 @@ function ChangePasswordModal({ onClose }) {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Current password */}
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-800 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-1.5">
                   Current Password
                 </label>
                 <div className="relative">
@@ -94,7 +94,7 @@ function ChangePasswordModal({ onClose }) {
                     placeholder="Your current password"
                     required
                     autoFocus
-                    className="w-full border border-earth-300 rounded-xl px-4 py-2.5 pr-10 text-sm
+                    className="w-full border border-earth-200 rounded-xl px-4 py-2.5 pr-10 text-sm
                       font-body text-earth-900 placeholder-earth-400 focus:outline-none
                       focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white"
                   />
@@ -107,7 +107,7 @@ function ChangePasswordModal({ onClose }) {
 
               {/* New password */}
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-800 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-1.5">
                   New Password
                 </label>
                 <div className="relative">
@@ -117,7 +117,7 @@ function ChangePasswordModal({ onClose }) {
                     onChange={e => setForm(f => ({ ...f, next: e.target.value }))}
                     placeholder="At least 8 characters"
                     required
-                    className="w-full border border-earth-300 rounded-xl px-4 py-2.5 pr-10 text-sm
+                    className="w-full border border-earth-200 rounded-xl px-4 py-2.5 pr-10 text-sm
                       font-body text-earth-900 placeholder-earth-400 focus:outline-none
                       focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white"
                   />
@@ -150,7 +150,7 @@ function ChangePasswordModal({ onClose }) {
 
               {/* Confirm password */}
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-800 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-1.5">
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -167,7 +167,7 @@ function ChangePasswordModal({ onClose }) {
                           ? 'border-red-300 focus:ring-red-300'
                           : form.confirm && form.next === form.confirm
                           ? 'border-green-300 focus:ring-green-300'
-                          : 'border-earth-300 focus:ring-brand-400'
+                          : 'border-earth-200 focus:ring-brand-400'
                       }`}
                   />
                   <button type="button" onClick={() => toggle('confirm')}
@@ -248,7 +248,7 @@ function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack 
             className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
               selected === branch._id
                 ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-300'
-                : 'border-earth-200 hover:border-earth-300 bg-earth-100'
+                : 'border-earth-200 hover:border-earth-200 bg-earth-100'
             }`}
           >
             <p className="font-body font-semibold text-earth-900 text-sm">{branch.name}</p>
@@ -352,7 +352,7 @@ export default function LoginPage() {
   return (
     <>
       {/* ── Page: warm off-white background ─────────────────────────────────── */}
-      <div className="min-h-screen bg-[#F5F2EF] flex flex-col">
+      <div className="min-h-screen bg-brand-50 flex flex-col">
 
         {/* ── Top nav strip ─────────────────────────────────────────────────── */}
         <div className="bg-white border-b border-earth-200 py-3 px-4">
@@ -437,7 +437,7 @@ export default function LoginPage() {
                         value={form.phone}
                         onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
                         placeholder="0712 345 678"
-                        className="w-full border border-earth-300 rounded-xl px-4 py-3 text-sm font-body
+                        className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm font-body
                           text-earth-900 placeholder-earth-400 focus:outline-none focus:ring-2
                           focus:ring-brand-400 focus:border-transparent bg-white transition-all"
                         required
@@ -447,7 +447,7 @@ export default function LoginPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-xs font-body font-semibold text-earth-800 uppercase tracking-wide">
+                        <label className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide">
                           Password
                         </label>
                         <button
@@ -464,7 +464,7 @@ export default function LoginPage() {
                           value={form.password}
                           onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                           placeholder="Your password"
-                          className="w-full border border-earth-300 rounded-xl px-4 py-3 pr-12 text-sm
+                          className="w-full border border-earth-200 rounded-xl px-4 py-3 pr-12 text-sm
                             font-body text-earth-900 placeholder-earth-400 focus:outline-none
                             focus:ring-2 focus:ring-brand-400 focus:border-transparent bg-white transition-all"
                           required

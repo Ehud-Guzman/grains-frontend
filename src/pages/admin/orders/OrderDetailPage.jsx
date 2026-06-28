@@ -4,12 +4,13 @@ import Receipt from '../../../components/orders/Receipt'
 import {
   ArrowLeft, Check, X, Printer, Phone, MapPin,
   CreditCard, Truck, Store, Package, ChevronRight,
-  AlertTriangle, Clock, BadgeCheck, Ban
+  AlertTriangle, Clock, BadgeCheck, Ban, FileCheck, RefreshCw
 } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { adminOrderService } from '../../../services/admin/order.service'
 import { adminDriverService } from '../../../services/admin/driver.service'
 import { adminPaymentService } from '../../../services/admin/payment.service'
+import { globalSettingsService } from '../../../services/admin/globalSettings.service'
 import { useOnboarding } from '../../../context/OnboardingContext'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { OrderStatusTimeline } from '../../../components/orders/OrderStatusTimeline'
@@ -81,6 +82,9 @@ export default function AdminOrderDetailPage() {
   const [selectedDriver, setSelectedDriver] = useState('')
   const [assigningDriver, setAssigningDriver] = useState(false)
   const [confirmingPayment, setConfirmingPayment] = useState(false)
+  const [mpesaRef, setMpesaRef] = useState('')
+  const [showMpesaRefInput, setShowMpesaRefInput] = useState(false)
+  const [etimsResubmitting, setEtimsResubmitting] = useState(false)
 
   const fetchOrder = async () => {
     try {
@@ -160,6 +164,33 @@ export default function AdminOrderDetailPage() {
     } finally { setConfirmingPayment(false) }
   }
 
+  const handleConfirmMpesaPayment = async () => {
+    const ref = mpesaRef.trim().toUpperCase()
+    if (!ref) return toast.error('Enter the M-Pesa transaction reference')
+    if (!/^[A-Z0-9]{10}$/.test(ref)) return toast.error('Reference must be 10 uppercase letters/numbers (e.g. QDK14KSHD7)')
+    setConfirmingPayment(true)
+    try {
+      await adminPaymentService.confirmManual(id, ref)
+      toast.success('M-Pesa payment confirmed')
+      setShowMpesaRefInput(false)
+      setMpesaRef('')
+      fetchOrder()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm payment')
+    } finally { setConfirmingPayment(false) }
+  }
+
+  const handleEtimsResubmit = async () => {
+    setEtimsResubmitting(true)
+    try {
+      await globalSettingsService.etimsResubmit(id)
+      toast.success('eTIMS invoice submitted to KRA')
+      fetchOrder()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'eTIMS resubmission failed')
+    } finally { setEtimsResubmitting(false) }
+  }
+
   // ── LOADING / NOT FOUND ───────────────────────────────────────────────────
   if (loading) return (
     <div className="flex justify-center items-center py-32">
@@ -223,7 +254,34 @@ export default function AdminOrderDetailPage() {
             </div>
 
             {/* Right — actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+
+              {/* eTIMS status badge */}
+              {order.etimsStatus && (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-admin font-medium ${
+                  order.etimsStatus === 'submitted' ? 'bg-green-50 border-green-200 text-green-700' :
+                  order.etimsStatus === 'failed'    ? 'bg-red-50 border-red-200 text-red-700' :
+                  'bg-amber-50 border-amber-200 text-amber-700'
+                }`}>
+                  <FileCheck size={11} />
+                  KRA {order.etimsStatus === 'submitted' ? 'Filed' : order.etimsStatus === 'failed' ? 'Failed' : 'Pending'}
+                </span>
+              )}
+
+              {/* eTIMS resubmit button — visible for staff+ when not yet submitted */}
+              {order.etimsStatus !== 'submitted' && ['staff', 'supervisor', 'admin', 'superadmin'].includes(user?.role) && (
+                <button
+                  onClick={handleEtimsResubmit}
+                  disabled={etimsResubmitting}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border
+                    border-green-200 bg-green-50 text-green-700 text-sm font-admin font-medium
+                    hover:bg-green-100 hover:border-green-300 transition-all shadow-sm
+                    active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed">
+                  <RefreshCw size={13} className={etimsResubmitting ? 'animate-spin' : ''} />
+                  {etimsResubmitting ? 'Submitting…' : 'Submit to KRA'}
+                </button>
+              )}
+
               <button
                 onClick={() => setShowReceipt(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border
@@ -535,8 +593,9 @@ export default function AdminOrderDetailPage() {
 
                 {/* Confirm cash payment — supervisor/admin only */}
                 {canConfirmPayment &&
+                  !['cancelled', 'rejected'].includes(order.status) &&
                   ['pickup', 'delivery'].includes(order.paymentMethod) &&
-                  order.paymentStatus === 'pending' && (
+                  ['unpaid', 'pending'].includes(order.paymentStatus) && (
                   <button
                     onClick={handleConfirmPayment}
                     disabled={confirmingPayment}
@@ -547,6 +606,64 @@ export default function AdminOrderDetailPage() {
                     <Check size={14} />
                     {confirmingPayment ? 'Confirming…' : 'Confirm Payment Received'}
                   </button>
+                )}
+
+                {/* Pending M-Pesa notice — callback may have been missed */}
+                {order.paymentMethod === 'mpesa' &&
+                  order.paymentStatus === 'pending' &&
+                  !['cancelled', 'rejected'].includes(order.status) && (
+                  <p className="mt-3 text-xs font-admin text-amber-700 bg-amber-50
+                    border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                    Waiting for M-Pesa confirmation. If the customer has already paid but the
+                    callback was lost, use the button below to confirm manually.
+                  </p>
+                )}
+
+                {/* Manual M-Pesa confirmation — when callback was missed */}
+                {canConfirmPayment &&
+                  !['cancelled', 'rejected'].includes(order.status) &&
+                  order.paymentMethod === 'mpesa' &&
+                  ['pending', 'failed'].includes(order.paymentStatus) && (
+                  <div className="mt-3">
+                    {!showMpesaRefInput ? (
+                      <button
+                        onClick={() => setShowMpesaRefInput(true)}
+                        className="flex items-center justify-center gap-2 w-full py-2.5
+                          bg-green-600 text-white rounded-xl text-sm font-admin font-semibold
+                          hover:bg-green-700 transition-all active:scale-[0.98] shadow-sm">
+                        <Check size={14} /> Confirm M-Pesa Payment Received
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs font-admin text-admin-500">Enter the M-Pesa receipt number from the customer's phone:</p>
+                        <input
+                          value={mpesaRef}
+                          onChange={e => setMpesaRef(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                          placeholder="e.g. QDK14KSHD7"
+                          maxLength={10}
+                          className="w-full border border-admin-200 rounded-lg px-3 py-2 text-sm
+                            font-mono text-admin-800 focus:outline-none focus:ring-2
+                            focus:ring-green-400 focus:border-transparent bg-admin-50 uppercase"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleConfirmMpesaPayment}
+                            disabled={confirmingPayment || mpesaRef.length !== 10}
+                            className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm
+                              font-admin font-semibold hover:bg-green-700 disabled:opacity-50
+                              transition-colors">
+                            {confirmingPayment ? 'Confirming…' : 'Confirm'}
+                          </button>
+                          <button
+                            onClick={() => { setShowMpesaRefInput(false); setMpesaRef('') }}
+                            className="px-4 py-2 border border-admin-200 text-admin-600
+                              rounded-lg text-sm font-admin hover:bg-admin-50 transition-colors">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </Card>

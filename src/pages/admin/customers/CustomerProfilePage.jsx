@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, Plus, Lock, Unlock } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, Plus, Lock, Unlock, Building2, FileText } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { adminCustomerService } from '../../../services/admin/customer.service'
+import { adminReportService } from '../../../services/admin/report.service'
 import { formatKES, formatDate, getStatusBadgeClass, getStatusLabel } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
@@ -17,6 +18,8 @@ export default function CustomerProfilePage() {
   const [note, setNote] = useState('')
   const [savingNote, setSavingNote] = useState(false)
   const [lockLoading, setLockLoading] = useState(false)
+  const [b2bLoading, setB2bLoading] = useState(false)
+  const [stmtLoading, setStmtLoading] = useState(false)
 
   const fetchProfile = async () => {
     try {
@@ -57,6 +60,47 @@ export default function CustomerProfilePage() {
     } finally { setSavingNote(false) }
   }
 
+  const handleToggleB2B = async () => {
+    setB2bLoading(true)
+    try {
+      await adminCustomerService.toggleB2B(id)
+      toast.success(customer.isB2B ? 'Marked as retail customer' : 'Marked as B2B customer')
+      fetchProfile()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update B2B status')
+    } finally { setB2bLoading(false) }
+  }
+
+  const handleDownloadStatement = async () => {
+    setStmtLoading(true)
+    try {
+      const res = await adminReportService.getCustomerStatement(id, { period: 'year' })
+      const { orders = [], summary = {}, period } = res.data.data || {}
+      const lines = [
+        `Customer Statement — ${customer.name}`,
+        `Period: ${period}`,
+        `Total Orders: ${summary.totalOrders || 0}`,
+        `Total Spend: KES ${(summary.totalSpend || 0).toLocaleString()}`,
+        `Total VAT: KES ${(summary.totalVat || 0).toLocaleString()}`,
+        `Total Discounts: KES ${(summary.totalDiscounts || 0).toLocaleString()}`,
+        '',
+        'Date,Reference,Status,Items,Total',
+        ...orders.map(o =>
+          `${formatDate(o.createdAt)},${o.orderRef},${o.status},${o.items?.length || 0},${o.total}`
+        ),
+      ]
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `statement-${customer.name?.replace(/\s+/g, '-')}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      toast.error('Could not generate statement')
+    } finally { setStmtLoading(false) }
+  }
+
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
   if (!customer) return <div className="p-6 text-center text-admin-400">Customer not found</div>
 
@@ -83,6 +127,11 @@ export default function CustomerProfilePage() {
                   {customer.isLocked && (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-admin font-medium bg-red-100 text-red-700">
                       <Lock size={10} /> Locked
+                    </span>
+                  )}
+                  {customer.isB2B && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-admin font-medium bg-blue-100 text-blue-700">
+                      <Building2 size={10} /> B2B
                     </span>
                   )}
                 </div>
@@ -119,11 +168,36 @@ export default function CustomerProfilePage() {
                 <Lock size={14} /> Lock Account
               </button>
             )}
+
+            {!isSuperAdmin && (
+              <button
+                onClick={handleToggleB2B}
+                disabled={b2bLoading}
+                className={`mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-admin font-medium transition-colors disabled:opacity-50 border ${
+                  customer.isB2B
+                    ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200'
+                    : 'bg-admin-50 text-admin-600 hover:bg-admin-100 border-admin-200'
+                }`}
+              >
+                <Building2 size={14} /> {customer.isB2B ? 'Remove B2B Flag' : 'Mark as B2B'}
+              </button>
+            )}
           </div>
 
           {/* Stats */}
           <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-            <h2 className="font-admin font-semibold text-admin-900 mb-4">Lifetime Stats</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-admin font-semibold text-admin-900">Lifetime Stats</h2>
+              <button
+                onClick={handleDownloadStatement}
+                disabled={stmtLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-admin-50 border border-admin-200
+                  rounded-lg text-xs font-admin font-medium text-admin-700 hover:bg-admin-100
+                  transition-colors disabled:opacity-50"
+              >
+                <FileText size={13} /> {stmtLoading ? 'Generating…' : 'Statement'}
+              </button>
+            </div>
             <div className="space-y-3">
               {[
                 { label: 'Total Orders', value: customer.totalOrders || 0 },

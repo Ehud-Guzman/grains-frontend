@@ -7,7 +7,7 @@ import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingE
 import {
   Store, ShoppingCart, Bell, Shield, Save, AlertTriangle,
   GitBranch, ChevronDown, Lock, Users, Package, Clock,
-  Tag, UserCheck, MapPin, Plus, Trash2, Percent, Info,
+  Tag, UserCheck, MapPin, Plus, Trash2, Percent, Info, Award,
 } from 'lucide-react'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
@@ -19,6 +19,7 @@ const NAV = [
   { id: 'orders',        icon: ShoppingCart, label: 'Orders'           },
   { id: 'catalog',       icon: Tag,          label: 'Catalog'          },
   { id: 'customers',     icon: UserCheck,    label: 'Customers'        },
+  { id: 'loyalty',       icon: Award,        label: 'Loyalty'          },
   { id: 'notifications', icon: Bell,         label: 'Notifications'    },
   { id: 'system',        icon: Shield,       label: 'System', superAdminOnly: true },
 ]
@@ -245,6 +246,11 @@ export default function SettingsPage() {
         kraPin: '',
         vatEnabled: false,
         vatRate: 16,
+        loyaltyEnabled: true,
+        loyaltyBronzeThreshold: 5000,
+        loyaltySilverThreshold: 25000,
+        loyaltyGoldThreshold: 75000,
+        priceAlertThresholdPct: 5,
         ...res.data.data,
       }))
       .catch(() => toast.error('Failed to load settings'))
@@ -868,6 +874,42 @@ export default function SettingsPage() {
             </div>
           </Section>
 
+          {/* ── LOYALTY PROGRAMME ───────────────────────────────────────── */}
+          <Section id="loyalty" icon={Award} title="Loyalty Programme"
+            desc="Reward repeat customers with tiers based on lifetime spend">
+            <Toggle label="Enable Loyalty Programme"
+              desc="Show customers their loyalty tier and progress on the customer dashboard"
+              checked={!!form.loyaltyEnabled}
+              onChange={e => set('loyaltyEnabled', e.target.checked)} />
+
+            {form.loyaltyEnabled && (
+              <>
+                <Divider />
+                <SubHeading>Tier Thresholds (lifetime spend in KES)</SubHeading>
+                <div className="grid grid-cols-3 gap-4">
+                  <Field label="🥉 Bronze" hint="Minimum spend to earn Bronze">
+                    <Input
+                      type="number" min="0" step="1000"
+                      value={form.loyaltyBronzeThreshold ?? 5000}
+                      onChange={e => set('loyaltyBronzeThreshold', Number(e.target.value))} />
+                  </Field>
+                  <Field label="🥈 Silver" hint="Minimum spend to earn Silver">
+                    <Input
+                      type="number" min="0" step="1000"
+                      value={form.loyaltySilverThreshold ?? 25000}
+                      onChange={e => set('loyaltySilverThreshold', Number(e.target.value))} />
+                  </Field>
+                  <Field label="🥇 Gold" hint="Minimum spend to earn Gold">
+                    <Input
+                      type="number" min="0" step="1000"
+                      value={form.loyaltyGoldThreshold ?? 75000}
+                      onChange={e => set('loyaltyGoldThreshold', Number(e.target.value))} />
+                  </Field>
+                </div>
+              </>
+            )}
+          </Section>
+
           {/* ── NOTIFICATIONS ───────────────────────────────────────────── */}
           <Section id="notifications" icon={Bell} title="Notifications"
             desc="Control which events trigger alerts">
@@ -911,6 +953,22 @@ export default function SettingsPage() {
                 desc="Send transactional emails via Gmail. Add GMAIL_USER and GMAIL_APP_PASSWORD to your backend .env to activate."
                 checked={form.emailEnabled}
                 onChange={e => set('emailEnabled', e.target.checked)} />
+            </div>
+
+            <Divider />
+            <SubHeading>Price Alerts</SubHeading>
+            <div className="space-y-4">
+              <Field label="Price Drop Alert Threshold (%)"
+                hint="Only send a price-drop alert to customers watching a product if the price drops by at least this percentage. Set to 0 to alert on any price change.">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={form.priceAlertThresholdPct ?? 5}
+                  onChange={e => set('priceAlertThresholdPct', Math.max(0, Number(e.target.value)))}
+                  className="w-32"
+                />
+              </Field>
             </div>
           </Section>
 

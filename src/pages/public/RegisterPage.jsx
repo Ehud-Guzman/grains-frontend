@@ -62,11 +62,11 @@ export default function RegisterPage() {
     focus:outline-none focus:ring-2 focus:border-transparent transition-all bg-white ${
       errors[key]
         ? 'border-red-300 focus:ring-red-300'
-        : 'border-earth-300 focus:ring-brand-400'
+        : 'border-earth-200 focus:ring-brand-400'
     }`
 
   return (
-    <div className="min-h-screen bg-[#F5F2EF] flex flex-col">
+    <div className="min-h-screen bg-brand-50 flex flex-col">
 
       {/* ── Top nav strip ─────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-earth-200 py-3 px-4">
@@ -116,7 +116,7 @@ export default function RegisterPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-800
+                  <label className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">Full Name</label>
                   <input type="text" placeholder="John Kamau" required autoFocus
                     value={form.name}
@@ -126,7 +126,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-800
+                  <label className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">Phone Number</label>
                   <input type="tel" placeholder="0712 345 678" required
                     value={form.phone}
@@ -136,7 +136,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-800
+                  <label className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">
                     Email <span className="text-earth-500 font-normal normal-case">(optional)</span>
                   </label>
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-800
+                  <label className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">Password</label>
                   <div className="relative">
                     <input

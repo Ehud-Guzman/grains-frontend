@@ -127,7 +127,7 @@ export default function TrackOrderPage() {
           <form onSubmit={handleTrack} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-600
+                <label className="block text-xs font-body font-semibold text-earth-700
                   uppercase tracking-wide mb-1.5">
                   Phone Number
                 </label>
@@ -144,7 +144,7 @@ export default function TrackOrderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-600
+                <label className="block text-xs font-body font-semibold text-earth-700
                   uppercase tracking-wide mb-1.5">
                   Order Reference
                 </label>
@@ -228,7 +228,7 @@ export default function TrackOrderPage() {
                 <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-3">
                   Items Ordered
                 </p>
-                <div className="bg-earth-50 rounded-xl overflow-hidden">
+                <div className="bg-earth-100 rounded-xl overflow-hidden">
                   {order.orderItems?.map((item, i) => (
                     <div key={i}
                       className="flex items-center justify-between px-4 py-3 border-b border-earth-100 last:border-0">
@@ -268,7 +268,7 @@ export default function TrackOrderPage() {
               )}
 
               {/* Contact */}
-              <div className="bg-earth-50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="bg-earth-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div>
                   <p className="font-body font-medium text-earth-700 text-sm">Questions about your order?</p>
                   <p className="text-earth-400 text-xs mt-0.5">Our team is available {shopInfo.hours}</p>

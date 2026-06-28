@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Plus, Lock, Unlock, Edit, Key, Shield, UserCog, X, Eye, EyeOff } from 'lucide-react'
+import { Plus, Lock, Unlock, Edit, Key, Shield, UserCog, X, Eye, EyeOff, Settings2 } from 'lucide-react'
 import { adminUserService } from '../../../services/admin/user.service'
+import { adminBranchService } from '../../../services/admin/branch.service'
 import { formatDate } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
+
+const ALL_PERMISSIONS = [
+  { key: 'manage_branches', label: 'Manage Branches', desc: 'Create, edit, and deactivate branches' },
+]
 
 const ROLES = ['staff', 'supervisor', 'admin', 'superadmin']
 
@@ -21,6 +26,131 @@ function RoleBadge({ role }) {
       px-2.5 py-1 rounded-full border capitalize ${cfg.bg} ${cfg.border} ${cfg.text}`}>
       {role}
     </span>
+  )
+}
+
+// ── PERMISSIONS MODAL ─────────────────────────────────────────────────────────
+function PermissionsModal({ user, onClose, onSaved }) {
+  const [permissions, setPermissions] = useState(user.customPermissions || [])
+  const [allowedBranchIds, setAllowedBranchIds] = useState(
+    (user.allowedBranchIds || []).map(b => (b._id || b).toString())
+  )
+  const [branches, setBranches] = useState([])
+  const [loadingBranches, setLoadingBranches] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    adminBranchService.getAll()
+      .then(res => setBranches(res.data.data || []))
+      .catch(() => {})
+      .finally(() => setLoadingBranches(false))
+  }, [])
+
+  const togglePerm = (key) =>
+    setPermissions(prev => prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key])
+
+  const toggleBranch = (id) =>
+    setAllowedBranchIds(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await adminUserService.setPermissions(user._id, { customPermissions: permissions, allowedBranchIds })
+      toast.success(`Permissions updated for ${user.name}`)
+      onSaved()
+      onClose()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update permissions')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-admin-lg border border-admin-100">
+
+        <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+              <Settings2 size={15} className="text-brand-600" />
+            </div>
+            <div>
+              <h3 className="font-admin font-bold text-admin-900 text-sm">Custom Permissions</h3>
+              <p className="text-admin-400 text-xs font-admin">{user.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-600 transition-colors">
+            <X size={15} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Extra capabilities */}
+          <div>
+            <p className="text-xs font-admin font-semibold text-admin-600 uppercase tracking-wide mb-3">
+              Extra Capabilities
+            </p>
+            <div className="space-y-2">
+              {ALL_PERMISSIONS.map(p => (
+                <label key={p.key}
+                  className="flex items-start gap-3 p-3 rounded-xl border border-admin-100 hover:bg-admin-50 cursor-pointer transition-colors">
+                  <input type="checkbox" checked={permissions.includes(p.key)}
+                    onChange={() => togglePerm(p.key)}
+                    className="mt-0.5 accent-brand-500 w-4 h-4 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-admin font-semibold text-admin-800">{p.label}</p>
+                    <p className="text-xs font-admin text-admin-400">{p.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Branch access */}
+          <div>
+            <p className="text-xs font-admin font-semibold text-admin-600 uppercase tracking-wide mb-1">
+              Branch Access
+            </p>
+            <p className="text-xs font-admin text-admin-400 mb-3">
+              Select multiple branches for this user to switch between at login.
+            </p>
+            {loadingBranches ? (
+              <div className="flex justify-center py-4"><Spinner size="sm" /></div>
+            ) : branches.length === 0 ? (
+              <p className="text-xs font-admin text-admin-400 text-center py-3">No branches found</p>
+            ) : (
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {branches.map(b => (
+                  <label key={b._id}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-admin-100 hover:bg-admin-50 cursor-pointer transition-colors">
+                    <input type="checkbox" checked={allowedBranchIds.includes(b._id.toString())}
+                      onChange={() => toggleBranch(b._id.toString())}
+                      className="accent-brand-500 w-4 h-4 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-admin font-semibold text-admin-800">{b.name}</p>
+                      {b.location && <p className="text-xs font-admin text-admin-400">{b.location}</p>}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-5 pb-5 flex gap-2">
+          <button onClick={handleSave} disabled={saving}
+            className="flex-1 py-3 bg-brand-500 text-white rounded-xl text-sm font-admin
+              font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors">
+            {saving ? 'Saving…' : 'Save Permissions'}
+          </button>
+          <button onClick={onClose}
+            className="flex-1 py-3 border border-admin-200 text-admin-600 rounded-xl
+              text-sm font-admin font-medium hover:bg-admin-50 transition-colors">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -172,6 +302,7 @@ export default function UserManagementPage() {
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal]   = useState(null)
+  const [permUser, setPermUser] = useState(null)
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -290,6 +421,15 @@ export default function UserManagementPage() {
                         title="Reset password">
                         <Key size={15} />
                       </button>
+                      <button onClick={() => setPermUser(user)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          user.customPermissions?.length > 0 || user.allowedBranchIds?.length > 0
+                            ? 'text-brand-500 hover:bg-brand-50'
+                            : 'text-admin-400 hover:bg-admin-100 hover:text-admin-700'
+                        }`}
+                        title="Custom permissions">
+                        <Settings2 size={15} />
+                      </button>
                       <button onClick={() => handleLock(user)}
                         className={`p-1.5 rounded-lg transition-colors ${
                           user.isLocked
@@ -317,6 +457,14 @@ export default function UserManagementPage() {
 
       {modal && (
         <Modal modal={modal} onClose={() => setModal(null)} onSave={handleSave} />
+      )}
+
+      {permUser && (
+        <PermissionsModal
+          user={permUser}
+          onClose={() => setPermUser(null)}
+          onSaved={fetchUsers}
+        />
       )}
     </div>
   )

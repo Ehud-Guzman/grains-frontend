@@ -16,7 +16,7 @@ export default function MpesaCountdown({ orderId, phone, amount, orderRef, onSuc
     // Poll every 5 seconds
     pollRef.current = setInterval(async () => {
       try {
-        const res = await api.get(`/payments/status/${orderId}`)
+        const res = await api.get(`/payments/status/${orderId}`, { params: { phone } })
         consecutiveErrors.current = 0
         setPollError(false)
         const paymentStatus = res.data.data?.paymentStatus
@@ -75,7 +75,7 @@ export default function MpesaCountdown({ orderId, phone, amount, orderRef, onSuc
         <p className="text-earth-500 text-sm mb-6">
           Your order has been saved. You can pay on pickup or try again.
         </p>
-        <button onClick={onFailure} className="btn-primary">
+        <button onClick={() => onFailure('retry')} className="btn-primary">
           <RefreshCw size={16} />
           Try Again
         </button>

@@ -179,18 +179,26 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
           </div>
         </div>
 
-        {/* Receipt label + KRA PIN */}
+        {/* Receipt label + KRA PINs */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
           <p style={{ color: '#833D19', fontSize: '10px', letterSpacing: '0.2em',
             textTransform: 'uppercase', margin: 0, fontWeight: 700 }}>
             TAX INVOICE
           </p>
-          {kraPin && (
-            <p style={{ color: '#4B5563', fontSize: '10px', letterSpacing: '0.12em',
-              margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
-              KRA PIN: {kraPin}
-            </p>
-          )}
+          <div style={{ textAlign: 'right' }}>
+            {kraPin && (
+              <p style={{ color: '#4B5563', fontSize: '10px', letterSpacing: '0.12em',
+                margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                Seller PIN: {kraPin}
+              </p>
+            )}
+            {order.buyerKraPin && (
+              <p style={{ color: '#4B5563', fontSize: '10px', letterSpacing: '0.12em',
+                margin: '2px 0 0', fontFamily: 'monospace', fontWeight: 600 }}>
+                Buyer PIN: {order.buyerKraPin}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

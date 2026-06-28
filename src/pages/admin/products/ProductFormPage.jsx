@@ -17,7 +17,7 @@ const CATEGORIES = [
 ]
 
 const emptyPackaging = () => ({
-  size: '50kg', customSize: '', priceKES: '', stock: '',
+  size: '50kg', customSize: '', priceKES: '', costPriceKES: '', stock: '',
   lowStockThreshold: 10, quoteOnly: false,
   _id: Math.random().toString(36).slice(2)
 })
@@ -151,9 +151,9 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
           )}
         </div>
 
-        {/* Price */}
+        {/* Selling price */}
         <div className="col-span-6 sm:col-span-3">
-          <label className="block text-xs font-admin text-admin-500 mb-1.5">Price (KES)</label>
+          <label className="block text-xs font-admin text-admin-500 mb-1.5">Sale Price (KES)</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400 text-xs font-admin">KES</span>
             <Input type="number" min="0" placeholder="3,800"
@@ -161,6 +161,21 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
               onChange={e => onChange({ ...pkg, priceKES: e.target.value })}
               disabled={pkg.quoteOnly}
               className={`pl-10 ${pkg.quoteOnly ? 'opacity-40 cursor-not-allowed' : ''}`}
+            />
+          </div>
+        </div>
+
+        {/* Cost price */}
+        <div className="col-span-6 sm:col-span-2">
+          <label className="block text-xs font-admin text-admin-500 mb-1.5">
+            Cost Price <span className="text-admin-300 font-normal">(optional)</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400 text-xs font-admin">KES</span>
+            <Input type="number" min="0" placeholder="2,500"
+              value={pkg.costPriceKES}
+              onChange={e => onChange({ ...pkg, costPriceKES: e.target.value })}
+              className="pl-10"
             />
           </div>
         </div>
@@ -376,6 +391,7 @@ export default function ProductFormPage() {
               customSize: PACKAGING_SIZES.includes(pkg.size) ? '' : pkg.size,
               size: PACKAGING_SIZES.includes(pkg.size) ? pkg.size : 'Custom',
               priceKES: pkg.priceKES ?? '',
+              costPriceKES: pkg.costPriceKES ?? '',
               stock: pkg.stock ?? '',
               lowStockThreshold: pkg.lowStockThreshold ?? 10,
               quoteOnly: pkg.quoteOnly || false
@@ -428,6 +444,7 @@ export default function ProductFormPage() {
       packaging: v.packaging.map(pkg => ({
         size: pkg.size === 'Custom' ? pkg.customSize.trim() : pkg.size,
         priceKES: pkg.quoteOnly ? null : (Number(pkg.priceKES) || null),
+        costPriceKES: pkg.costPriceKES !== '' ? (Number(pkg.costPriceKES) || null) : null,
         stock: pkg.quoteOnly ? null : (Number(pkg.stock) || 0),
         lowStockThreshold: Number(pkg.lowStockThreshold) || 10,
         quoteOnly: pkg.quoteOnly

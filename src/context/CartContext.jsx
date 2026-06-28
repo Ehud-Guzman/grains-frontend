@@ -74,6 +74,25 @@ export const CartProvider = ({ children }) => {
     localStorage.removeItem(CART_KEY)
   }, [])
 
+  // Bulk-load items from a previous order (reorder flow).
+  // Clears the cart first, then loads all items at their original quantities.
+  // Stock is unknown at this point (user sees errors at checkout if OOS).
+  const reorderItems = useCallback((orderItems) => {
+    const cartItems = orderItems.map(item => ({
+      key:         `${item.productId}-${item.variety}-${item.packaging}`,
+      productId:   item.productId,
+      productName: item.productName,
+      variety:     item.variety,
+      packaging:   item.packaging,
+      priceKES:    item.unitPrice,
+      stock:       Infinity, // stock not known from order snapshot; validated at checkout
+      imageURL:    null,
+      quantity:    item.quantity
+    }))
+    setItems(cartItems)
+    toast.success('Items added to cart')
+  }, [])
+
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
 
@@ -83,7 +102,7 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={{
       items, subtotal, itemCount, isOpen,
-      addItem, removeItem, updateQuantity, clearCart,
+      addItem, removeItem, updateQuantity, clearCart, reorderItems,
       openCart, closeCart
     }}>
       {children}

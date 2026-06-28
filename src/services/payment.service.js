@@ -6,6 +6,6 @@ export const paymentService = {
     api.post('/payments/mpesa/initiate', { orderId, phone, amount }),
 
   // Poll payment status — call every 5s after STK push
-  getStatus: (orderId) =>
-    api.get(`/payments/status/${orderId}`),
+  getStatus: (orderId, phone) =>
+    api.get(`/payments/status/${orderId}`, { params: phone ? { phone } : undefined }),
 }

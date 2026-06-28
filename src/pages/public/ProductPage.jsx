@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight } from 'lucide-react'
+import {
+  ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight,
+  Bell, BellOff, TrendingDown, Clock
+} from 'lucide-react'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea,
+} from 'recharts'
+import toast from 'react-hot-toast'
 import { productService } from '../../services/product.service'
+import { customerAlertService } from '../../services/customerAlert.service'
 import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES } from '../../utils/helpers'
 import { STOCK_CONFIG, CART_FEEDBACK_DELAY_MS } from '../../utils/constants'
@@ -69,6 +78,7 @@ export default function ProductPage() {
   const shopInfo = useShopInfo()
   const { id } = useParams()
   const { addItem } = useCart()
+  const { user } = useAuth()
   const scrollRef = useRef()
 
   const [product, setProduct]           = useState(null)
@@ -79,6 +89,11 @@ export default function ProductPage() {
   const [quantity, setQuantity]         = useState(1)
   const [activeImage, setActiveImage]   = useState(0)
   const [added, setAdded]               = useState(false)
+  const [priceHistory, setPriceHistory] = useState([])
+  const [priceRange, setPriceRange]     = useState('3m')
+  const [bestTime, setBestTime]         = useState(null)
+  const [myAlerts, setMyAlerts]         = useState([])
+  const [alertLoading, setAlertLoading] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -87,12 +102,14 @@ export default function ProductPage() {
     setQuantity(1)
     setActiveImage(0)
     setAdded(false)
+    setPriceHistory([])
+    setPriceRange('3m')
+    setBestTime(null)
 
     productService.getById(id)
       .then(res => {
         const p = res.data.data
         setProduct(p)
-        // Fetch suggested from same category
         return productService.getAll({ category: p.category, limit: 8, isActive: true })
           .then(r => {
             const others = (r.data.data || []).filter(x => x._id !== id)
@@ -103,6 +120,86 @@ export default function ProductPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
+
+  // Fetch price history + best-time badge whenever variety/packaging selection changes
+  useEffect(() => {
+    if (!product) return
+    const v = product.varieties?.[selectedVariety]
+    const pkg = v?.packaging?.[selectedPkg]
+    if (!v || !pkg) return
+
+    productService.getPriceHistory(id, v.varietyName, pkg.size)
+      .then(res => {
+        const logs = res.data?.data || []
+        setPriceHistory([...logs].reverse()) // oldest → newest, keep all 200
+      })
+      .catch(() => {})
+
+    if (pkg.priceKES) {
+      productService.getBestTimeBadge(id, v.varietyName, pkg.size, pkg.priceKES)
+        .then(res => setBestTime(res.data?.data || null))
+        .catch(() => {})
+    }
+  }, [id, product, selectedVariety, selectedPkg])
+
+  // Fetch the customer's own alerts for this product (only if logged in as customer)
+  useEffect(() => {
+    if (!user || user.role !== 'customer') return
+    customerAlertService.getMyAlerts()
+      .then(res => setMyAlerts(res.data?.data || []))
+      .catch(() => {})
+  }, [user])
+
+  const isAlertActive = (type) => {
+    if (!product) return false
+    const v = product.varieties?.[selectedVariety]
+    const pkg = v?.packaging?.[selectedPkg]
+    return myAlerts.some(a =>
+      a.type === type &&
+      a.productId === id &&
+      a.varietyName === v?.varietyName &&
+      a.packaging === pkg?.size &&
+      a.isActive
+    )
+  }
+
+  const handleToggleAlert = async (type) => {
+    if (!user || user.role !== 'customer') {
+      toast('Log in to set up alerts', { icon: '🔒' })
+      return
+    }
+    const v = product.varieties?.[selectedVariety]
+    const pkg = v?.packaging?.[selectedPkg]
+    if (!v || !pkg) return
+
+    const existing = myAlerts.find(a =>
+      a.type === type && a.productId === id &&
+      a.varietyName === v.varietyName && a.packaging === pkg.size && a.isActive
+    )
+
+    setAlertLoading(true)
+    try {
+      if (existing) {
+        await customerAlertService.unsubscribe(existing._id)
+        setMyAlerts(prev => prev.map(a => a._id === existing._id ? { ...a, isActive: false } : a))
+        toast.success('Alert removed')
+      } else {
+        const res = await customerAlertService.subscribe({
+          type,
+          productId: id,
+          productName: product.name,
+          varietyName: v.varietyName,
+          packaging: pkg.size,
+          priceAtSubscription: type === 'price_drop' ? pkg.priceKES : undefined,
+        })
+        setMyAlerts(prev => [...prev, res.data.data])
+        toast.success(type === 'back_in_stock' ? 'We\'ll notify you when it\'s back!' : 'Price drop alert set!')
+      }
+    } catch {
+      toast.error('Could not update alert')
+    } finally {
+      setAlertLoading(false) }
+  }
 
   if (loading) return (
     <div className="min-h-screen bg-cream flex items-center justify-center">
@@ -264,20 +361,48 @@ export default function ProductPage() {
 
             {/* Price + stock */}
             {packaging && (
-              <div className="flex items-center gap-3 py-1">
-                <div className="flex items-center gap-2">
-                  <Tag size={16} className="text-brand-400" />
-                  <span className="font-display text-2xl text-brand-600 font-bold">
-                    {isQuoteOnly ? 'Quote only' : formatKES(packaging.priceKES)}
-                  </span>
+              <div className="space-y-1.5 py-1">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Tag size={16} className="text-brand-400" />
+                    <span className="font-display text-2xl text-brand-600 font-bold">
+                      {isQuoteOnly ? 'Quote only' : formatKES(packaging.priceKES)}
+                    </span>
+                  </div>
+                  {stockStatus && (
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-body font-semibold
+                      px-2.5 py-1 rounded-full border ${stockConfig.badge} ${stockConfig.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${stockConfig.dot}`} />
+                      {stockConfig.label}
+                    </span>
+                  )}
+                  {bestTime?.isBestTime && (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-body font-semibold
+                      px-2.5 py-1 rounded-full border border-green-200 bg-green-50 text-green-700">
+                      <TrendingDown size={12} /> Best price in 90 days
+                    </span>
+                  )}
                 </div>
-                {stockStatus && (
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-body font-semibold
-                    px-2.5 py-1 rounded-full border ${stockConfig.badge} ${stockConfig.text}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${stockConfig.dot}`} />
-                    {stockConfig.label}
-                  </span>
-                )}
+              </div>
+            )}
+
+            {/* Volume pricing tiers */}
+            {packaging?.pricingTiers?.length > 0 && !isQuoteOnly && (
+              <div className="bg-earth-50 border border-earth-200 rounded-xl p-3.5">
+                <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-2">
+                  Volume Pricing
+                </p>
+                <div className="space-y-1.5">
+                  {[{ minQty: 1, priceKES: packaging.priceKES, isBase: true },
+                    ...[...packaging.pricingTiers].sort((a, b) => a.minQty - b.minQty)
+                  ].map((tier, i) => (
+                    <div key={i} className={`flex justify-between text-sm font-body px-2 py-1 rounded-lg
+                      ${quantity >= tier.minQty ? 'bg-brand-50 border border-brand-200 text-brand-800' : 'text-earth-600'}`}>
+                      <span>{tier.isBase ? '1+' : `${tier.minQty}+`} units</span>
+                      <span className="font-bold">{formatKES(tier.priceKES)} each</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -318,13 +443,24 @@ export default function ProductPage() {
                   )}
                 </div>
 
-                {inStock && packaging?.priceKES && (
-                  <p className="text-sm font-body text-earth-700">
-                    Total: <span className="font-display font-bold text-earth-900 text-base">
-                      {formatKES(packaging.priceKES * quantity)}
-                    </span>
-                  </p>
-                )}
+                {inStock && packaging?.priceKES && (() => {
+                  const tiers = packaging.pricingTiers || []
+                  const sorted = [...tiers].sort((a, b) => b.minQty - a.minQty)
+                  const activeTier = sorted.find(t => quantity >= t.minQty)
+                  const unitPrice = activeTier ? activeTier.priceKES : packaging.priceKES
+                  return (
+                    <p className="text-sm font-body text-earth-700">
+                      Total: <span className="font-display font-bold text-earth-900 text-base">
+                        {formatKES(unitPrice * quantity)}
+                      </span>
+                      {activeTier && (
+                        <span className="text-xs text-green-600 font-body ml-2">
+                          ({formatKES(unitPrice)} × {quantity})
+                        </span>
+                      )}
+                    </p>
+                  )
+                })()}
 
                 <button onClick={handleAddToCart} disabled={!inStock || added}
                   className={`flex items-center justify-center gap-2 w-full py-4 rounded-xl
@@ -337,6 +473,38 @@ export default function ProductPage() {
                     : <><ShoppingCart size={18} /> {inStock ? 'Add to Cart' : 'Out of Stock'}</>
                   }
                 </button>
+
+                {/* Out-of-stock alert */}
+                {!inStock && !isQuoteOnly && (
+                  <button
+                    onClick={() => handleToggleAlert('back_in_stock')}
+                    disabled={alertLoading}
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl
+                      font-body font-semibold text-sm transition-all border ${
+                        isAlertActive('back_in_stock')
+                          ? 'border-earth-300 bg-earth-50 text-earth-600'
+                          : 'border-brand-300 bg-white text-brand-700 hover:bg-brand-50'}`}>
+                    {isAlertActive('back_in_stock')
+                      ? <><BellOff size={15} /> Remove back-in-stock alert</>
+                      : <><Bell size={15} /> Notify me when back in stock</>}
+                  </button>
+                )}
+
+                {/* Price drop alert */}
+                {inStock && !isQuoteOnly && packaging?.priceKES && (
+                  <button
+                    onClick={() => handleToggleAlert('price_drop')}
+                    disabled={alertLoading}
+                    className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl
+                      font-body text-sm transition-all border ${
+                        isAlertActive('price_drop')
+                          ? 'border-earth-200 bg-earth-50 text-earth-500'
+                          : 'border-earth-200 bg-white text-earth-600 hover:border-brand-300 hover:text-brand-700'}`}>
+                    {isAlertActive('price_drop')
+                      ? <><BellOff size={14} /> Remove price drop alert</>
+                      : <><Bell size={14} /> Alert me if price drops</>}
+                  </button>
+                )}
               </>
             )}
 
@@ -353,7 +521,182 @@ export default function ProductPage() {
         </div>
       </div>
 
+      {/* ── PRICE HISTORY CHART ─────────────────────────────────── */}
+      {priceHistory.length < 2 ? (
+        <div className="border-t border-earth-100 bg-white py-8 mt-4">
+          <div className="container-page">
+            <div className="flex items-center gap-2.5 mb-5">
+              <Clock size={16} className="text-earth-500" />
+              <h2 className="font-display text-lg font-bold text-earth-900">Price History</h2>
+            </div>
+            <div className="h-[200px] rounded-2xl border border-earth-100 bg-earth-50
+              flex flex-col items-center justify-center gap-2">
+              <TrendingDown size={28} className="text-earth-300" />
+              <p className="text-earth-400 text-sm font-body">No price history yet</p>
+              <p className="text-earth-300 text-xs font-body">
+                Chart appears here once prices have been updated
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (() => {
+        const RANGES = [
+          { key: '1m',  label: '1M',  days: 30  },
+          { key: '3m',  label: '3M',  days: 90  },
+          { key: '6m',  label: '6M',  days: 180 },
+          { key: '1y',  label: '1Y',  days: 365 },
+          { key: 'all', label: 'All', days: null },
+        ]
+
+        const SEASON_STYLE = {
+          harvesting:  { fill: 'rgba(34,197,94,0.07)',   label: 'Harvest'     },
+          drought:     { fill: 'rgba(251,146,60,0.09)',  label: 'Drought'     },
+          planting:    { fill: 'rgba(59,130,246,0.07)',  label: 'Planting'    },
+          import_hike: { fill: 'rgba(239,68,68,0.08)',   label: 'Import Hike' },
+        }
+
+        const cutoffDays = RANGES.find(r => r.key === priceRange)?.days
+        const filtered = cutoffDays
+          ? priceHistory.filter(l => new Date(l.changedAt) >= new Date(Date.now() - cutoffDays * 864e5))
+          : priceHistory
+
+        const chartData = filtered.map(l => ({
+          date:      new Date(l.changedAt).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }),
+          price:     l.newPrice,
+          seasonTag: l.seasonTag,
+        }))
+
+        // Build season bands from consecutive same-tagged entries
+        const seasonBands = []
+        let band = null
+        chartData.forEach((d, i) => {
+          const tag = d.seasonTag
+          if (!tag || tag === 'normal') { if (band) { seasonBands.push(band); band = null } return }
+          if (band && band.tag === tag) { band.x2 = d.date }
+          else { if (band) seasonBands.push(band); band = { tag, x1: d.date, x2: d.date } }
+          if (i === chartData.length - 1 && band) seasonBands.push(band)
+        })
+
+        // Custom colored dots
+        const ColoredDot = (props) => {
+          const { cx, cy, index } = props
+          if (!chartData[index]) return null
+          const prev = chartData[index - 1]
+          const curr = chartData[index]
+          const color = !prev ? '#9E8E7A'
+            : curr.price > prev.price ? '#EF4444'
+            : curr.price < prev.price ? '#22C55E'
+            : '#9E8E7A'
+          return <circle cx={cx} cy={cy} r={3.5} fill={color} stroke="#fff" strokeWidth={1} />
+        }
+
+        return (
+          <div className="border-t border-earth-100 bg-white py-8 mt-4">
+            <div className="container-page">
+
+              {/* Header row */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <Clock size={16} className="text-earth-500" />
+                  <h2 className="font-display text-lg font-bold text-earth-900">Price History</h2>
+                  {bestTime?.isBestTime && (
+                    <span className="inline-flex items-center gap-1 text-xs font-body font-semibold
+                      px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700">
+                      <TrendingDown size={11} /> {bestTime.percentBelow}% below 90d avg
+                    </span>
+                  )}
+                </div>
+
+                {/* Range selector */}
+                <div className="flex items-center gap-1 bg-earth-50 rounded-xl p-1 border border-earth-100">
+                  {RANGES.map(r => (
+                    <button key={r.key} onClick={() => setPriceRange(r.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-body font-semibold transition-all ${
+                        priceRange === r.key
+                          ? 'bg-white text-earth-900 shadow-sm border border-earth-100'
+                          : 'text-earth-500 hover:text-earth-700'
+                      }`}>
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-4 mb-3">
+                <span className="flex items-center gap-1.5 text-xs font-body text-earth-400">
+                  <span className="w-2 h-2 rounded-full bg-green-500" /> Price fell
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-body text-earth-400">
+                  <span className="w-2 h-2 rounded-full bg-red-500" /> Price rose
+                </span>
+                {seasonBands.length > 0 && Object.entries(SEASON_STYLE)
+                  .filter(([tag]) => seasonBands.some(b => b.tag === tag))
+                  .map(([tag, { label, fill }]) => (
+                    <span key={tag} className="flex items-center gap-1.5 text-xs font-body text-earth-400">
+                      <span className="w-3 h-2.5 rounded-sm border border-earth-200" style={{ background: fill }} />
+                      {label}
+                    </span>
+                  ))
+                }
+              </div>
+
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F1EDE6" vertical={false} />
+
+                  {/* Season bands */}
+                  {seasonBands.map((b, i) => {
+                    const style = SEASON_STYLE[b.tag]
+                    if (!style) return null
+                    return (
+                      <ReferenceArea key={i} x1={b.x1} x2={b.x2}
+                        fill={style.fill} stroke="none" />
+                    )
+                  })}
+
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+                    axisLine={false} tickLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+                    tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
+                    axisLine={false} tickLine={false} width={36}
+                    domain={['auto', 'auto']}
+                  />
+                  <Tooltip
+                    formatter={(v) => [formatKES(v), 'Price']}
+                    contentStyle={{
+                      fontFamily: 'Outfit', fontSize: 12,
+                      borderRadius: 10, border: '1px solid #E8DDD0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="price"
+                    stroke="#C8912A"
+                    strokeWidth={2}
+                    dot={<ColoredDot />}
+                    activeDot={{ r: 5, fill: '#C8912A', stroke: '#fff', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+
+              {bestTime && (
+                <p className="mt-3 text-xs font-body text-earth-400 text-right">
+                  90-day avg · {formatKES(bestTime.avg90d)}
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── SUGGESTED PRODUCTS ────────────────────────────────────── */}
+
       {suggested.length > 0 && (
         <div className="border-t border-earth-100 bg-white py-10 mt-4">
           <div className="container-page">

@@ -59,6 +59,14 @@ export default {
         'warm-lg':    '0 8px 40px rgba(0, 0, 0, 0.12)',
         'admin':      '0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05)',
         'admin-lg':   '0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05)',
+      },
+      keyframes: {
+        grow:    { '0%': { width: '0%' }, '100%': { width: '100%' } },
+        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+      },
+      animation: {
+        'grow':    'grow 6s linear forwards',
+        'marquee': 'marquee 28s linear infinite',
       }
     },
   },

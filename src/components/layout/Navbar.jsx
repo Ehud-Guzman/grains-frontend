@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   ShoppingCart, Menu, X, User, LogOut, Package, UserCircle,
-  ChevronDown, ChevronLeft, ShoppingBag, MapPin, Search, Phone, Clock,
+  ChevronDown, ShoppingBag, MapPin, Search, Phone, Clock,
   Truck, ChevronRight, MessageCircle, LayoutGrid, Home,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -73,10 +73,10 @@ function AllCategoriesMenu({ categories }) {
       <button
         onClick={() => setOpen(o => !o)}
         className={`flex items-center gap-2 px-4 h-full text-sm font-body font-semibold
-          transition-colors ${
+          transition-all ${
             open
-              ? 'bg-brand-600 text-white'
-              : 'bg-brand-500 text-white hover:bg-brand-600'
+              ? 'bg-brand-700 text-white'
+              : 'bg-gradient-to-b from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700'
           }`}
       >
         <LayoutGrid size={15} />
@@ -109,7 +109,7 @@ function AllCategoriesMenu({ categories }) {
             </div>
           )}
 
-          <div className="border-t border-earth-100 px-4 py-3 bg-earth-50">
+          <div className="border-t border-earth-100 px-4 py-3 bg-earth-100">
             <Link
               to="/shop"
               onClick={() => setOpen(false)}
@@ -128,97 +128,33 @@ function AllCategoriesMenu({ categories }) {
   )
 }
 
-// ── CategoryStrip — scrollable quick-links with arrows + edge fades ──────────
-function CategoryStrip({ categories }) {
-  const scrollRef = useRef()
-  const [canLeft,  setCanLeft]  = useState(false)
-  const [canRight, setCanRight] = useState(false)
-
-  const checkScroll = () => {
-    const el = scrollRef.current
-    if (!el) return
-    setCanLeft(el.scrollLeft > 4)
-    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
-  }
-
-  useEffect(() => {
-    checkScroll()
-    const el = scrollRef.current
-    if (!el) return
-    el.addEventListener('scroll', checkScroll, { passive: true })
-    window.addEventListener('resize', checkScroll, { passive: true })
-    return () => {
-      el.removeEventListener('scroll', checkScroll)
-      window.removeEventListener('resize', checkScroll)
-    }
-  }, [categories])
-
-  const scroll = (dir) => {
-    scrollRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' })
-  }
+// ── CategoryMarquee — auto-scrolling ticker, non-interactive ─────────────────
+function CategoryMarquee({ categories }) {
+  if (!categories.length) return null
+  const items = [...categories, ...categories]
 
   return (
-    <div className="relative flex-1 flex items-stretch min-w-0 overflow-hidden">
-      {/* Left fade + arrow */}
-      <div className={`absolute left-0 top-0 bottom-0 z-10 flex items-center
-        transition-opacity duration-200 pointer-events-none ${canLeft ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="w-10 h-full bg-gradient-to-r from-white to-transparent" />
-      </div>
-      {canLeft && (
-        <button
-          onClick={() => scroll(-1)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6
-            bg-white hover:bg-earth-100 text-earth-600 hover:text-earth-900
-            rounded-full flex items-center justify-center shadow-sm transition-all
-            border border-earth-200"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft size={13} />
-        </button>
-      )}
-
-      {/* Scrollable list */}
+    <div className="flex-1 overflow-hidden relative min-w-0 flex items-center">
+      <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 z-10
+        bg-gradient-to-r from-white to-transparent" />
       <div
-        ref={scrollRef}
-        className="flex items-center gap-0 flex-1 overflow-x-auto scrollbar-none"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex"
+        style={{ width: 'max-content', animation: 'marquee 30s linear infinite' }}
       >
-        {categories.map(cat => (
-          <NavLink
-            key={cat}
-            to={`/shop?category=${encodeURIComponent(cat)}`}
-            className={({ isActive }) =>
-              `flex items-center gap-1.5 px-3.5 h-full text-sm font-body font-medium
-              whitespace-nowrap transition-all border-b-2 ${
-                isActive
-                  ? 'text-brand-600 border-brand-500'
-                  : 'text-earth-600 border-transparent hover:text-earth-900 hover:border-earth-400'
-              }`
-            }
+        {items.map((cat, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center gap-4 whitespace-nowrap select-none"
           >
-            <span className="text-sm leading-none">{getCategoryIcon(cat)}</span>
-            {cat}
-          </NavLink>
+            <span className="text-sm font-body font-medium text-earth-700 tracking-wide">
+              {cat}
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          </span>
         ))}
       </div>
-
-      {/* Right fade + arrow */}
-      <div className={`absolute right-0 top-0 bottom-0 z-10 flex items-center justify-end
-        transition-opacity duration-200 pointer-events-none ${canRight ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="w-10 h-full bg-gradient-to-l from-white to-transparent" />
-      </div>
-      {canRight && (
-        <button
-          onClick={() => scroll(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-6
-            bg-white hover:bg-earth-100 text-earth-600 hover:text-earth-900
-            rounded-full flex items-center justify-center shadow-sm transition-all
-            border border-earth-200"
-          aria-label="Scroll right"
-        >
-          <ChevronRight size={13} />
-        </button>
-      )}
+      <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 z-10
+        bg-gradient-to-l from-white to-transparent" />
     </div>
   )
 }
@@ -226,18 +162,18 @@ function CategoryStrip({ categories }) {
 // ── TopBar ────────────────────────────────────────────────────────────────────
 function TopBar({ shopInfo }) {
   return (
-    <div className="bg-earth-50 border-b border-earth-200 hidden sm:block">
+    <div className="bg-gradient-to-r from-brand-800 to-brand-700 hidden sm:block">
       <div className="container-page">
-        <div className="flex items-center justify-between h-8 text-[11px] font-body text-earth-500">
+        <div className="flex items-center justify-between h-8 text-[11px] font-body text-brand-200">
 
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-1.5">
-              <Truck size={11} className="text-brand-500 flex-shrink-0" />
-              <span>Free delivery on orders over <span className="text-earth-800 font-semibold">KES 50,000</span></span>
+              <Truck size={11} className="text-brand-300 flex-shrink-0" />
+              <span>Free delivery on orders over <span className="text-white font-semibold">KES 50,000</span></span>
             </div>
             {shopInfo?.location && (
               <div className="hidden lg:flex items-center gap-1.5">
-                <MapPin size={10} className="text-earth-400" />
+                <MapPin size={10} className="text-brand-400" />
                 <span>{shopInfo.location}</span>
               </div>
             )}
@@ -248,7 +184,7 @@ function TopBar({ shopInfo }) {
               <a
                 href={`https://wa.me/${shopInfo.whatsapp.replace(/\D/g, '')}`}
                 target="_blank" rel="noreferrer"
-                className="flex items-center gap-1.5 hover:text-green-600 transition-colors"
+                className="flex items-center gap-1.5 hover:text-green-400 transition-colors"
               >
                 <MessageCircle size={11} />
                 <span>WhatsApp</span>
@@ -257,7 +193,7 @@ function TopBar({ shopInfo }) {
             {shopInfo?.phone && (
               <a
                 href={`tel:${shopInfo.phone.replace(/\s/g, '')}`}
-                className="flex items-center gap-1.5 hover:text-brand-600 transition-colors"
+                className="flex items-center gap-1.5 hover:text-white transition-colors"
               >
                 <Phone size={10} />
                 <span>{shopInfo.phone}</span>
@@ -338,26 +274,26 @@ export default function Navbar() {
 
       {/* ── Sticky wrapper ──────────────────────────────────────── */}
       <div ref={headerRef} className={`sticky top-0 z-40 transition-shadow duration-300 ${
-        scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.10)]' : ''
+        scrolled ? 'shadow-[0_4px_24px_rgba(0,0,0,0.14)]' : ''
       }`}>
 
         {/* ── Row 1: Logo + Search + Cart/Account ─────────────── */}
-        <div className="bg-white border-b border-earth-200">
+        <div className="bg-white border-b border-earth-300">
           <div className="container-page">
             <div className="flex items-center gap-3 h-[68px]">
 
               {/* Logo */}
               <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
-                <div className="w-10 h-10 flex-shrink-0">
+                <div className="w-11 h-11 flex-shrink-0">
                   <img
                     src="/Vittorios-logo.jpeg"
                     alt={shopInfo.name}
-                    className="w-full h-full object-cover rounded-lg border border-earth-200
-                      group-hover:border-brand-400 transition-colors"
+                    className="w-full h-full object-cover rounded-xl border-2 border-earth-200
+                      group-hover:border-brand-400 transition-colors shadow-sm"
                   />
                 </div>
-                <div className="hidden lg:block">
-                  <p className="font-display font-bold text-earth-900 text-[15px] leading-tight
+                <div className="hidden sm:block">
+                  <p className="font-display font-bold text-earth-900 text-[16px] leading-tight
                     group-hover:text-brand-600 transition-colors whitespace-nowrap">
                     {shopInfo.name}
                   </p>
@@ -389,16 +325,16 @@ export default function Navbar() {
                   <Link
                     to="/login"
                     data-tour="public-signin-link"
-                    className="inline-flex items-center gap-2 rounded-xl border border-brand-400
-                      bg-brand-50 px-3 sm:px-4 py-2.5 text-brand-700
-                      transition-all hover:border-brand-500 hover:bg-brand-100 active:scale-[0.98]"
+                    className="inline-flex items-center gap-2 rounded-xl border-2 border-brand-500
+                      bg-white px-3 sm:px-4 py-2 text-brand-600 shadow-sm
+                      transition-all hover:bg-brand-500 hover:text-white active:scale-[0.98]"
                   >
                     <User size={16} />
                     <span className="text-sm font-body font-semibold leading-none whitespace-nowrap">
                       Sign In
                     </span>
-                    <span className="hidden lg:inline text-[11px] font-body text-brand-500 leading-none whitespace-nowrap">
-                      My Account
+                    <span className="hidden lg:inline text-[11px] font-body opacity-75 leading-none whitespace-nowrap">
+                      / My Account
                     </span>
                   </Link>
                 ) : (
@@ -441,7 +377,7 @@ export default function Navbar() {
                           ].map(item => (
                             <Link key={item.to} to={item.to}
                               onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-earth-50
+                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-earth-100
                                 font-body transition-colors group">
                               <div className="w-7 h-7 bg-earth-100 group-hover:bg-brand-100 rounded-lg
                                 flex items-center justify-center transition-colors flex-shrink-0">
@@ -475,16 +411,17 @@ export default function Navbar() {
                 <button
                   onClick={() => openCart?.()}
                   aria-label="Open cart"
-                  className="relative flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-lg
-                    bg-brand-500 hover:bg-brand-600 text-white transition-all
-                    active:scale-[0.97] group shadow-sm"
+                  className={`relative flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-xl
+                    bg-gradient-to-br from-brand-500 to-brand-600 text-white transition-all
+                    active:scale-[0.97] group shadow-md hover:from-brand-400 hover:to-brand-500
+                    ${itemCount > 0 ? 'ring-2 ring-brand-300 ring-offset-1' : ''}`}
                 >
                   <div className="relative">
                     <ShoppingCart size={19} className="group-hover:scale-110 transition-transform" />
                     {itemCount > 0 && (
                       <span className="absolute -top-2 -right-2 bg-white text-brand-600 text-[10px]
                         min-w-[16px] h-4 rounded-full flex items-center justify-center
-                        font-bold leading-none px-0.5 border border-brand-200 shadow-sm">
+                        font-bold leading-none px-0.5 border border-brand-300 shadow-sm">
                         {itemCount > 9 ? '9+' : itemCount}
                       </span>
                     )}
@@ -523,7 +460,7 @@ export default function Navbar() {
         )}
 
         {/* ── Row 2: Category nav (desktop only) ──────────────── */}
-        <div className="hidden md:block bg-white border-t border-earth-100 border-b border-earth-200">
+        <div className="hidden md:block bg-white border-y border-earth-200">
           <div className="container-page">
             <div className="flex items-stretch h-10 gap-0">
 
@@ -533,20 +470,20 @@ export default function Navbar() {
               {/* Divider */}
               <div className="w-px bg-earth-200 mx-1 flex-shrink-0" />
 
-              {/* Category quick-links — scrollable with arrows */}
-              <CategoryStrip categories={categories} />
+              {/* Category marquee — auto-scrolling ticker */}
+              <CategoryMarquee categories={categories} />
 
               {/* Right side nav */}
-              <div className="flex items-center gap-0.5 flex-shrink-0 border-l border-earth-200 pl-2 ml-1">
+              <div className="flex items-center gap-0.5 flex-shrink-0 border-l border-brand-200 pl-2 ml-1">
                 <NavLink
                   to="/"
                   end
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
-                    transition-colors whitespace-nowrap ${
+                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-semibold
+                    transition-all whitespace-nowrap border-b-2 ${
                       isActive
-                        ? 'text-brand-600 border-b-2 border-brand-500'
-                        : 'text-earth-600 hover:text-earth-900'
+                        ? 'text-brand-700 border-brand-500'
+                        : 'text-earth-600 border-transparent hover:text-brand-700 hover:border-brand-300'
                     }`
                   }
                 >
@@ -557,11 +494,11 @@ export default function Navbar() {
                   to="/shop"
                   end
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
-                    transition-colors whitespace-nowrap ${
+                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-semibold
+                    transition-all whitespace-nowrap border-b-2 ${
                       isActive
-                        ? 'text-brand-600 border-b-2 border-brand-500'
-                        : 'text-earth-600 hover:text-earth-900'
+                        ? 'text-brand-700 border-brand-500'
+                        : 'text-earth-600 border-transparent hover:text-brand-700 hover:border-brand-300'
                     }`
                   }
                 >
@@ -572,11 +509,11 @@ export default function Navbar() {
                   to="/track"
                   data-tour="public-track-link"
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-medium
-                    transition-colors whitespace-nowrap ${
+                    `flex items-center gap-1.5 px-3 h-full text-sm font-body font-semibold
+                    transition-all whitespace-nowrap border-b-2 ${
                       isActive
-                        ? 'text-brand-600 border-b-2 border-brand-500'
-                        : 'text-earth-600 hover:text-earth-900'
+                        ? 'text-brand-700 border-brand-500'
+                        : 'text-earth-600 border-transparent hover:text-brand-700 hover:border-brand-300'
                     }`
                   }
                 >
@@ -604,17 +541,18 @@ export default function Navbar() {
             style={{ animation: 'slideInLeft 0.22s ease-out' }}
           >
             {/* Drawer header */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-earth-200">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-brand-700
+              bg-gradient-to-r from-brand-800 to-brand-600">
               <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3">
                 <img src="/Vittorios-logo.jpeg" alt={shopInfo.name}
-                  className="w-9 h-9 rounded-lg object-cover border border-earth-200" />
+                  className="w-10 h-10 rounded-xl object-cover border-2 border-brand-400 shadow-sm" />
                 <div>
-                  <p className="font-display font-bold text-earth-900 text-sm leading-tight">{shopInfo.name}</p>
-                  <p className="text-earth-500 text-[10px] font-body">{shopInfo.tagline}</p>
+                  <p className="font-display font-bold text-white text-sm leading-tight">{shopInfo.name}</p>
+                  <p className="text-brand-200 text-[10px] font-body">{shopInfo.tagline}</p>
                 </div>
               </Link>
               <button onClick={() => setMenuOpen(false)}
-                className="p-2 rounded-lg text-earth-400 hover:text-earth-900 hover:bg-earth-100 transition-all">
+                className="p-2 rounded-lg text-brand-200 hover:text-white hover:bg-brand-700 transition-all">
                 <X size={20} />
               </button>
             </div>

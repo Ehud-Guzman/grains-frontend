@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ShoppingCart, TrendingUp, DollarSign, Package, AlertTriangle,
-  Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight, Sparkles
+  Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight,
+  Banknote, Hourglass
 } from 'lucide-react'
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from 'recharts'
 import { useAuth } from '../../context/AuthContext'
 import SuperAdminDashboardPage from './SuperAdminDashboardPage'
 import { useOnboarding } from '../../context/OnboardingContext'
@@ -28,19 +33,20 @@ function StatusBadge({ status }) {
 // ── KPI CARD ──────────────────────────────────────────────────────────────────
 function KpiCard({ icon: Icon, label, value, sub, color, badge, link }) {
   const colorMap = {
-    blue:  { icon: 'bg-blue-50 text-blue-600',   border: 'border-blue-100'   },
-    amber: { icon: 'bg-amber-50 text-amber-600',  border: 'border-amber-100'  },
-    green: { icon: 'bg-green-50 text-green-600',  border: 'border-green-100'  },
-    brand: { icon: 'bg-brand-50 text-brand-600',  border: 'border-brand-100'  },
-    red:   { icon: 'bg-red-50 text-red-600',      border: 'border-red-100'    },
-  }[color] || { icon: 'bg-admin-100 text-admin-600', border: 'border-admin-200' }
+    blue:  { icon: 'bg-blue-50 text-blue-600',     bar: 'border-l-blue-500'    },
+    amber: { icon: 'bg-amber-50 text-amber-600',   bar: 'border-l-amber-500'   },
+    green: { icon: 'bg-emerald-50 text-emerald-600', bar: 'border-l-emerald-500' },
+    brand: { icon: 'bg-brand-50 text-brand-600',   bar: 'border-l-brand-500'   },
+    red:   { icon: 'bg-red-50 text-red-600',       bar: 'border-l-red-500'     },
+  }[color] || { icon: 'bg-admin-100 text-admin-600', bar: 'border-l-admin-300' }
 
   const inner = (
-    <div className={`bg-white rounded-xl border shadow-admin p-4 hover:shadow-admin-lg
-      transition-all ${colorMap.border} ${link ? 'cursor-pointer hover:-translate-y-0.5' : ''}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${colorMap.icon}`}>
-          <Icon size={18} />
+    <div className={`bg-white rounded-xl border border-admin-100 border-l-4 ${colorMap.bar}
+      shadow-admin p-5 hover:shadow-admin-lg transition-all
+      ${link ? 'cursor-pointer hover:-translate-y-0.5' : ''}`}>
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorMap.icon}`}>
+          <Icon size={17} />
         </div>
         {badge > 0 && (
           <span className={`text-xs font-admin font-bold px-2 py-0.5 rounded-full ${
@@ -50,9 +56,9 @@ function KpiCard({ icon: Icon, label, value, sub, color, badge, link }) {
           </span>
         )}
       </div>
-      <p className="font-admin font-bold text-admin-900 text-xl leading-tight">{value}</p>
-      <p className="text-admin-400 text-xs font-admin mt-1">{label}</p>
-      {sub && <p className="text-admin-300 text-xs font-admin mt-0.5">{sub}</p>}
+      <p className="font-admin font-bold text-admin-900 text-2xl leading-tight tracking-tight">{value}</p>
+      <p className="text-admin-500 text-xs font-admin mt-1.5 font-medium">{label}</p>
+      {sub && <p className="text-admin-400 text-xs font-admin mt-0.5">{sub}</p>}
     </div>
   )
 
@@ -62,9 +68,9 @@ function KpiCard({ icon: Icon, label, value, sub, color, badge, link }) {
 // ── SKELETON ──────────────────────────────────────────────────────────────────
 function KpiSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-admin-100 shadow-admin p-4 animate-pulse">
-      <div className="w-9 h-9 bg-admin-100 rounded-xl mb-3" />
-      <div className="h-6 bg-admin-100 rounded w-20 mb-1" />
+    <div className="bg-white rounded-xl border border-admin-100 border-l-4 border-l-admin-200 shadow-admin p-5 animate-pulse">
+      <div className="w-9 h-9 bg-admin-100 rounded-lg mb-4" />
+      <div className="h-7 bg-admin-100 rounded w-24 mb-2" />
       <div className="h-3 bg-admin-100 rounded w-28" />
     </div>
   )
@@ -73,13 +79,16 @@ function KpiSkeleton() {
 export default function AdminDashboardPage() {
   const { user } = useAuth()
   if (user?.role === 'superadmin') return <SuperAdminDashboardPage />
-  const { startTour, getChecklist } = useOnboarding()
-  const [kpis, setKpis]         = useState(null)
-  const [lowStock, setLowStock]   = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState('')
+  const { getChecklist } = useOnboarding()
+  const [kpis, setKpis]             = useState(null)
+  const [lowStock, setLowStock]     = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
+  const [revenueData, setRevenueData]     = useState([])
+  const [revPeriod, setRevPeriod]         = useState('month')
+  const [revLoading, setRevLoading]       = useState(true)
   const adminChecklist = getChecklist('admin').filter(item => {
     if (item.id === 'reports') return ['supervisor', 'admin'].includes(user?.role)
     if (item.id === 'settings') return user?.role === 'admin'
@@ -105,11 +114,27 @@ export default function AdminDashboardPage() {
     finally { setLoading(false); setRefreshing(false) }
   }
 
+  const fetchRevenue = async (period) => {
+    setRevLoading(true)
+    try {
+      const res = await adminReportService.getSales({ period })
+      const raw = res.data?.data?.byDay || []
+      setRevenueData(raw.map(d => ({
+        date:    new Date(d.date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }),
+        revenue: Math.round(d.revenue),
+        orders:  d.orders,
+      })))
+    } catch { setRevenueData([]) }
+    finally { setRevLoading(false) }
+  }
+
   useEffect(() => {
     fetchData()
     const interval = setInterval(() => fetchData(true), 60000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => { fetchRevenue(revPeriod) }, [revPeriod])
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -119,18 +144,12 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Dashboard</h1>
           <p className="text-admin-400 text-xs font-admin mt-0.5">
+            {new Date().toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            <span className="mx-1.5 text-admin-300">·</span>
             Updated {timeAgo(lastRefreshed)}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => startTour('admin', { force: true })}
-            className="flex items-center gap-2 px-3 py-2 bg-brand-500/10 border border-brand-500/20 rounded-lg
-              text-sm font-admin font-semibold text-brand-700 hover:bg-brand-500/15 transition-colors shadow-admin"
-          >
-            <Sparkles size={14} />
-            <span className="hidden sm:inline">Tour</span>
-          </button>
           <button onClick={() => fetchData(true)} disabled={refreshing}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
               text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
@@ -151,10 +170,8 @@ export default function AdminDashboardPage() {
           <OnboardingChecklistCard
             eyebrow="Operational Readiness"
             title="Bring new staff up to speed fast"
-            description="This admin checklist keeps the first session focused on the pages that matter most, while still fitting the premium feel of your workspace."
+            description="This admin checklist keeps the first session focused on the pages that matter most."
             items={adminChecklist}
-            actionLabel="Replay Tour"
-            onAction={() => startTour('admin', { force: true })}
             theme="admin"
           />
         </div>
@@ -185,14 +202,115 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
+      {/* ── Cash Flow Row ──────────────────────────────────────────────────── */}
+      {(loading || kpis?.cashFlow) && (
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {loading ? (
+            Array.from({ length: 2 }).map((_, i) => <KpiSkeleton key={i} />)
+          ) : (
+            <>
+              <KpiCard icon={Banknote}  label="Paid This Month"   color="green"
+                value={formatKES(kpis.cashFlow?.paidRevenue ?? 0)}
+                sub={`${kpis.cashFlow?.paidOrders ?? 0} order${kpis.cashFlow?.paidOrders !== 1 ? 's' : ''} confirmed`} />
+              <KpiCard icon={Hourglass} label="Awaiting Payment"  color="amber"
+                value={formatKES(kpis.cashFlow?.unpaidRevenue ?? 0)}
+                sub={`${kpis.cashFlow?.unpaidOrders ?? 0} order${kpis.cashFlow?.unpaidOrders !== 1 ? 's' : ''} outstanding`} />
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Revenue Trend Chart ────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-admin-100 shadow-admin p-5 mb-5">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="font-admin font-bold text-admin-900 text-sm">Revenue Trend</h2>
+            <p className="text-admin-400 text-xs font-admin mt-0.5">Approved + completed orders</p>
+          </div>
+          <div className="flex items-center gap-1 bg-admin-50 rounded-lg p-0.5 border border-admin-100">
+            {[['week', '7D'], ['month', '30D']].map(([val, label]) => (
+              <button key={val}
+                onClick={() => setRevPeriod(val)}
+                className={`px-3 py-1.5 rounded-md text-xs font-admin font-semibold transition-all ${
+                  revPeriod === val
+                    ? 'bg-white text-admin-900 shadow-sm'
+                    : 'text-admin-500 hover:text-admin-700'
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {revLoading ? (
+          <div className="h-[180px] flex flex-col justify-end gap-1 pb-2 animate-pulse">
+            {[60, 85, 45, 70, 90, 55, 75, 40, 65, 80, 50, 95].map((h, i) => (
+              <div key={i} className="flex-1" style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <div className="w-full rounded-sm bg-admin-100" style={{ height: `${h}%` }} />
+              </div>
+            ))}
+          </div>
+        ) : revenueData.length === 0 ? (
+          <div className="h-[180px] flex flex-col items-center justify-center gap-2">
+            <TrendingUp size={28} className="text-admin-200" />
+            <p className="text-admin-400 text-xs font-admin">No approved orders in the past 30 days</p>
+            <Link to="/admin/reports" className="text-xs font-admin font-semibold text-brand-600 hover:underline">
+              View full reports →
+            </Link>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="dashRevGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#C8912A" stopOpacity={0.18} />
+                  <stop offset="95%" stopColor="#C8912A" stopOpacity={0}    />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1EDE6" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+                axisLine={false} tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+                tickFormatter={v => `${(v / 1000).toFixed(0)}K`}
+                axisLine={false} tickLine={false} width={36}
+              />
+              <Tooltip
+                formatter={(v, name) => [
+                  name === 'revenue' ? formatKES(v) : v,
+                  name === 'revenue' ? 'Revenue' : 'Orders',
+                ]}
+                contentStyle={{
+                  fontFamily: 'Outfit', fontSize: 12,
+                  borderRadius: 10, border: '1px solid #E8DDD0',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#C8912A"
+                strokeWidth={2}
+                dot={{ r: 3, fill: '#C8912A', strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#C8912A', stroke: '#fff', strokeWidth: 2 }}
+                fill="url(#dashRevGrad)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
       {/* ── Bottom panels ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden" data-tour="admin-recent-orders">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden" data-tour="admin-recent-orders">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 bg-admin-50/40">
             <div>
-              <h2 className="font-admin font-bold text-admin-900">Recent Orders</h2>
+              <h2 className="font-admin font-bold text-admin-900 text-sm">Recent Orders</h2>
               <p className="text-admin-400 text-xs font-admin mt-0.5">Last 10 orders placed</p>
             </div>
             <Link to="/admin/orders"
@@ -268,10 +386,10 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Low Stock */}
-        <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden" data-tour="admin-low-stock">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
+        <div className="bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden" data-tour="admin-low-stock">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 bg-admin-50/40">
             <div>
-              <h2 className="font-admin font-bold text-admin-900">Low Stock</h2>
+              <h2 className="font-admin font-bold text-admin-900 text-sm">Low Stock</h2>
               <p className="text-admin-400 text-xs font-admin mt-0.5">Below threshold</p>
             </div>
             <Link to="/admin/stock"

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, ChevronRight, Users } from 'lucide-react'
+import { Search, ChevronRight, Users, Building2 } from 'lucide-react'
 import { adminCustomerService } from '../../../services/admin/customer.service'
 import { formatKES, formatDate } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
@@ -86,6 +86,11 @@ export default function CustomerListPage() {
                     <td className="px-5 py-3.5 text-right font-semibold text-admin-800 hidden md:table-cell">{formatKES(c.totalSpend || 0)}</td>
                     <td className="px-5 py-3.5 hidden lg:table-cell">
                       <div className="flex gap-1 flex-wrap">
+                        {c.isB2B && (
+                          <span className="inline-flex items-center gap-0.5 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                            <Building2 size={10} /> B2B
+                          </span>
+                        )}
                         {c.isRepeat && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">Repeat</span>}
                         {c.isHighValue && <span className="text-xs bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-full font-medium">High Value</span>}
                         {c.isInactive && <span className="text-xs bg-admin-100 text-admin-500 px-1.5 py-0.5 rounded-full font-medium">Inactive</span>}

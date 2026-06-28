@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Package, Shield, Truck, Star, Sparkles } from 'lucide-react'
-import { useOnboarding } from '../../context/OnboardingContext'
+import { ArrowRight, Package, Shield, Truck, Star, Sparkles, X, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductSpotlight from '../../components/ui/ProductSpotlight'
@@ -10,6 +9,8 @@ import SkeletonCard from '../../components/ui/SkeletonCard'
 import GridToggle from '../../components/ui/GridToggle'
 import { useShopInfo, useCategories } from '../../context/AppSettingsContext'
 import { getOptimizedImageUrl } from '../../utils/image'
+import { promotionService } from '../../services/promotion.service'
+import { formatKES } from '../../utils/helpers'
 
 const FEATURED_LIMIT = 8
 const SECONDARY_LIMIT = 6
@@ -41,16 +42,343 @@ function getProductHeroImage(product) {
 }
 
 
+// ── ANNOUNCEMENT BAR (tips) ───────────────────────────────────────────────────
+function AnnouncementBar({ tips }) {
+  const [idx, setIdx] = useState(0)
+  const [dismissed, setDismissed] = useState(false)
+
+  useEffect(() => {
+    if (tips.length <= 1) return
+    const t = setInterval(() => setIdx(i => (i + 1) % tips.length), 4000)
+    return () => clearInterval(t)
+  }, [tips.length])
+
+  if (dismissed || tips.length === 0) return null
+  const tip = tips[idx]
+
+  return (
+    <div className="bg-brand-700 text-white text-sm font-body py-2.5 px-4 relative overflow-hidden">
+      <div className="container-page flex items-center justify-center gap-3">
+        <Sparkles size={14} className="text-brand-300 flex-shrink-0" />
+        <p className="text-center leading-snug">
+          <span className="font-semibold">{tip.title}</span>
+          {tip.description && <span className="text-white/75 ml-1.5">{tip.description}</span>}
+        </p>
+        {tips.length > 1 && (
+          <div className="flex gap-1 ml-2">
+            {tips.map((_, i) => (
+              <button key={i} onClick={() => setIdx(i)}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${i === idx ? 'bg-white' : 'bg-white/30'}`} />
+            ))}
+          </div>
+        )}
+      </div>
+      <button onClick={() => setDismissed(true)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 transition-colors">
+        <X size={14} />
+      </button>
+    </div>
+  )
+}
+
+// ── PROMO BANNER CAROUSEL (banner + seasonal) ─────────────────────────────────
+function PromoBannerCarousel({ banners }) {
+  const [idx, setIdx]       = useState(0)
+  const [visible, setVisible] = useState(true)   // drives the fade
+  const timerRef  = useRef(null)
+  const pendingIdx = useRef(null)
+
+  const go = useCallback((n) => {
+    if (n === idx) return
+    pendingIdx.current = n
+    setVisible(false)                             // fade out
+    clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      pendingIdx.current = null
+      setIdx(i => {
+        const next = (i + 1) % banners.length
+        pendingIdx.current = null
+        return next
+      })
+      setVisible(false)
+    }, 6000)
+  }, [idx, banners.length])
+
+  // When visible goes false → swap slide → fade back in
+  useEffect(() => {
+    if (visible) return
+    const t = setTimeout(() => {
+      if (pendingIdx.current !== null) {
+        setIdx(pendingIdx.current)
+        pendingIdx.current = null
+      } else {
+        setIdx(i => (i + 1) % banners.length)
+      }
+      setVisible(true)
+    }, 280)
+    return () => clearTimeout(t)
+  }, [visible, banners.length])
+
+  // Auto-advance
+  useEffect(() => {
+    if (banners.length <= 1) return
+    timerRef.current = setInterval(() => setVisible(false), 6000)
+    return () => clearInterval(timerRef.current)
+  }, [banners.length])
+
+  if (banners.length === 0) return null
+  const p = banners[idx]
+
+  return (
+    <section className="relative my-4 mx-3 sm:mx-6 lg:mx-10 rounded-2xl overflow-hidden shadow-xl">
+      {/* Progress bar */}
+      {banners.length > 1 && (
+        <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2">
+          {banners.map((_, i) => (
+            <div key={i} className="flex-1 h-0.5 rounded-full bg-white/20 overflow-hidden">
+              <div className={`h-full bg-white/80 ${i === idx ? 'animate-[grow_6s_linear]' : i < idx ? 'w-full' : 'w-0'}`} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Slide */}
+      <div className="relative h-52 sm:h-64 lg:h-72 w-full"
+        style={{ transition: 'opacity 280ms ease', opacity: visible ? 1 : 0 }}>
+
+        {/* Blurred backdrop */}
+        {p.imageUrl ? (
+          <img src={p.imageUrl} alt="" aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover scale-110"
+            style={{ filter: 'blur(20px) brightness(0.4) saturate(1.3)' }} />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-800 via-brand-700 to-earth-800" />
+        )}
+
+        {/* Crisp image — right side, natural ratio */}
+        {p.imageUrl && (
+          <div className="absolute inset-0 flex items-center justify-end pr-6 lg:pr-12 pointer-events-none">
+            <img src={p.imageUrl} alt={p.title}
+              className="h-[90%] w-auto max-w-[40%] object-contain drop-shadow-2xl" />
+          </div>
+        )}
+
+        {/* Left gradient for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
+
+        {/* Text content */}
+        <div className="relative h-full px-6 sm:px-8 flex flex-col justify-center max-w-sm sm:max-w-md">
+          {p.seasonTag && (
+            <span className="inline-flex items-center gap-1 self-start mb-2 text-[10px] font-body
+              font-bold uppercase tracking-widest text-white/60">
+              <Tag size={9} /> {p.seasonTag.replace(/_/g, ' ')}
+            </span>
+          )}
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-2">
+            {p.title}
+          </h2>
+          {p.description && (
+            <p className="font-body text-white/75 text-sm sm:text-base mb-4 leading-relaxed line-clamp-2">
+              {p.description}
+            </p>
+          )}
+          <Link
+            to={p.linkedProductId ? `/shop/${p.linkedProductId}` : '/shop'}
+            className="self-start inline-flex items-center gap-2 bg-white/95 text-earth-900
+              font-body font-bold px-5 py-2.5 rounded-xl hover:bg-white transition-all
+              active:scale-95 text-sm shadow-lg backdrop-blur-sm">
+            {p.linkedProductId ? 'Shop Now' : 'Browse'} <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {/* Subtle "Ad" label */}
+        <span className="absolute bottom-2 right-3 text-[9px] font-body font-semibold
+          text-white/30 uppercase tracking-widest select-none">Promoted</span>
+
+        {/* Tap areas for prev/next on mobile */}
+        {banners.length > 1 && (
+          <>
+            <button onClick={() => go((idx - 1 + banners.length) % banners.length)}
+              className="absolute left-0 top-0 bottom-0 w-1/4 opacity-0" aria-label="Previous" />
+            <button onClick={() => go((idx + 1) % banners.length)}
+              className="absolute right-0 top-0 bottom-0 w-1/4 opacity-0" aria-label="Next" />
+          </>
+        )}
+      </div>
+
+      {/* Dot indicators — desktop */}
+      {banners.length > 1 && (
+        <div className="absolute bottom-3 right-4 flex gap-1.5">
+          {banners.map((_, i) => (
+            <button key={i} onClick={() => go(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === idx ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/35 hover:bg-white/55'
+              }`} />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── FEATURED PRODUCT PROMO ────────────────────────────────────────────────────
+function FeaturedPromoCards({ promos, allProducts }) {
+  const items = promos
+    .map(p => ({ promo: p, product: allProducts.find(pr => pr._id === p.linkedProductId) }))
+    .filter(x => x.product)
+  if (items.length === 0) return null
+
+  return (
+    <section className="py-8 bg-white border-b border-earth-100">
+      <div className="container-page">
+        <div className="flex items-center gap-3 mb-4">
+          <Star size={16} className="text-brand-500" />
+          <h2 className="font-display text-lg font-bold text-earth-900">Staff Picks</h2>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+          {items.map(({ promo, product }) => {
+            const img = product.varieties?.find(v => v.imageURLs?.[0])?.imageURLs?.[0] || product.imageURLs?.[0]
+            const pkg = product.varieties?.[0]?.packaging?.find(p => !p.quoteOnly && p.priceKES)
+            return (
+              <Link key={promo._id} to={`/shop/${product._id}`}
+                className="flex-shrink-0 w-48 sm:w-56 bg-white rounded-2xl border border-earth-200
+                  overflow-hidden shadow-warm hover:shadow-warm-lg hover:-translate-y-1 transition-all group">
+                <div className="relative h-36 bg-earth-100">
+                  {img
+                    ? <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    : <div className="w-full h-full flex items-center justify-center"><Package size={28} className="text-earth-300" /></div>
+                  }
+                  <span className="absolute top-2 left-2 bg-brand-600 text-white text-[10px] font-body
+                    font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                    {promo.seasonTag ? promo.seasonTag.replace(/_/g, ' ') : 'Featured'}
+                  </span>
+                </div>
+                <div className="p-3">
+                  <p className="font-body font-semibold text-earth-900 text-sm truncate">{product.name}</p>
+                  {promo.description && <p className="text-earth-500 text-xs mt-0.5 line-clamp-2">{promo.description}</p>}
+                  {pkg && <p className="font-display font-bold text-brand-600 text-sm mt-1.5">KES {pkg.priceKES.toLocaleString()}</p>}
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── PriceTicker ───────────────────────────────────────────────────────────────
+// Shows all packaging sizes for one product at a time.
+// Cube-flips with a left-to-right cascade when cycling to the next product.
+
+const FLIP_MS     = 220
+const HOLD_MS     = 3600
+const COL_STAGGER = 55           // ms between each column's flip start
+const MAX_PKGS    = 5            // max packaging columns shown
+const TOTAL_FLIP  = FLIP_MS + (MAX_PKGS - 1) * COL_STAGGER // 440ms
+
+function PriceTicker({ products, priceChanges }) {
+  const [prodIdx, setProdIdx] = useState(0)
+  const [anim, setAnim]       = useState(null) // null | 'out' | 'in'
+  const idxRef = useRef(0)
+
+  useEffect(() => {
+    if (products.length <= 1) return
+    let cancelled = false
+
+    const advance = () => {
+      if (cancelled) return
+      setAnim('out')
+      setTimeout(() => {
+        if (cancelled) return
+        const next = (idxRef.current + 1) % products.length
+        idxRef.current = next
+        setProdIdx(next)
+        setAnim('in')
+        setTimeout(() => {
+          if (cancelled) return
+          setAnim(null)
+          setTimeout(advance, HOLD_MS)
+        }, TOTAL_FLIP)
+      }, TOTAL_FLIP)
+    }
+
+    const t = setTimeout(advance, HOLD_MS)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [products.length])
+
+  const { product, packages } = products[prodIdx]
+  const change  = priceChanges[product._id]
+  const cols    = packages.slice(0, MAX_PKGS)
+  const animCls = anim === 'out' ? 'cube-ticker-out' : anim === 'in' ? 'cube-ticker-in' : ''
+
+  return (
+    <div>
+      {/* Header: product name + % change · "All prices" pinned right */}
+      <div className="flex items-center justify-between gap-4 mb-2.5">
+        <div style={{ perspective: '400px' }}>
+          <div className={animCls} style={{ animationDelay: '0ms' }}>
+            <div className="flex items-center gap-2">
+              <p className="text-white/50 text-xs font-body font-semibold leading-none">
+                {product.name}
+              </p>
+              {change && (
+                <span className={`text-[10px] font-body font-bold ${change.direction === 'up' ? 'text-red-400' : 'text-green-400'}`}>
+                  {change.direction === 'up' ? '▲' : '▼'}{change.pct}%
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <Link to="/shop"
+          className="flex-shrink-0 text-[10px] font-body text-white/30 hover:text-white/60 transition-colors flex items-center gap-1">
+          All prices <ArrowRight size={10} />
+        </Link>
+      </div>
+
+      {/* Package columns + sparkline — each flips with a staggered delay */}
+      <div className="flex items-end gap-x-6 flex-wrap gap-y-2">
+        {cols.map((pkg, i) => (
+          <div key={i} style={{ perspective: '400px' }}>
+            <div className={animCls} style={{ animationDelay: `${i * COL_STAGGER}ms` }}>
+              <Link to={`/shop/${product._id}`} className="group block">
+                <p className="text-white/30 text-[10px] font-body leading-none">{pkg.size}</p>
+                <span className="text-brand-300 font-display font-bold text-base leading-none group-hover:text-brand-200 transition-colors">
+                  {formatKES(pkg.priceKES)}
+                </span>
+              </Link>
+            </div>
+          </div>
+        ))}
+
+
+      </div>
+
+      {/* Dot indicators when there are multiple products */}
+      {products.length > 1 && (
+        <div className="flex items-center gap-1 mt-3">
+          {products.map((_, i) => (
+            <span key={i} className={`rounded-full transition-all duration-300 ${
+              i === prodIdx ? 'w-3 h-1 bg-white/50' : 'w-1 h-1 bg-white/18'
+            }`} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const shopInfo   = useShopInfo()
   const categories = useCategories()
-  const { startTour } = useOnboarding()
   const [featured, setFeatured]         = useState([])
   const [moreProducts, setMoreProducts] = useState([])
   const [spotlight, setSpotlight]       = useState([])
+  const [promotions, setPromotions]     = useState([])
   const [loading, setLoading]           = useState(true)
   const [compact, setCompact]           = useState(true)
+  const [priceChanges, setPriceChanges]   = useState({})
 
   // Persist grid preference (default true = 2-col mobile)
   useEffect(() => {
@@ -64,113 +392,170 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    productService.getAll({ limit: 18 }).then(prodRes => {
+    Promise.all([
+      productService.getAll({ limit: 18 }),
+      promotionService.getActive().catch(() => ({ data: { data: [] } })),
+    ]).then(([prodRes, promoRes]) => {
       const all = prodRes.data.data || []
       const prioritized = [...all].sort((a, b) => Number(hasStock(b)) - Number(hasStock(a)))
       const spotlightCandidates = prioritized.filter(product =>
         hasSpotlightPrice(product) && hasSpotlightImage(product)
       )
-
       setFeatured(prioritized.slice(0, FEATURED_LIMIT))
       setMoreProducts(prioritized.slice(FEATURED_LIMIT, FEATURED_LIMIT + SECONDARY_LIMIT))
       setSpotlight([...spotlightCandidates].sort(() => Math.random() - 0.5).slice(0, 6))
+      setPromotions(promoRes.data.data || [])
+
+      // Price changes for card badges
+      if (all.length) {
+        productService.getPriceChanges(all.map(p => p._id))
+          .then(res => setPriceChanges(res.data?.data || {}))
+          .catch(() => {})
+      }
+
+
     }).finally(() => setLoading(false))
   }, [])
+
+  const tips    = promotions.filter(p => p.type === 'tip')
+  const banners = promotions.filter(p => p.type === 'banner' || p.type === 'seasonal')
+  const featuredPromos = promotions.filter(p => p.type === 'featured_product' && p.linkedProductId)
 
   return (
     <div>
 
+      {/* ── Announcement bar ──────────────────────────────────────────── */}
+      <AnnouncementBar tips={tips} />
+
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="relative bg-white overflow-hidden border-b border-earth-100">
+      <section className="relative overflow-hidden bg-gradient-to-br from-earth-900 via-brand-900 to-brand-800">
 
-        {/* Subtle dot pattern */}
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'1\'/%3E%3Ccircle cx=\'33\' cy=\'33\' r=\'1\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+        {/* Subtle dot texture */}
+        <div className="absolute inset-0 opacity-[0.05]"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'1\'/%3E%3Ccircle cx=\'33\' cy=\'33\' r=\'1\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
 
-        {/* Glow blob */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-400/15 rounded-full
+        {/* Warm glow — top-right */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-500/20 rounded-full
           blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        {/* Warm glow — top-left, softens the dark earth-900 corner */}
+        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-brand-700/25 rounded-full
+          blur-3xl -translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
-        <div className="container-page py-16 sm:py-24 relative">
-          <div className="grid lg:grid-cols-2 gap-10 xl:gap-16 items-start" data-tour="public-home-hero">
+        <div className="container-page pt-2 pb-8 sm:pt-4 sm:pb-12 relative">
+          <div className="grid lg:grid-cols-2 gap-8 xl:gap-12 items-start" data-tour="public-home-hero">
 
             {/* Left: text + CTAs */}
             <div>
+              {/* Live price ticker — eyebrow above headline */}
+              {!loading && (() => {
+                const pulseProducts = featured
+                  .filter(p => p.varieties?.some(v =>
+                    v.packaging?.some(pkg => !pkg.quoteOnly && pkg.priceKES && pkg.stock > 0)
+                  ))
+                  .map(p => ({
+                    product:  p,
+                    packages: p.varieties.flatMap(v =>
+                      (v.packaging || []).filter(pkg => !pkg.quoteOnly && pkg.priceKES && pkg.stock > 0)
+                    ),
+                  }))
+                  .filter(x => x.packages.length > 0)
 
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-earth-900
-                leading-tight mb-6">
+                if (!pulseProducts.length) return null
+
+                return (
+                  <div className="mb-12 pb-4 border-b border-white/10">
+                    <p className="text-white/35 text-[10px] font-body uppercase tracking-[0.2em] mb-2">
+                      Today's Prices
+                    </p>
+                    <PriceTicker products={pulseProducts} priceChanges={priceChanges} />
+                  </div>
+                )
+              })()}
+
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white
+                leading-tight mb-4">
                 Quality Grains,
-                <span className="text-brand-500 block">Delivered Fresh</span>
+                <span className="text-brand-300 block">Delivered Fresh</span>
               </h1>
-              <p className="font-body text-earth-600 text-lg mb-8 leading-relaxed max-w-xl">
-                {shopInfo.tagline}. Premium maize, beans, rice and more are available for pickup
+              <p className="font-body text-brand-200/90 text-base mb-6 leading-relaxed max-w-xl">
+                {shopInfo.tagline}. Premium maize, beans, rice and more available for pickup
                 or delivery from {shopInfo.location}.
               </p>
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link to="/shop"
                   data-tour="public-shop-cta"
-                  className="btn-primary text-base px-8 py-4 group">
+                  className="inline-flex items-center justify-center gap-2 bg-white text-earth-900
+                    font-body font-bold px-6 py-3 rounded-xl hover:bg-brand-100 transition-all
+                    active:scale-[0.98] text-sm shadow-lg group">
                   Shop Now
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link to="/track"
-                  className="btn-outline text-base px-8 py-4">
+                  className="inline-flex items-center justify-center gap-2 border-2 border-white/25
+                    text-white font-body font-bold px-6 py-3 rounded-xl hover:bg-white/10
+                    transition-all text-sm">
                   Track Order
                 </Link>
-                <button
-                  onClick={() => startTour('public', { force: true })}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-earth-200
-                    bg-earth-50 px-6 py-4 text-base font-body font-semibold text-earth-700
-                    transition-all hover:bg-earth-100"
-                >
-                  <Sparkles size={17} className="text-brand-500" />
-                  Take Tour
-                </button>
+              </div>
+
+              {/* Stats row */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5">
+                {['50+ products', 'Bulk from 45 kg', 'Bungoma & beyond'].map(s => (
+                  <span key={s} className="flex items-center gap-2 text-sm font-body text-brand-200/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+                    {s}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* Right: 2×2 product image mosaic */}
+            {/* Right: 2×2 editorial image mosaic */}
             <div className="hidden lg:block relative select-none">
-              {/* Fade edges into white background */}
-              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
+              {/* Blend edges into the hero background */}
+              <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-brand-900/30 to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-brand-900/70 to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-brand-900/50 to-transparent z-10 pointer-events-none" />
 
-              <div className="grid grid-cols-2 gap-3">
-                {loading
-                  ? [0, 1, 2, 3].map(i => (
-                      <div key={i}
-                        className={`aspect-square rounded-2xl bg-earth-100 animate-pulse ${i % 2 === 1 ? 'mt-5' : ''}`}
-                      />
-                    ))
-                  : (() => {
-                      const heroImgs = featured
-                        .map(p => ({ name: p.name, img: getProductHeroImage(p) }))
-                        .filter(p => p.img)
-                        .slice(0, 4)
-
-                      const slots = [...heroImgs, ...Array(4 - heroImgs.length).fill(null)]
-
-                      return slots.map((item, i) => (
-                        <div key={i}
-                          className={`relative aspect-square rounded-2xl overflow-hidden bg-earth-100 border border-earth-200 ${i % 2 === 1 ? 'mt-5' : ''}`}
-                        >
-                          {item && (
-                            <img
-                              src={getOptimizedImageUrl(item.img, { width: 400, height: 400 })}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              loading="eager"
-                              decoding="async"
-                            />
-                          )}
-                        </div>
-                      ))
-                    })()
-                }
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { src: '/beans.webp',                     label: 'Beans',    position: 'center'     },
+                  { src: '/maize%20farm.webp',              label: 'Maize',    position: 'center 30%' },
+                  { src: '/mixedcereals.webp',              label: 'Cereals',  position: 'center'     },
+                  { src: '/wheat-1188x792-1024x683.webp',   label: 'Wheat',    position: 'center top' },
+                ].map(({ src, label, position }, i) => (
+                  <div
+                    key={i}
+                    className={`relative overflow-hidden rounded-2xl border border-white/8 group ${i % 2 === 1 ? 'mt-6' : ''}`}
+                    style={{ aspectRatio: '1/1' }}
+                  >
+                    <img
+                      src={src}
+                      alt={label}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                      style={{ objectPosition: position }}
+                      loading="eager"
+                      decoding="async"
+                    />
+                    {/* Depth gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                    {/* Subtle warm tint overlay */}
+                    <div className="absolute inset-0 bg-brand-900/15 mix-blend-multiply" />
+                    {/* Label */}
+                    <div className="absolute bottom-3 left-3.5">
+                      <span className="text-[10px] font-body font-bold uppercase tracking-[0.22em] text-white/60">
+                        {label}
+                      </span>
+                    </div>
+                    {/* Hover: brighten the top edge slightly */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                  </div>
+                ))}
               </div>
             </div>
 
           </div>
+
         </div>
       </section>
 
@@ -203,30 +588,81 @@ export default function HomePage() {
 
       {/* ── Categories ───────────────────────────────────────────────── */}
       {categories.length > 0 && (
-        <section className="py-12 bg-earth-50">
+        <section className="py-14 bg-earth-50 border-y border-earth-100">
           <div className="container-page">
-            <h2 className="font-display text-2xl sm:text-3xl text-earth-900 font-bold mb-6">
-              Shop by Category
-            </h2>
-            <div className="flex flex-wrap gap-2.5">
-              {categories.map(cat => (
-                <Link key={cat}
-                  to={`/shop?category=${encodeURIComponent(cat)}`}
-                  className="bg-white border border-earth-200 text-earth-700 hover:bg-brand-500
-                    hover:text-white hover:border-brand-500 px-5 py-2.5 rounded-full font-body
-                    font-medium text-sm transition-all duration-200 shadow-sm hover:shadow-brand-900/20">
-                  {cat}
-                </Link>
-              ))}
+
+            {/* Header row */}
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <p className="text-[10px] font-body font-bold uppercase tracking-[0.28em] text-brand-500 mb-2">
+                  What we carry
+                </p>
+                <h2 className="font-display text-2xl sm:text-3xl text-earth-900 font-bold leading-tight">
+                  Shop by Category
+                </h2>
+              </div>
               <Link to="/shop"
-                className="text-brand-600 hover:text-brand-700 font-body font-semibold text-sm
-                  px-3 py-2.5 flex items-center gap-1 transition-colors">
-                View all <ArrowRight size={14} />
+                className="group flex items-center gap-1.5 text-sm font-body font-semibold
+                  text-earth-500 hover:text-brand-600 transition-colors flex-shrink-0">
+                All products
+                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
+
+            {/* Cards */}
+            {(() => {
+              const ACCENTS = [
+                'bg-amber-500',
+                'bg-emerald-600',
+                'bg-orange-500',
+                'bg-yellow-600',
+                'bg-rose-500',
+                'bg-brand-500',
+                'bg-teal-600',
+                'bg-indigo-500',
+              ]
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {categories.map((cat, i) => (
+                    <Link key={cat}
+                      to={`/shop?category=${encodeURIComponent(cat)}`}
+                      className="group bg-white rounded-2xl border border-earth-100 p-5
+                        flex flex-col justify-between min-h-[140px] shadow-sm
+                        hover:shadow-md hover:-translate-y-1 hover:border-earth-200
+                        transition-all duration-300"
+                    >
+                      {/* Top accent dot */}
+                      <div className={`w-2.5 h-2.5 rounded-full ${ACCENTS[i % ACCENTS.length]} mb-4`} />
+
+                      {/* Category name */}
+                      <div className="flex-1 flex items-center">
+                        <h3 className="font-display text-[1.05rem] leading-snug font-bold text-earth-900
+                          group-hover:text-brand-700 transition-colors">
+                          {cat}
+                        </h3>
+                      </div>
+
+                      {/* CTA */}
+                      <div className="flex items-center gap-1 mt-4 text-[10px] font-body font-bold
+                        uppercase tracking-[0.18em] text-earth-400 group-hover:text-brand-500
+                        transition-colors">
+                        Explore
+                        <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
         </section>
       )}
+
+      {/* ── Promo carousel ───────────────────────────────────────────────── */}
+      <PromoBannerCarousel banners={banners} />
+
+      {/* ── Featured product promos ───────────────────────────────────────── */}
+      <FeaturedPromoCards promos={featuredPromos} allProducts={[...featured, ...moreProducts]} />
 
       {/* ── Featured products ─────────────────────────────────────────── */}
       <section className="py-12 bg-cream">
@@ -274,7 +710,7 @@ export default function HomePage() {
                 : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
             }`}>
               {featured.map(product => (
-                <ProductCard key={product._id} product={product} compact={compact} />
+                <ProductCard key={product._id} product={product} compact={compact} priceChange={priceChanges[product._id]} />
               ))}
             </div>
           )}
@@ -334,7 +770,7 @@ export default function HomePage() {
 
               <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
                 {moreProducts.map(product => (
-                  <ProductCard key={product._id} product={product} compact />
+                  <ProductCard key={product._id} product={product} compact priceChange={priceChanges[product._id]} />
                 ))}
               </div>
             </div>

@@ -32,7 +32,7 @@ export function OrderConfirmPage() {
     <div className="min-h-screen bg-cream flex flex-col">
 
       {/* ── Success hero ────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-brand-800 via-brand-900 to-brand-950 pt-12 pb-24 text-center px-4 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 pt-12 pb-24 text-center px-4 relative overflow-hidden">
         {/* Decorative rings */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-64 h-64 rounded-full border border-white/5" />
@@ -140,11 +140,11 @@ export function OrderConfirmPage() {
             Order Details
           </p>
 
-          <div className="divide-y divide-earth-50">
+          <div className="divide-y divide-earth-100">
             {total && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-earth-50 rounded-lg flex items-center justify-center">
+                  <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
                     <CreditCard size={13} className="text-earth-400" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Total Amount</span>
@@ -155,7 +155,7 @@ export function OrderConfirmPage() {
             {paymentMethod && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-earth-50 rounded-lg flex items-center justify-center">
+                  <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
                     <CreditCard size={13} className="text-earth-400" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Payment</span>
@@ -168,7 +168,7 @@ export function OrderConfirmPage() {
             {deliveryMethod && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-earth-50 rounded-lg flex items-center justify-center">
+                  <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
                     <Truck size={13} className="text-earth-400" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Delivery</span>
@@ -181,7 +181,7 @@ export function OrderConfirmPage() {
             {phone && (
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-earth-50 rounded-lg flex items-center justify-center">
+                  <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
                     <Phone size={13} className="text-earth-400" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Contact</span>

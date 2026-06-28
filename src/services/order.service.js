@@ -5,5 +5,6 @@ export const orderService = {
   placeOrder: (data) => api.post('/orders', data),
   trackOrder: (phone, ref) => api.get('/orders/track', { params: { phone, ref } }),
   getMyOrders: (params) => api.get('/orders/my', { params }),
+  getMyStats: () => api.get('/orders/my/stats'),
   cancelOrder: (id) => api.patch(`/orders/${id}/cancel`)
 }

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Phone, XCircle, Package, Truck, Store, CreditCard, Receipt as ReceiptIcon, AlertTriangle } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Phone, XCircle, Package, Truck, Store, CreditCard, Receipt as ReceiptIcon, AlertTriangle, RotateCcw } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
 import { useShopInfo } from '../../context/AppSettingsContext'
+import { useCart } from '../../context/CartContext'
 import { formatKES, formatDate, getStatusLabel } from '../../utils/helpers'
 import { PAYMENT_LABELS, ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
@@ -19,12 +20,20 @@ const STEP_LABELS = {
 
 export default function CustomerOrderDetailPage() {
   const shopInfo = useShopInfo()
+  const { reorderItems, openCart } = useCart()
+  const navigate = useNavigate()
   const { id } = useParams()
   const [order, setOrder]         = useState(null)
   const [loading, setLoading]     = useState(true)
   const [cancelling, setCancelling] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
+
+  const handleReorder = () => {
+    if (!order?.orderItems?.length) return
+    reorderItems(order.orderItems)
+    openCart()
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -250,6 +259,14 @@ export default function CustomerOrderDetailPage() {
                 text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-600
                 transition-colors">
               <ReceiptIcon size={16} /> View & Print Receipt
+            </button>
+          )}
+          {isTerminal && (
+            <button onClick={handleReorder}
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-white
+                border-2 border-brand-300 text-brand-700 rounded-xl text-sm font-body
+                font-semibold hover:bg-brand-50 transition-colors">
+              <RotateCcw size={16} /> Reorder Same Items
             </button>
           )}
           {order.status === 'pending' && (

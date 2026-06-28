@@ -30,6 +30,7 @@ const RegisterPage = lazy(() => import("./pages/public/RegisterPage"));
 const CustomerDashboardPage = lazy(() => import("./pages/customer/DashboardPage"));
 const CustomerOrderDetailPage = lazy(() => import("./pages/customer/OrderDetailPage"));
 const CustomerProfilePage = lazy(() => import("./pages/customer/ProfilePage"));
+const SavedListsPage = lazy(() => import("./pages/customer/SavedListsPage"));
 
 // Driver portal
 const DriverLayout        = lazy(() => import("./components/driver/DriverLayout"));
@@ -48,11 +49,14 @@ const StockIntakePage = lazy(() => import("./pages/admin/stock/StockIntakePage")
 const CustomerListPage = lazy(() => import("./pages/admin/customers/CustomerListPage"));
 const AdminCustomerProfilePage = lazy(() => import("./pages/admin/customers/CustomerProfilePage"));
 const ReportsPage = lazy(() => import("./pages/admin/reports/ReportsPage"));
+const CouponsPage = lazy(() => import("./pages/admin/coupons/CouponsPage"));
+const PromotionsPage = lazy(() => import("./pages/admin/promotions/PromotionsPage"));
 const SettingsPage = lazy(() => import("./pages/admin/settings/SettingsPage"));
 const ActivityLogPage = lazy(() => import("./pages/admin/logs/ActivityLogPage"));
 const UserManagementPage = lazy(() => import("./pages/admin/users/UserManagementPage"));
 const BranchManagementPage = lazy(() => import("./pages/admin/branches/BranchManagementPage"));
 const BackupManagementPage = lazy(() => import("./pages/admin/backups/BackupManagementPage"));
+const EtimsPage            = lazy(() => import("./pages/admin/settings/EtimsPage"));
 
 const ADMIN_ROLES        = ["staff", "supervisor", "admin", "superadmin"];
 const BUSINESS_ROLES     = ["staff", "supervisor", "admin"];
@@ -117,6 +121,11 @@ export default function App() {
               <Route path="/profile" element={
                 <ProtectedRoute requireRole={["customer"]}>
                   <CustomerProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/lists" element={
+                <ProtectedRoute requireRole={["customer"]}>
+                  <SavedListsPage />
                 </ProtectedRoute>
               } />
             </Route>
@@ -210,6 +219,18 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
+              <Route path="coupons" element={
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
+                  <CouponsPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="promotions" element={
+                <ProtectedRoute requireRole={ADMIN_UP}>
+                  <PromotionsPage />
+                </ProtectedRoute>
+              } />
+
               <Route path="settings" element={
                 <ProtectedRoute requireRole={ADMIN_UP}>
                   <SettingsPage />
@@ -237,6 +258,11 @@ export default function App() {
               <Route path="backups" element={
                 <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
                   <BackupManagementPage />
+                </ProtectedRoute>
+              } />
+              <Route path="etims" element={
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                  <EtimsPage />
                 </ProtectedRoute>
               } />
             </Route>

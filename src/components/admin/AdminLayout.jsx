@@ -4,6 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Users, LogOut,
   Menu, X, Layers, TrendingUp, UserCog, Shield, Settings2,
   Bell, ChevronRight, GitBranch, Eye, Archive, Truck, ClipboardList,
+  Tag, Megaphone, FileCheck,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -24,10 +25,12 @@ const BUSINESS_NAV = [
   {
     group: 'Management',
     items: [
-      { to: '/admin/products',  icon: Package,         label: 'Products',      roles: ['admin'] },
-      { to: '/admin/drivers',   icon: Truck,           label: 'Drivers',       roles: ['supervisor','admin'] },
-      { to: '/admin/customers', icon: Users,           label: 'Customers',     roles: ['supervisor','admin'] },
-      { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',       roles: ['supervisor','admin'] },
+      { to: '/admin/products',    icon: Package,     label: 'Products',    roles: ['admin'] },
+      { to: '/admin/drivers',     icon: Truck,       label: 'Drivers',     roles: ['supervisor','admin'] },
+      { to: '/admin/customers',   icon: Users,       label: 'Customers',   roles: ['supervisor','admin'] },
+      { to: '/admin/coupons',     icon: Tag,         label: 'Coupons',     roles: ['supervisor','admin'] },
+      { to: '/admin/promotions',  icon: Megaphone,   label: 'Promotions',  roles: ['admin'] },
+      { to: '/admin/reports',     icon: TrendingUp,  label: 'Reports',     roles: ['supervisor','admin'] },
     ]
   },
   {
@@ -64,6 +67,7 @@ const SUPERADMIN_NAV = [
       { to: '/admin/users',     icon: UserCog,         label: 'User Management' },
       { to: '/admin/logs',      icon: Shield,          label: 'Activity Log'    },
       { to: '/admin/backups',   icon: Archive,         label: 'Backups'         },
+      { to: '/admin/etims',     icon: FileCheck,       label: 'KRA eTIMS'       },
       { to: '/admin/settings',  icon: Settings2,       label: 'Settings'        },
     ]
   },
@@ -148,13 +152,13 @@ export default function AdminLayout() {
 
   // ── SIDEBAR ────────────────────────────────────────────────────────────────
   const SidebarContent = () => (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#1C0E08' }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#0F172A' }}>
 
       {/* Logo */}
-      <div className="px-5 py-4 border-b border-white/10 flex-shrink-0">
+      <div className="px-5 py-4 border-b border-slate-700/70 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden
-            border border-white/10 shadow-sm">
+            border border-slate-700/80 shadow-sm">
             <img src="/Vittorios-logo.jpeg" alt="Vittorios"
               className="w-full h-full object-cover" />
           </div>
@@ -165,7 +169,7 @@ export default function AdminLayout() {
             <p className={`text-xs leading-tight font-admin ${
               user?.role === 'superadmin' ? 'text-red-400/70' : 'text-white/40'
             }`}>
-              {user?.role === 'superadmin' ? '⚡ Platform Control' : 'Admin Panel'}
+              {user?.role === 'superadmin' ? ' Platform Control' : 'Admin Panel'}
             </p>
           </div>
         </div>
@@ -180,7 +184,7 @@ export default function AdminLayout() {
           if (items.length === 0) return null
           return (
             <div key={group.group}>
-              <p className="text-white/25 text-xs font-admin font-semibold uppercase
+              <p className="text-slate-500 text-[10px] font-admin font-semibold uppercase
                 tracking-widest px-3 mb-1.5">
                 {group.group}
               </p>
@@ -192,14 +196,14 @@ export default function AdminLayout() {
                       `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-admin
                       font-medium transition-all duration-150 group ${
                         isActive
-                          ? 'bg-brand-500 text-white shadow-sm'
-                          : 'text-white/50 hover:text-white hover:bg-white/8'
+                          ? 'bg-white/[.11] text-white ring-1 ring-inset ring-white/[.08]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/[.07]'
                       }`
                     }>
                     {({ isActive }) => (
                       <>
                         <item.icon size={16} className={`flex-shrink-0 transition-colors ${
-                          isActive ? 'text-white' : 'text-white/40 group-hover:text-white/80'
+                          isActive ? 'text-brand-300' : 'text-slate-500 group-hover:text-slate-300'
                         }`} />
                         <span className="flex-1">{item.label}</span>
                         {item.to === '/admin/orders' && pendingCount > 0 && !item.viewOnly && (
@@ -223,9 +227,9 @@ export default function AdminLayout() {
       </nav>
 
       {/* User + Logout */}
-      <div className="px-3 pb-4 pt-3 border-t border-white/10 flex-shrink-0">
+      <div className="px-3 pb-4 pt-3 border-t border-slate-700/70 flex-shrink-0">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1
-          bg-white/5">
+          bg-slate-800/60">
           <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center
             flex-shrink-0 shadow-sm overflow-hidden border border-white/10">
             {user?.avatarURL ? (
@@ -248,7 +252,7 @@ export default function AdminLayout() {
         </div>
         <button onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-admin
-            font-medium text-white/40 hover:text-red-400 hover:bg-red-500/10 w-full
+            font-medium text-slate-500 hover:text-red-400 hover:bg-red-500/10 w-full
             transition-all duration-150 group mt-1">
           <LogOut size={15} className="flex-shrink-0 group-hover:text-red-400 transition-colors" />
           Sign Out
@@ -262,7 +266,7 @@ export default function AdminLayout() {
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 border-r border-white/5"
-        style={{ backgroundColor: '#1C0E08' }}>
+        style={{ backgroundColor: '#0F172A' }}>
         <SidebarContent />
       </aside>
 
@@ -273,7 +277,7 @@ export default function AdminLayout() {
             onClick={() => setSidebarOpen(false)} />
           <aside className="fixed left-0 top-0 h-full w-64 z-50 lg:hidden flex flex-col
             border-r border-white/10 shadow-2xl"
-            style={{ backgroundColor: '#1C0E08', animation: 'slideInLeft 0.22s ease-out' }}>
+            style={{ backgroundColor: '#0F172A', animation: 'slideInLeft 0.22s ease-out' }}>
             <SidebarContent />
           </aside>
         </>
@@ -417,7 +421,7 @@ export default function AdminLayout() {
           <div className="hidden lg:flex items-center justify-between h-full py-3">
             {/* Left — page title */}
             <div className="flex items-center gap-2">
-              <div className="w-1 h-5 bg-brand-500 rounded-full" />
+              <div className="w-1 h-5 bg-brand-600 rounded-full" />
               <div>
                 <p className="text-base font-admin font-bold text-admin-900 leading-tight">
                   {pageTitle}
@@ -536,7 +540,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-admin-50">
+        <main className="flex-1 overflow-y-auto bg-brand-50">
           <Outlet />
         </main>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
-  Download, TrendingUp, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy
+  Download, TrendingUp, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
+  Percent, Bike, Receipt
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -19,7 +20,10 @@ const TABS = [
   { key: 'stock',     label: 'Stock',     icon: BarChart3    },
   { key: 'customers', label: 'Customers', icon: Users        },
   { key: 'orders',    label: 'Orders',    icon: ShoppingCart },
+  { key: 'margins',   label: 'Margins',   icon: Percent      },
+  { key: 'riders',    label: 'Riders',    icon: Bike         },
   { key: 'onboarding', label: 'Onboarding', icon: LifeBuoy   },
+  { key: 'vat',        label: 'VAT',        icon: Receipt    },
 ]
 
 const PERIODS = [
@@ -305,7 +309,10 @@ export default function ReportsPage() {
       else if (tab === 'stock')     res = await adminReportService.getStockValuation()
       else if (tab === 'customers') res = await adminReportService.getCustomers()
       else if (tab === 'orders')    res = await adminReportService.getOrders(params)
+      else if (tab === 'margins')   res = await adminReportService.getMargins(params)
+      else if (tab === 'riders')    res = await adminReportService.getRiders(params)
       else if (tab === 'onboarding') res = await adminReportService.getOnboarding()
+      else if (tab === 'vat')        res = await adminReportService.getVat(params)
       setData(res.data.data)
     } catch { /* errors handled by api interceptor */ }
     finally { setLoading(false) }
@@ -384,7 +391,7 @@ export default function ReportsPage() {
         </div>
 
         {/* ── Period filter ────────────────────────────────────────── */}
-        {tab !== 'stock' && tab !== 'customers' && tab !== 'onboarding' && (
+        {!['stock', 'customers', 'onboarding'].includes(tab) && (
           <div className="flex gap-2 mb-5" data-no-print>
             {PERIODS.map(p => (
               <button key={p.value} onClick={() => setPeriod(p.value)}
@@ -642,6 +649,124 @@ export default function ReportsPage() {
                 </>
               )}
 
+              {/* ── GROSS MARGINS ──────────────────────────────────── */}
+              {tab === 'margins' && (
+                <>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <KpiTile label="Total Revenue"      value={formatKES(data.summary?.totalRevenue)} />
+                    <KpiTile label="Estimated Cost"     value={formatKES(data.summary?.totalCost)} />
+                    <KpiTile label="Gross Profit"       value={formatKES(data.summary?.totalGrossProfit)} />
+                    <KpiTile label="Overall Margin"
+                      value={data.summary?.overallMarginPct != null ? `${data.summary.overallMarginPct}%` : '—'} />
+                  </div>
+
+                  {data.summary?.skusWithCostData < data.summary?.totalSkus && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm font-admin text-amber-700">
+                      Margin data is available for {data.summary.skusWithCostData} of {data.summary.totalSkus} SKUs.
+                      Add <strong>Cost Price</strong> to products to improve coverage.
+                    </div>
+                  )}
+
+                  <DataTable
+                    title="Gross Margin by SKU"
+                    headers={[
+                      { label: 'Product' },
+                      { label: 'Units',    right: true },
+                      { label: 'Revenue',  right: true },
+                      { label: 'Cost',     right: true },
+                      { label: 'Profit',   right: true },
+                      { label: 'Margin %', right: true },
+                    ]}
+                    rows={data.rows || []}
+                    emptyMessage="No completed orders in this period"
+                    renderRow={(r, i) => (
+                      <tr key={i} className="hover:bg-admin-50 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
+                          <p className="text-admin-400 text-xs font-admin">{r.variety} · {r.packaging}</p>
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-600">{r.unitsSold}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-800">{formatKES(r.revenue)}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-500">
+                          {r.estimatedCost != null ? formatKES(r.estimatedCost) : '—'}
+                        </td>
+                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
+                          r.grossProfit == null ? 'text-admin-400' :
+                          r.grossProfit >= 0 ? 'text-green-700' : 'text-red-600'
+                        }`}>
+                          {r.grossProfit != null ? formatKES(r.grossProfit) : '—'}
+                        </td>
+                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
+                          r.marginPct == null ? 'text-admin-400' :
+                          r.marginPct >= 20 ? 'text-green-700' :
+                          r.marginPct >= 0 ? 'text-amber-600' : 'text-red-600'
+                        }`}>
+                          {r.marginPct != null ? `${r.marginPct}%` : '—'}
+                        </td>
+                      </tr>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* ── RIDER PERFORMANCE ──────────────────────────────── */}
+              {tab === 'riders' && (
+                <>
+                  {(!data.riders || data.riders.length === 0) ? (
+                    <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
+                      <Bike size={28} className="text-admin-300 mx-auto mb-3" />
+                      <p className="text-admin-500 font-admin font-medium">
+                        No completed delivery orders with driver assignments in this period.
+                      </p>
+                      <p className="text-admin-400 text-xs font-admin mt-1">
+                        Delivery time is tracked from order creation to status → completed.
+                      </p>
+                    </div>
+                  ) : (
+                    <DataTable
+                      title="Rider Performance"
+                      headers={[
+                        { label: 'Driver' },
+                        { label: 'Deliveries',    right: true },
+                        { label: 'Avg Time',      right: true },
+                        { label: 'Fastest',       right: true },
+                        { label: 'Slowest',       right: true },
+                        { label: 'Total Revenue', right: true },
+                      ]}
+                      rows={data.riders}
+                      renderRow={(r, i) => {
+                        const fmtMins = (m) => m == null ? '—'
+                          : m < 60 ? `${m}m`
+                          : `${Math.floor(m / 60)}h ${m % 60}m`
+                        return (
+                          <tr key={i} className="hover:bg-admin-50 transition-colors">
+                            <td className="px-5 py-3.5">
+                              <p className="font-admin font-semibold text-admin-800">{r.driverName || 'Unknown'}</p>
+                              <p className="text-admin-400 text-xs font-admin">{r.driverPhone}</p>
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
+                              {r.deliveries}
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-admin text-admin-700">
+                              {fmtMins(r.avgDeliveryMinutes)}
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-admin text-green-700">
+                              {fmtMins(r.minDeliveryMinutes)}
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-admin text-amber-600">
+                              {fmtMins(r.maxDeliveryMinutes)}
+                            </td>
+                            <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
+                              {formatKES(r.totalRevenue)}
+                            </td>
+                          </tr>
+                        )
+                      }}
+                    />
+                  )}
+                </>
+              )}
+
               {tab === 'onboarding' && (
                 <>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -672,6 +797,38 @@ export default function ReportsPage() {
                         <td className="px-5 py-3.5 text-right font-admin font-bold text-brand-700">{row.avgChecklistCompletion}%</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.helpCenterOpens}</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.milestonesReached}</td>
+                      </tr>
+                    )}
+                  />
+                </>
+              )}
+
+              {tab === 'vat' && (
+                <>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <KpiTile label="Total Orders (VAT)" value={data.summary?.totalOrders || 0} />
+                    <OnboardingSummaryCard label="Ex-VAT Revenue" value={formatKES(data.summary?.totalExVat || 0)} accent="brand" />
+                    <OnboardingSummaryCard label="VAT Collected" value={formatKES(data.summary?.totalVat || 0)} accent="blue" />
+                    <OnboardingSummaryCard label="Incl. VAT Revenue" value={formatKES(data.summary?.totalInclVat || 0)} accent="green" />
+                  </div>
+
+                  <DataTable
+                    title="Monthly VAT Summary (KRA Filing)"
+                    headers={[
+                      { label: 'Month' },
+                      { label: 'Orders', right: true },
+                      { label: 'Ex-VAT (KES)', right: true },
+                      { label: 'VAT 16% (KES)', right: true },
+                      { label: 'Incl. VAT (KES)', right: true },
+                    ]}
+                    rows={data.rows || []}
+                    renderRow={(row, i) => (
+                      <tr key={i} className="hover:bg-admin-50 transition-colors">
+                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">{row.period}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.totalOrders}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{formatKES(row.totalExVat)}</td>
+                        <td className="px-5 py-3.5 text-right font-admin font-bold text-brand-700">{formatKES(row.totalVat)}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-900 font-semibold">{formatKES(row.totalInclVat)}</td>
                       </tr>
                     )}
                   />

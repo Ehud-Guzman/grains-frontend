@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, X, SlidersHorizontal, Sparkles } from 'lucide-react'
-import { useOnboarding } from '../../context/OnboardingContext'
+import { Search, X, SlidersHorizontal } from 'lucide-react'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductFilters from '../../components/products/ProductFilters'
@@ -25,29 +24,19 @@ function FilterChip({ label, onRemove }) {
   )
 }
 
-function StoryRail({ products, pagination, startTour }) {
+function StoryRail({ products, pagination }) {
   const railItems = products.slice(0, 10)
 
   return (
     <div className="bg-white border-b border-earth-200">
       <div className="container-page py-4 sm:py-5">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-earth-900">Our Products</h1>
-            <p className="text-earth-500 font-body text-xs sm:text-sm mt-0.5">
-              {pagination
-                ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
-                : 'Browse the latest stock'}
-            </p>
-          </div>
-          <button
-            onClick={() => startTour('public', { force: true })}
-            className="inline-flex items-center gap-2 rounded-full border border-brand-300 bg-brand-50 px-3.5 py-2
-              text-[11px] font-body font-semibold uppercase tracking-[0.16em] text-brand-700 transition-colors hover:bg-brand-100"
-          >
-            <Sparkles size={12} />
-            Tour
-          </button>
+        <div className="mb-3">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-earth-900">Our Products</h1>
+          <p className="text-earth-500 font-body text-xs sm:text-sm mt-0.5">
+            {pagination
+              ? `${pagination.total} product${pagination.total !== 1 ? 's' : ''} available`
+              : 'Browse the latest stock'}
+          </p>
         </div>
 
         {railItems.length > 0 && (
@@ -94,7 +83,6 @@ function StoryRail({ products, pagination, startTour }) {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function CataloguePage() {
-  const { startTour, activeTour, currentStep } = useOnboarding()
   const [searchParams, setSearchParams] = useSearchParams()
   const [products, setProducts]         = useState([])
   const [pagination, setPagination]     = useState(null)
@@ -150,17 +138,6 @@ export default function CataloguePage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  // Auto-open / auto-close filter drawer during the tour's search+filter step on mobile
-  useEffect(() => {
-    const onFilterStep = activeTour === 'public' && currentStep === 2
-    if (onFilterStep && window.innerWidth < 768) {
-      setFiltersOpen(true)
-    } else if (!onFilterStep && activeTour) {
-      // Tour is active but moved past this step — close the drawer
-      setFiltersOpen(false)
-    }
-  }, [activeTour, currentStep])
-
   // Lock body scroll when mobile filters open
   useEffect(() => {
     if (filtersOpen) document.body.style.overflow = 'hidden'
@@ -214,7 +191,7 @@ export default function CataloguePage() {
     <div className="min-h-screen bg-cream">
 
       <div data-tour="public-shop-search">
-        <StoryRail products={products} pagination={pagination} startTour={startTour} />
+        <StoryRail products={products} pagination={pagination} />
 
         <div className="container-page py-6">
 
