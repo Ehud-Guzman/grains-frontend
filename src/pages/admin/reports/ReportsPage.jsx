@@ -325,7 +325,8 @@ export default function ReportsPage() {
     try {
       const typeMap = {
         sales: 'sales', products: 'best-sellers',
-        stock: 'stock-valuation', customers: 'customers', orders: 'orders', onboarding: 'onboarding'
+        stock: 'stock-valuation', customers: 'customers', orders: 'orders', onboarding: 'onboarding',
+        vat: 'vat'
       }
       const res = await adminReportService.exportCSV(typeMap[tab], { period })
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }))
@@ -528,7 +529,7 @@ export default function ReportsPage() {
               {tab === 'stock' && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
-                    <KpiTile label="Total Stock Value" value={formatKES(data.totalStockValueKES)} />
+                    <KpiTile label="Stock Value (Selling Price)" value={formatKES(data.totalStockValueKES)} />
                     <KpiTile label="Line Items"        value={data.itemCount} />
                   </div>
 
@@ -653,9 +654,9 @@ export default function ReportsPage() {
               {tab === 'margins' && (
                 <>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <KpiTile label="Total Revenue"      value={formatKES(data.summary?.totalRevenue)} />
-                    <KpiTile label="Estimated Cost"     value={formatKES(data.summary?.totalCost)} />
-                    <KpiTile label="Gross Profit"       value={formatKES(data.summary?.totalGrossProfit)} />
+                    <KpiTile label="Total Revenue (all SKUs)"        value={formatKES(data.summary?.totalRevenue)} />
+                    <KpiTile label="Estimated Cost (costed SKUs)"    value={formatKES(data.summary?.totalCost)} />
+                    <KpiTile label="Gross Profit (costed SKUs)"      value={formatKES(data.summary?.totalGrossProfit)} />
                     <KpiTile label="Overall Margin"
                       value={data.summary?.overallMarginPct != null ? `${data.summary.overallMarginPct}%` : '—'} />
                   </div>
@@ -818,14 +819,16 @@ export default function ReportsPage() {
                       { label: 'Month' },
                       { label: 'Orders', right: true },
                       { label: 'Ex-VAT (KES)', right: true },
-                      { label: 'VAT 16% (KES)', right: true },
+                      { label: `VAT (KES)`, right: true },
                       { label: 'Incl. VAT (KES)', right: true },
                     ]}
                     rows={data.rows || []}
                     renderRow={(row, i) => (
                       <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">{row.period}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.totalOrders}</td>
+                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">
+                          {new Date(row.year, row.month - 1).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })}
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.orders}</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{formatKES(row.totalExVat)}</td>
                         <td className="px-5 py-3.5 text-right font-admin font-bold text-brand-700">{formatKES(row.totalVat)}</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-900 font-semibold">{formatKES(row.totalInclVat)}</td>

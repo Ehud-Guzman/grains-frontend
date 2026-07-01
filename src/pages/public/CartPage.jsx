@@ -13,7 +13,7 @@ export default function CartPage() {
   const { dismissedTips, dismissTip } = useOnboarding()
   const vatEnabled = orderSettings.vatEnabled === true
   const vatRate    = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
-  const vatAmount  = vatEnabled ? Math.round(total * vatRate) / 100 : 0
+  const vatAmount  = vatEnabled ? Math.round(total * vatRate / 100) : 0
   const showCartTip = !dismissedTips['customer-cart-tip']
 
   if (items.length === 0) return (
@@ -89,7 +89,7 @@ export default function CartPage() {
                   </div>
 
                   <p className="text-brand-600 text-xs font-body font-semibold mb-3">
-                    {formatKES(item.unitPrice)} / bag
+                    {formatKES(item.priceKES)} / bag
                   </p>
 
                   <div className="flex items-center justify-between">
@@ -113,7 +113,7 @@ export default function CartPage() {
 
                     {/* Line total */}
                     <span className="font-display font-bold text-earth-900">
-                      {formatKES(item.unitPrice * item.quantity)}
+                      {formatKES(item.priceKES * item.quantity)}
                     </span>
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export default function CartPage() {
                       {item.productName} ×{item.quantity}
                     </span>
                     <span className="text-earth-900 font-body font-semibold flex-shrink-0">
-                      {formatKES(item.unitPrice * item.quantity)}
+                      {formatKES(item.priceKES * item.quantity)}
                     </span>
                   </div>
                 ))}

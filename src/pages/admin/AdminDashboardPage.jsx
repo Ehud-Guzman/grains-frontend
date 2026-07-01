@@ -190,9 +190,9 @@ export default function AdminDashboardPage() {
               value={kpis?.pendingOrders ?? 0}
               badge={kpis?.pendingOrders}
               link="/admin/orders?status=pending" />
-            <KpiCard icon={DollarSign}   label="Revenue Today"   color="green"
+            <KpiCard icon={DollarSign}   label="Revenue Today (gross)"  color="green"
               value={formatKES(kpis?.revenueToday ?? 0)} />
-            <KpiCard icon={TrendingUp}   label="This Month"      color="brand"
+            <KpiCard icon={TrendingUp}   label="This Month (gross)"     color="brand"
               value={formatKES(kpis?.revenueThisMonth ?? 0)} />
             <KpiCard icon={AlertTriangle} label="Low Stock Items" color="red"
               value={kpis?.lowStockCount ?? 0}

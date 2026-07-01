@@ -84,6 +84,8 @@ export default function AdminOrderDetailPage() {
   const [confirmingPayment, setConfirmingPayment] = useState(false)
   const [mpesaRef, setMpesaRef] = useState('')
   const [showMpesaRefInput, setShowMpesaRefInput] = useState(false)
+  const [showCashAmountInput, setShowCashAmountInput] = useState(false)
+  const [cashReceivedAmount, setCashReceivedAmount] = useState('')
   const [etimsResubmitting, setEtimsResubmitting] = useState(false)
 
   const fetchOrder = async () => {
@@ -153,11 +155,14 @@ export default function AdminOrderDetailPage() {
     } finally { setActionLoading(false) }
   }
 
-  const handleConfirmPayment = async () => {
+  const handleConfirmPayment = async (receivedAmount) => {
     setConfirmingPayment(true)
     try {
-      await adminPaymentService.confirmManual(id)
+      const amount = receivedAmount !== '' && receivedAmount != null ? Number(receivedAmount) : null
+      await adminPaymentService.confirmManual(id, null, amount)
       toast.success('Payment marked as received')
+      setShowCashAmountInput(false)
+      setCashReceivedAmount('')
       fetchOrder()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to confirm payment')
@@ -359,6 +364,10 @@ export default function AdminOrderDetailPage() {
 
               {/* Totals */}
               <div className="border-t border-admin-100 bg-admin-50/50 px-5 py-4 space-y-2">
+                <div className="flex justify-between text-sm font-admin">
+                  <span className="text-admin-500">Subtotal</span>
+                  <span className="text-admin-700">{formatKES(order.subtotal)}</span>
+                </div>
                 {order.deliveryFee > 0 && (
                   <div className="flex justify-between text-sm font-admin">
                     <span className="text-admin-500 flex items-center gap-1.5">
@@ -367,7 +376,19 @@ export default function AdminOrderDetailPage() {
                     <span className="text-admin-700">{formatKES(order.deliveryFee)}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center pt-1">
+                {order.vatEnabled && order.vatAmount > 0 && (
+                  <div className="flex justify-between text-sm font-admin">
+                    <span className="text-admin-500">VAT ({order.vatRate}%)</span>
+                    <span className="text-admin-700">{formatKES(order.vatAmount)}</span>
+                  </div>
+                )}
+                {order.couponDiscount > 0 && (
+                  <div className="flex justify-between text-sm font-admin">
+                    <span className="text-green-600">Discount ({order.couponCode})</span>
+                    <span className="text-green-600">−{formatKES(order.couponDiscount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-1 border-t border-admin-100 mt-1">
                   <span className="font-admin font-bold text-admin-800">Total</span>
                   <span className="font-admin font-bold text-brand-600 text-xl">
                     {formatKES(order.total)}
@@ -596,16 +617,50 @@ export default function AdminOrderDetailPage() {
                   !['cancelled', 'rejected'].includes(order.status) &&
                   ['pickup', 'delivery'].includes(order.paymentMethod) &&
                   ['unpaid', 'pending'].includes(order.paymentStatus) && (
-                  <button
-                    onClick={handleConfirmPayment}
-                    disabled={confirmingPayment}
-                    className="flex items-center justify-center gap-2 w-full mt-3 py-2.5
-                      bg-green-600 text-white rounded-xl text-sm font-admin font-semibold
-                      hover:bg-green-700 disabled:opacity-50 transition-all active:scale-[0.98]
-                      shadow-sm">
-                    <Check size={14} />
-                    {confirmingPayment ? 'Confirming…' : 'Confirm Payment Received'}
-                  </button>
+                  <div className="mt-3">
+                    {!showCashAmountInput ? (
+                      <button
+                        onClick={() => setShowCashAmountInput(true)}
+                        className="flex items-center justify-center gap-2 w-full py-2.5
+                          bg-green-600 text-white rounded-xl text-sm font-admin font-semibold
+                          hover:bg-green-700 transition-all active:scale-[0.98] shadow-sm">
+                        <Check size={14} /> Confirm Payment Received
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs font-admin text-admin-500">
+                          Amount received (KES) — leave blank if exact:
+                        </p>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={cashReceivedAmount}
+                          onChange={e => setCashReceivedAmount(e.target.value)}
+                          placeholder={String(order.total)}
+                          className="w-full border border-admin-200 rounded-lg px-3 py-2 text-sm
+                            font-admin text-admin-800 focus:outline-none focus:ring-2
+                            focus:ring-green-400 focus:border-transparent bg-admin-50"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleConfirmPayment(cashReceivedAmount || order.total)}
+                            disabled={confirmingPayment}
+                            className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm
+                              font-admin font-semibold hover:bg-green-700 disabled:opacity-50
+                              transition-colors">
+                            {confirmingPayment ? 'Confirming…' : 'Confirm'}
+                          </button>
+                          <button
+                            onClick={() => { setShowCashAmountInput(false); setCashReceivedAmount('') }}
+                            className="px-4 py-2 border border-admin-200 text-admin-600
+                              rounded-lg text-sm font-admin hover:bg-admin-50 transition-colors">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Pending M-Pesa notice — callback may have been missed */}

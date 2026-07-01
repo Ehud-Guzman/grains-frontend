@@ -105,7 +105,7 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disable
 export default function CheckoutPage() {
   const { items, subtotal: total, clearCart } = useCart()
   const { user, isAuthenticated } = useAuth()
-  const { orderSettings, isLoading: settingsLoading, hasLoaded } = useAppSettings()
+  const { orderSettings, shopInfo, isLoading: settingsLoading, hasLoaded } = useAppSettings()
   const { dismissedTips, dismissTip, markChecklistItem, markMilestone } = useOnboarding()
   const navigate = useNavigate()
 
@@ -146,8 +146,9 @@ export default function CheckoutPage() {
     : 0
   const vatEnabled     = orderSettings.vatEnabled === true
   const vatRate        = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
-  const vatAmount      = vatEnabled ? Math.round(total * vatRate) / 100 : 0
   const couponDiscount = couponData?.discountAmount ?? 0
+  const vatBase        = vatEnabled ? Math.max(0, total - couponDiscount) : 0
+  const vatAmount      = vatEnabled ? Math.round(vatBase * vatRate / 100) : 0
   const orderTotal     = Math.max(0, total + deliveryFee + vatAmount - couponDiscount)
   const belowMinimum = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
   const availablePaymentOptions = [
@@ -205,7 +206,7 @@ export default function CheckoutPage() {
       if (loading) return
       setShowMpesa(false)
       setLoading(true)
-      paymentService.initiate(placedOrder.orderId, form.mpesaPhone, placedOrder.total)
+      paymentService.initiate(placedOrder.orderId, form.mpesaPhone)
         .then(() => { setLoading(false); setShowMpesa(true) })
         .catch(err => {
           setLoading(false)
@@ -432,7 +433,7 @@ export default function CheckoutPage() {
       if (form.paymentMethod === 'mpesa') {
         setPlacedOrder({ orderId, orderRef, total: orderTotal })
         try {
-          await paymentService.initiate(orderId, form.mpesaPhone, orderTotal)
+          await paymentService.initiate(orderId, form.mpesaPhone)
           setShowMpesa(true)
         } catch (err) {
           const msg = err.response?.data?.message || 'M-Pesa request failed'
@@ -609,7 +610,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="space-y-3">
                     <OptionCard icon={Store} label="Pickup from Shop"
-                      desc="Collect your order from our location in Bungoma"
+                      desc={`Collect your order from our location in ${shopInfo?.location || 'our shop'}`}
                       checked={form.deliveryMethod === 'pickup'}
                       onChange={() => handleDeliveryMethodChange('pickup')} />
                     <OptionCard icon={Truck} label="Home Delivery"

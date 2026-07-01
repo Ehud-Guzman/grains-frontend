@@ -133,6 +133,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
   const itemCount   = order.orderItems?.length || 0
   const hasDelivery = order.deliveryFee > 0
   const hasVat      = order.vatEnabled && order.vatAmount > 0
+  const hasDiscount = order.couponDiscount > 0
 
   return (
     <div className="bg-white font-body" style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -295,13 +296,14 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
           <div style={{ width: '240px' }}>
             {[
-              { label: 'Subtotal',                                     value: formatKES(order.subtotal || order.total) },
-              ...(hasVat      ? [{ label: `VAT (${order.vatRate}%)`,   value: formatKES(order.vatAmount) }] : []),
-              ...(hasDelivery ? [{ label: 'Delivery Fee',              value: formatKES(order.deliveryFee) }] : []),
+              { label: 'Subtotal',                                                           value: formatKES(order.subtotal || order.total) },
+              ...(hasVat      ? [{ label: `VAT (${order.vatRate}%)`,                          value: formatKES(order.vatAmount) }] : []),
+              ...(hasDelivery ? [{ label: 'Delivery Fee',                                     value: formatKES(order.deliveryFee) }] : []),
+              ...(hasDiscount ? [{ label: `Discount (${order.couponCode})`, isDiscount: true, value: `−${formatKES(order.couponDiscount)}` }] : []),
             ].map(row => (
               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                <span style={{ color: '#6B7280', fontSize: '12px' }}>{row.label}</span>
-                <span style={{ color: '#111827', fontSize: '12px' }}>{row.value}</span>
+                <span style={{ color: row.isDiscount ? '#16a34a' : '#6B7280', fontSize: '12px' }}>{row.label}</span>
+                <span style={{ color: row.isDiscount ? '#16a34a' : '#111827', fontSize: '12px' }}>{row.value}</span>
               </div>
             ))}
             <div style={{ borderTop: '1px solid #111827', marginTop: '6px', paddingTop: '8px',
