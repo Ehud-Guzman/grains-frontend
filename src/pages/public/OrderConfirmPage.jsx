@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSearchParams, useLocation, Link } from 'react-router-dom'
-import { CheckCircle, Package, Phone, Copy, Check, ArrowRight, MapPin, CreditCard, Truck, MessageSquare } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Package, Phone, Copy, Check, ArrowRight, MapPin, CreditCard, Truck, MessageSquare } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -18,7 +18,10 @@ export function OrderConfirmPage() {
   const phone          = state?.phone
   const name           = state?.name
 
-  const isMpesa = paymentMethod === 'mpesa'
+  // paymentFailed: initiate() itself failed, no STK push was ever sent.
+  // paymentTimeout: STK push was sent but the customer never completed it.
+  const paymentIssue = Boolean(state?.paymentFailed || state?.paymentTimeout)
+  const isMpesa = paymentMethod === 'mpesa' && !paymentIssue
 
   const handleCopy = () => {
     if (!ref) return
@@ -31,7 +34,7 @@ export function OrderConfirmPage() {
   return (
     <div className="min-h-screen bg-cream flex flex-col">
 
-      {/* ── Success hero ────────────────────────────────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 pt-12 pb-24 text-center px-4 relative overflow-hidden">
         {/* Decorative rings */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -42,22 +45,38 @@ export function OrderConfirmPage() {
         </div>
 
         <div className="relative">
-          {/* Animated success icon */}
+          {/* Animated status icon */}
           <div className="relative inline-flex items-center justify-center mb-5">
-            <div className="absolute w-24 h-24 rounded-full bg-green-500/10 animate-ping" />
-            <div className="absolute w-20 h-20 rounded-full bg-green-500/15" />
-            <div className="w-16 h-16 bg-green-500/20 border-2 border-green-400/40 rounded-full
-              flex items-center justify-center relative z-10">
-              <CheckCircle size={34} className="text-green-400" />
-            </div>
+            {paymentIssue ? (
+              <>
+                <div className="absolute w-20 h-20 rounded-full bg-amber-500/15" />
+                <div className="w-16 h-16 bg-amber-500/20 border-2 border-amber-400/40 rounded-full
+                  flex items-center justify-center relative z-10">
+                  <AlertTriangle size={34} className="text-amber-400" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="absolute w-24 h-24 rounded-full bg-green-500/10 animate-ping" />
+                <div className="absolute w-20 h-20 rounded-full bg-green-500/15" />
+                <div className="w-16 h-16 bg-green-500/20 border-2 border-green-400/40 rounded-full
+                  flex items-center justify-center relative z-10">
+                  <CheckCircle size={34} className="text-green-400" />
+                </div>
+              </>
+            )}
           </div>
 
           <h1 className="font-display text-3xl font-bold text-cream mb-2">
-            Order Placed!
+            {paymentIssue ? 'Order Received — Payment Not Completed' : 'Order Placed!'}
           </h1>
           <p className="text-white/70 font-body text-sm max-w-xs mx-auto leading-relaxed">
-            {name ? `Thank you, ${name.split(' ')[0]}!` : 'Thank you!'}{' '}
-            We'll review and confirm within <span className="text-white font-semibold">2 hours</span>.
+            {paymentIssue
+              ? `Your order was saved but the M-Pesa payment ${state?.paymentTimeout ? "wasn't completed" : "couldn't be sent"}. Our team will call you shortly to arrange payment.`
+              : <>
+                  {name ? `Thank you, ${name.split(' ')[0]}!` : 'Thank you!'}{' '}
+                  We'll review and confirm within <span className="text-white font-semibold">2 hours</span>.
+                </>}
           </p>
         </div>
       </div>
@@ -129,6 +148,23 @@ export function OrderConfirmPage() {
               <p className="text-green-700 text-xs font-body mt-0.5 leading-relaxed">
                 Check your phone for an STK push prompt. Enter your M-Pesa PIN to complete payment.
                 If you didn't receive it, our team will call to confirm manually.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Payment issue notice ────────────────────────────────────────── */}
+        {paymentIssue && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertTriangle size={15} className="text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-body font-semibold text-amber-800">Payment Not Confirmed</p>
+              <p className="text-amber-700 text-xs font-body mt-0.5 leading-relaxed">
+                Your order is saved with reference <strong>{ref}</strong>, but M-Pesa payment
+                hasn't gone through yet. It will only be processed once payment is confirmed —
+                our team will call {phone || 'you'} shortly to sort it out.
               </p>
             </div>
           </div>
