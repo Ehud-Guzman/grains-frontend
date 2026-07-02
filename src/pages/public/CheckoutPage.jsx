@@ -249,7 +249,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !placedOrder) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center px-4">
         <div className="text-center">

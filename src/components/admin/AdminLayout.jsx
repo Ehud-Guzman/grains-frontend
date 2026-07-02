@@ -37,6 +37,7 @@ const BUSINESS_NAV = [
     group: 'System',
     items: [
       { to: '/admin/settings',  icon: Settings2,       label: 'Settings',      roles: ['admin'] },
+      { to: '/admin/etims',     icon: FileCheck,       label: 'KRA eTIMS',     permission: 'manage_etims' },
     ]
   },
 ]
@@ -105,6 +106,7 @@ const PAGE_TITLES = {
   '/admin/logs':      'Activity Log',
   '/admin/users':     'User Management',
   '/admin/backups':   'Backups',
+  '/admin/etims':     'KRA eTIMS',
 }
 
 export default function AdminLayout() {
@@ -180,7 +182,10 @@ export default function AdminLayout() {
         {(user?.role === 'superadmin' ? SUPERADMIN_NAV : BUSINESS_NAV).map(group => {
           const items = user?.role === 'superadmin'
             ? group.items
-            : group.items.filter(i => i.roles?.includes(user?.role))
+            : group.items.filter(i =>
+                i.roles?.includes(user?.role) ||
+                (i.permission && user?.customPermissions?.includes(i.permission))
+              )
           if (items.length === 0) return null
           return (
             <div key={group.group}>

@@ -261,7 +261,7 @@ export default function App() {
                 </ProtectedRoute>
               } />
               <Route path="etims" element={
-                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES} requirePermission="manage_etims">
                   <EtimsPage />
                 </ProtectedRoute>
               } />

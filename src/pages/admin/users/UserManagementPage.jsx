@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 
 const ALL_PERMISSIONS = [
   { key: 'manage_branches', label: 'Manage Branches', desc: 'Create, edit, and deactivate branches' },
+  { key: 'manage_etims', label: 'Manage eTIMS', desc: 'Configure KRA eTIMS integration settings (TIN, device ID, base URL)' },
 ]
 
 const ROLES = ['staff', 'supervisor', 'admin', 'superadmin']
