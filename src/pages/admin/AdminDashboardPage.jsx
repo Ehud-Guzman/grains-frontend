@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ShoppingCart, TrendingUp, DollarSign, Package, AlertTriangle,
   Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight,
-  Banknote, Hourglass
+  Banknote, Hourglass, ListOrdered
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -97,6 +97,8 @@ function BusinessDashboardPage() {
   const [revenueData, setRevenueData]     = useState([])
   const [revPeriod, setRevPeriod]         = useState('month')
   const [revLoading, setRevLoading]       = useState(true)
+  const [trending, setTrending]           = useState([])
+  const [trendingLoading, setTrendingLoading] = useState(true)
   const adminChecklist = getChecklist('admin').filter(item => {
     if (item.id === 'reports') return ['supervisor', 'admin'].includes(user?.role)
     if (item.id === 'settings') return user?.role === 'admin'
@@ -143,6 +145,14 @@ function BusinessDashboardPage() {
   }, [])
 
   useEffect(() => { fetchRevenue(revPeriod) }, [revPeriod])
+
+  useEffect(() => {
+    setTrendingLoading(true)
+    adminReportService.getBestSellers({ period: 'week', limit: 5 })
+      .then(res => setTrending(res.data?.data?.products || []))
+      .catch(() => setTrending([]))
+      .finally(() => setTrendingLoading(false))
+  }, [])
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -210,13 +220,16 @@ function BusinessDashboardPage() {
         )}
       </div>
 
-      {/* ── Cash Flow Row ──────────────────────────────────────────────────── */}
+      {/* ── Cash Flow Row (placed vs paid vs pending) ────────────────────── */}
       {(loading || kpis?.cashFlow) && (
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {loading ? (
-            Array.from({ length: 2 }).map((_, i) => <KpiSkeleton key={i} />)
+            Array.from({ length: 3 }).map((_, i) => <KpiSkeleton key={i} />)
           ) : (
             <>
+              <KpiCard icon={ListOrdered} label="Placed This Month" color="blue"
+                value={formatKES((kpis.cashFlow?.paidRevenue ?? 0) + (kpis.cashFlow?.unpaidRevenue ?? 0))}
+                sub={`${(kpis.cashFlow?.paidOrders ?? 0) + (kpis.cashFlow?.unpaidOrders ?? 0)} order(s) total`} />
               <KpiCard icon={Banknote}  label="Paid This Month"   color="green"
                 value={formatKES(kpis.cashFlow?.paidRevenue ?? 0)}
                 sub={`${kpis.cashFlow?.paidOrders ?? 0} order${kpis.cashFlow?.paidOrders !== 1 ? 's' : ''} confirmed`} />
@@ -468,6 +481,46 @@ function BusinessDashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Most Moving Products (last 7 days) ───────────────────────────── */}
+      <div className="bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden mt-5">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 bg-admin-50/40">
+          <div>
+            <h2 className="font-admin font-bold text-admin-900 text-sm">Most Moving Products</h2>
+            <p className="text-admin-400 text-xs font-admin mt-0.5">By units sold, last 7 days</p>
+          </div>
+          <Link to="/admin/reports"
+            className="flex items-center gap-1 text-brand-600 hover:text-brand-700
+              text-xs font-admin font-semibold transition-colors">
+            Full report <ArrowUpRight size={13} />
+          </Link>
+        </div>
+
+        {trendingLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 p-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-16 bg-admin-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : trending.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-admin-500 font-admin font-medium text-sm">No sales in the last 7 days</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-admin-50">
+            {trending.map((p, i) => (
+              <div key={i} className="px-4 py-4">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-50 text-brand-700 text-xs font-admin font-bold mb-2">
+                  {i + 1}
+                </span>
+                <p className="text-admin-800 text-xs font-admin font-semibold truncate">{p.productName}</p>
+                <p className="text-admin-400 text-xs font-admin truncate">{p.variety} · {p.packaging}</p>
+                <p className="text-brand-700 text-sm font-admin font-bold mt-1.5">{p.unitsSold} sold</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

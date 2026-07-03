@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Users, LogOut,
   Menu, X, Layers, TrendingUp, UserCog, Shield, Settings2,
   Bell, ChevronRight, GitBranch, Eye, Archive, Truck, ClipboardList,
-  Tag, Megaphone, FileCheck,
+  Tag, Megaphone, FileCheck, AlertTriangle, Send,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -20,6 +20,7 @@ const BUSINESS_NAV = [
       { to: '/admin/orders',    icon: ShoppingCart,    label: 'Orders',        roles: ['staff','supervisor','admin'] },
       { to: '/admin/stock',          icon: Layers,          label: 'Stock',         roles: ['staff','supervisor','admin'], end: true },
       { to: '/admin/stock/intake',   icon: ClipboardList,   label: 'Intake',        roles: ['supervisor','admin'] },
+      { to: '/admin/alerts',         icon: AlertTriangle,   label: 'Alerts',        roles: ['supervisor','admin'] },
     ]
   },
   {
@@ -30,6 +31,7 @@ const BUSINESS_NAV = [
       { to: '/admin/customers',   icon: Users,       label: 'Customers',   roles: ['supervisor','admin'] },
       { to: '/admin/coupons',     icon: Tag,         label: 'Coupons',     roles: ['supervisor','admin'] },
       { to: '/admin/promotions',  icon: Megaphone,   label: 'Promotions',  roles: ['admin'] },
+      { to: '/admin/broadcast',  icon: Send,        label: 'Broadcast',   roles: ['admin'] },
       { to: '/admin/reports',     icon: TrendingUp,  label: 'Reports',     roles: ['supervisor','admin'] },
     ]
   },
@@ -60,6 +62,7 @@ const SUPERADMIN_NAV = [
       { to: '/admin/stock/intake',   icon: ClipboardList,   label: 'Intake',    viewOnly: true },
       { to: '/admin/customers', icon: Users,           label: 'Customers', viewOnly: true },
       { to: '/admin/reports',   icon: TrendingUp,      label: 'Reports',   viewOnly: true },
+      { to: '/admin/alerts',    icon: AlertTriangle,   label: 'Alerts',    viewOnly: true },
     ]
   },
   {
@@ -102,6 +105,8 @@ const PAGE_TITLES = {
   '/admin/products':  'Products',
   '/admin/customers': 'Customers',
   '/admin/reports':   'Reports',
+  '/admin/alerts':    'Alerts',
+  '/admin/broadcast': 'SMS Broadcast',
   '/admin/settings':  'Settings',
   '/admin/logs':      'Activity Log',
   '/admin/users':     'User Management',

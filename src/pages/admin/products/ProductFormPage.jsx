@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Trash2, Upload, X,
-  ChevronDown, ChevronUp, Save, Eye, Package, Info
+  ChevronDown, ChevronUp, Save, Eye, Package, Info, Layers
 } from 'lucide-react'
 import { adminProductService } from '../../../services/admin/product.service'
 import Spinner from '../../../components/ui/Spinner'
@@ -15,10 +15,20 @@ const CATEGORIES = [
   'Animal Feed & Byproducts', 'Oil Seeds & Nuts', 'Fresh Dry Food Add-ons',
   'Packaged Branded Products', 'Other'
 ]
+const SEASON_TAGS = [
+  { value: '', label: 'None' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'harvesting', label: 'Harvesting' },
+  { value: 'drought', label: 'Drought' },
+  { value: 'planting', label: 'Planting' },
+  { value: 'import_hike', label: 'Import Hike' }
+]
+
+const emptyTier = () => ({ minQty: '', priceKES: '', _id: Math.random().toString(36).slice(2) })
 
 const emptyPackaging = () => ({
   size: '50kg', customSize: '', priceKES: '', costPriceKES: '', stock: '',
-  lowStockThreshold: 10, quoteOnly: false,
+  lowStockThreshold: 10, quoteOnly: false, pricingTiers: [],
   _id: Math.random().toString(36).slice(2)
 })
 
@@ -236,6 +246,61 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
           Customers will see a "Request a Quote" button instead of a price
         </p>
       )}
+
+      {!pkg.quoteOnly && (
+        <div className="mt-3 pt-3 border-t border-admin-100">
+          <div className="flex items-center justify-between mb-2">
+            <span className="flex items-center gap-1.5 text-xs font-admin font-semibold text-admin-600">
+              <Layers size={12} /> Bulk Pricing Tiers <span className="text-admin-300 font-normal">(optional)</span>
+            </span>
+            <button type="button"
+              onClick={() => onChange({ ...pkg, pricingTiers: [...(pkg.pricingTiers || []), emptyTier()] })}
+              className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-admin font-medium">
+              <Plus size={12} /> Add Tier
+            </button>
+          </div>
+
+          {(pkg.pricingTiers || []).length === 0 ? (
+            <p className="text-xs text-admin-400 font-admin">
+              No tiers — customers always pay the sale price above regardless of quantity.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {pkg.pricingTiers.map((tier, i) => (
+                <div key={tier._id} className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Input type="number" min="1" placeholder="Min qty (e.g. 10)"
+                      value={tier.minQty}
+                      onChange={e => onChange({
+                        ...pkg,
+                        pricingTiers: pkg.pricingTiers.map(t => t._id === tier._id ? { ...t, minQty: e.target.value } : t)
+                      })} />
+                  </div>
+                  <span className="text-admin-300 text-xs">→</span>
+                  <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400 text-xs font-admin">KES</span>
+                    <Input type="number" min="0" placeholder="Price per unit"
+                      value={tier.priceKES}
+                      onChange={e => onChange({
+                        ...pkg,
+                        pricingTiers: pkg.pricingTiers.map(t => t._id === tier._id ? { ...t, priceKES: e.target.value } : t)
+                      })}
+                      className="pl-10" />
+                  </div>
+                  <button type="button"
+                    onClick={() => onChange({ ...pkg, pricingTiers: pkg.pricingTiers.filter(t => t._id !== tier._id) })}
+                    className="p-2 text-admin-400 hover:text-red-500 transition-colors flex-shrink-0">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+              <p className="text-xs text-admin-400 font-admin">
+                Applied at checkout when quantity ≥ Min qty. Highest matching tier wins.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -365,6 +430,7 @@ export default function ProductFormPage() {
   const [form, setForm]         = useState({
     name: '', category: '', customCategory: '',
     description: '', imageURLs: [], isActive: false,
+    seasonTag: '',
     varieties: [emptyVariety()]
   })
 
@@ -394,7 +460,11 @@ export default function ProductFormPage() {
               costPriceKES: pkg.costPriceKES ?? '',
               stock: pkg.stock ?? '',
               lowStockThreshold: pkg.lowStockThreshold ?? 10,
-              quoteOnly: pkg.quoteOnly || false
+              quoteOnly: pkg.quoteOnly || false,
+              pricingTiers: (pkg.pricingTiers || []).map(t => ({
+                minQty: t.minQty ?? '', priceKES: t.priceKES ?? '',
+                _id: Math.random().toString(36).slice(2)
+              }))
             }))
           }))
         })
@@ -437,6 +507,7 @@ export default function ProductFormPage() {
     description: form.description.trim(),
     imageURLs: form.imageURLs,
     isActive,
+    seasonTag: form.seasonTag || undefined,
     varieties: form.varieties.map(v => ({
       varietyName: v.varietyName.trim(),
       description: v.description.trim(),
@@ -447,7 +518,10 @@ export default function ProductFormPage() {
         costPriceKES: pkg.costPriceKES !== '' ? (Number(pkg.costPriceKES) || null) : null,
         stock: pkg.quoteOnly ? null : (Number(pkg.stock) || 0),
         lowStockThreshold: Number(pkg.lowStockThreshold) || 10,
-        quoteOnly: pkg.quoteOnly
+        quoteOnly: pkg.quoteOnly,
+        pricingTiers: pkg.quoteOnly ? [] : (pkg.pricingTiers || [])
+          .filter(t => t.minQty !== '' && t.priceKES !== '')
+          .map(t => ({ minQty: Number(t.minQty), priceKES: Number(t.priceKES) }))
       }))
     }))
   })
@@ -602,6 +676,18 @@ export default function ProductFormPage() {
             Set <strong>Quote Only</strong> on Bulk sizes — customers see "Request a Quote" instead of a price.
             Prices of <strong>0</strong> or empty will show as "Contact us".
           </p>
+        </div>
+
+        {/* ── SEASON CONTEXT ──────────────────────────────────────────── */}
+        <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
+          <Field label="Market Season Context"
+            hint="Tags any price change made in this save on the price-history chart (e.g. a price rise during a drought). Leave as None for routine updates.">
+            <Select value={form.seasonTag}
+              onChange={e => setForm(f => ({ ...f, seasonTag: e.target.value }))}
+              className="max-w-xs">
+              {SEASON_TAGS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </Select>
+          </Field>
         </div>
       </div>
 

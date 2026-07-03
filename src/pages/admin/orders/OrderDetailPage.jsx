@@ -540,6 +540,14 @@ export default function AdminOrderDetailPage() {
               ['preparing', 'out_for_delivery'].includes(order.status) && (
               <Card title="Assign Driver">
                 <div className="p-4 space-y-3">
+                  {order.preferredDriverId && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl">
+                      <Truck size={13} className="text-blue-600" />
+                      <span className="text-xs font-admin font-semibold text-blue-700">
+                        Customer requested: {order.preferredDriverId.name}
+                      </span>
+                    </div>
+                  )}
                   {order.driverId && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
                       <Truck size={13} className="text-green-600" />

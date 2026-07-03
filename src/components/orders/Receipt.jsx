@@ -18,7 +18,7 @@ const STATUS_CFG = {
 export default function Receipt({ order, variant = 'customer', onClose }) {
   const { shopInfo } = useAppSettings()
   const isAdmin       = variant === 'admin'
-  const [receiptConfig, setReceiptConfig] = useState({ kraPin: '', receiptFooterNote: '' })
+  const [receiptConfig, setReceiptConfig] = useState({ kraPin: '', receiptFooterNote: '', cuSerialNumber: '' })
 
   useEffect(() => {
     publicSettingsService.getReceiptConfig()
@@ -32,7 +32,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
 
-  const { kraPin, receiptFooterNote } = receiptConfig
+  const { kraPin, receiptFooterNote, cuSerialNumber } = receiptConfig
   const customerName  = order.userId?.name  || order.guestId?.name  || order.name  || '—'
   const customerPhone = order.userId?.phone || order.guestId?.phone || order.phone || '—'
   const statusCfg     = STATUS_CFG[order.status] || STATUS_CFG.pending
@@ -114,6 +114,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
                     order={order} isAdmin={isAdmin} statusCfg={statusCfg}
                     customerName={customerName} customerPhone={customerPhone}
                     shopInfo={shopInfo} kraPin={kraPin} receiptFooterNote={receiptFooterNote}
+                    cuSerialNumber={cuSerialNumber}
                   />
                 </div>
               </div>
@@ -135,11 +136,13 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
 }
 
 // ── RECEIPT BODY ──────────────────────────────────────────────────────────────
-function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, shopInfo, kraPin, receiptFooterNote }) {
+function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, shopInfo, kraPin, receiptFooterNote, cuSerialNumber }) {
   const itemCount   = order.orderItems?.length || 0
   const hasDelivery = order.deliveryFee > 0
   const hasVat      = order.vatEnabled && order.vatAmount > 0
   const hasDiscount = order.couponDiscount > 0
+  const invoiceNumber = order.etimsInvoiceNumber || order.orderRef
+  const etimsConfirmed = order.etimsStatus === 'submitted' && order.etimsControlNumber
 
   return (
     <div className="bg-white font-body" style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -237,6 +240,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <tbody>
                 {[
+                  ['Invoice No.', invoiceNumber],
                   ['Reference', order.orderRef],
                   ['Date',      formatDate(order.createdAt)],
                   ['Items',     `${itemCount} item${itemCount !== 1 ? 's' : ''}`],
@@ -432,6 +436,36 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
                 color: '#111827', letterSpacing: '0.08em' }}>
                 {kraPin}
               </span>
+            </div>
+          )}
+
+          {/* eTIMS fiscal zone — CU serial + QR placeholder (real QR embeds once KRA OSCU credentials go live) */}
+          {kraPin && (
+            <div style={{ marginTop: '12px', borderTop: '1px dashed #E5E7EB', paddingTop: '12px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontSize: '9px', fontWeight: 700, color: '#6B7280',
+                  letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 3px' }}>
+                  CU Serial No.
+                </p>
+                <p style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 600, color: '#111827', margin: 0 }}>
+                  {cuSerialNumber || 'Pending eTIMS setup'}
+                </p>
+                {etimsConfirmed && (
+                  <p style={{ fontSize: '10px', fontFamily: 'monospace', color: '#4B5563', margin: '4px 0 0' }}>
+                    Control No. {order.etimsControlNumber}
+                  </p>
+                )}
+              </div>
+              <div style={{
+                width: '56px', height: '56px', border: '1.5px dashed #D1D5DB', borderRadius: '6px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <span style={{ fontSize: '7px', fontWeight: 700, color: '#9CA3AF',
+                  letterSpacing: '0.05em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3 }}>
+                  eTIMS<br />QR
+                </span>
+              </div>
             </div>
           )}
         </div>

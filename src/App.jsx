@@ -20,6 +20,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 const HomePage = lazy(() => import("./pages/public/HomePage"));
 const CataloguePage = lazy(() => import("./pages/public/CataloguePage"));
 const ProductPage = lazy(() => import("./pages/public/ProductPage"));
+const PriceComparisonPage = lazy(() => import("./pages/public/PriceComparisonPage"));
 const CartPage = lazy(() => import("./pages/public/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/public/CheckoutPage"));
 const OrderConfirmPage = lazy(() => import("./pages/public/OrderConfirmPage").then(m => ({ default: m.OrderConfirmPage })));
@@ -32,6 +33,7 @@ const CustomerDashboardPage = lazy(() => import("./pages/customer/DashboardPage"
 const CustomerOrderDetailPage = lazy(() => import("./pages/customer/OrderDetailPage"));
 const CustomerProfilePage = lazy(() => import("./pages/customer/ProfilePage"));
 const SavedListsPage = lazy(() => import("./pages/customer/SavedListsPage"));
+const MyAlertsPage = lazy(() => import("./pages/customer/MyAlertsPage"));
 
 // Driver portal
 const DriverLayout        = lazy(() => import("./components/driver/DriverLayout"));
@@ -50,6 +52,8 @@ const StockIntakePage = lazy(() => import("./pages/admin/stock/StockIntakePage")
 const CustomerListPage = lazy(() => import("./pages/admin/customers/CustomerListPage"));
 const AdminCustomerProfilePage = lazy(() => import("./pages/admin/customers/CustomerProfilePage"));
 const ReportsPage = lazy(() => import("./pages/admin/reports/ReportsPage"));
+const AdminAlertsPage = lazy(() => import("./pages/admin/alerts/AdminAlertsPage"));
+const BroadcastPage = lazy(() => import("./pages/admin/broadcast/BroadcastPage"));
 const CouponsPage = lazy(() => import("./pages/admin/coupons/CouponsPage"));
 const PromotionsPage = lazy(() => import("./pages/admin/promotions/PromotionsPage"));
 const SettingsPage = lazy(() => import("./pages/admin/settings/SettingsPage"));
@@ -113,6 +117,7 @@ export default function App() {
               <Route path="/"                element={<BranchKeyed><HomePage /></BranchKeyed>} />
               <Route path="/shop"            element={<BranchKeyed><CataloguePage /></BranchKeyed>} />
               <Route path="/shop/:id"        element={<BranchKeyed><ProductPage /></BranchKeyed>} />
+              <Route path="/compare-prices"  element={<PriceComparisonPage />} />
               <Route path="/cart"            element={<CartPage />} />
               <Route path="/checkout"        element={<CheckoutPage />} />
               <Route path="/order-confirmed" element={<OrderConfirmPage />} />
@@ -136,6 +141,11 @@ export default function App() {
               <Route path="/lists" element={
                 <ProtectedRoute requireRole={["customer"]}>
                   <SavedListsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/alerts" element={
+                <ProtectedRoute requireRole={["customer"]}>
+                  <MyAlertsPage />
                 </ProtectedRoute>
               } />
             </Route>
@@ -229,6 +239,12 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
+              <Route path="alerts" element={
+                <ProtectedRoute requireRole={SUPERVISOR_UP}>
+                  <AdminAlertsPage />
+                </ProtectedRoute>
+              } />
+
               <Route path="coupons" element={
                 <ProtectedRoute requireRole={SUPERVISOR_UP}>
                   <CouponsPage />
@@ -238,6 +254,12 @@ export default function App() {
               <Route path="promotions" element={
                 <ProtectedRoute requireRole={ADMIN_UP}>
                   <PromotionsPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="broadcast" element={
+                <ProtectedRoute requireRole={ADMIN_UP}>
+                  <BroadcastPage />
                 </ProtectedRoute>
               } />
 

@@ -220,6 +220,17 @@ export default function CustomerOrderDetailPage() {
                     {order.deliveryAddress}
                   </p>
                 )}
+                {order.deliveryMethod === 'delivery' && order.driverId && (
+                  <p className="text-xs text-earth-600 font-body mt-1">
+                    Rider: <span className="font-semibold">{order.driverId.name}</span>
+                    {order.driverId.vehicleInfo?.type ? ` (${order.driverId.vehicleInfo.type})` : ''}
+                  </p>
+                )}
+                {order.deliveryMethod === 'delivery' && !order.driverId && order.preferredDriverId?.name && (
+                  <p className="text-xs text-earth-400 font-body mt-1">
+                    Requested rider: {order.preferredDriverId.name} (not yet confirmed)
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-start gap-2.5">

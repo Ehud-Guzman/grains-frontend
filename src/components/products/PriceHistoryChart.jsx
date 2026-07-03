@@ -1,7 +1,8 @@
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea,
 } from 'recharts'
-import { Clock, TrendingDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Clock, TrendingDown, Scale } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
 
 // Lazy-loaded from ProductPage so the recharts vendor chunk (~380KB) is only
@@ -23,7 +24,7 @@ const SEASON_STYLE = {
   import_hike: { fill: 'rgba(239,68,68,0.08)',   label: 'Import Hike' },
 }
 
-export default function PriceHistoryChart({ priceHistory, priceRange, onRangeChange, bestTime }) {
+export default function PriceHistoryChart({ priceHistory, priceRange, onRangeChange, bestTime, productId }) {
   const cutoffDays = RANGES.find(r => r.key === priceRange)?.days
   const filtered = cutoffDays
     ? priceHistory.filter(l => new Date(l.changedAt) >= new Date(Date.now() - cutoffDays * 864e5))
@@ -76,18 +77,28 @@ export default function PriceHistoryChart({ priceHistory, priceRange, onRangeCha
             )}
           </div>
 
-          {/* Range selector */}
-          <div className="flex items-center gap-1 bg-earth-50 rounded-xl p-1 border border-earth-100">
-            {RANGES.map(r => (
-              <button key={r.key} onClick={() => onRangeChange(r.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-body font-semibold transition-all ${
-                  priceRange === r.key
-                    ? 'bg-white text-earth-900 shadow-sm border border-earth-100'
-                    : 'text-earth-500 hover:text-earth-700'
-                }`}>
-                {r.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            {productId && (
+              <Link to={`/compare-prices?product=${productId}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-body font-semibold
+                  text-earth-600 border border-earth-200 hover:border-brand-300 hover:text-brand-700 transition-colors">
+                <Scale size={12} /> Compare
+              </Link>
+            )}
+
+            {/* Range selector */}
+            <div className="flex items-center gap-1 bg-earth-50 rounded-xl p-1 border border-earth-100">
+              {RANGES.map(r => (
+                <button key={r.key} onClick={() => onRangeChange(r.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-body font-semibold transition-all ${
+                    priceRange === r.key
+                      ? 'bg-white text-earth-900 shadow-sm border border-earth-100'
+                      : 'text-earth-500 hover:text-earth-700'
+                  }`}>
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   User, Phone, Mail, MapPin, Plus, Trash2,
-  Save, Lock, Edit2, CheckCircle, Package, ArrowLeft, Camera, Star
+  Save, Lock, Edit2, CheckCircle, Package, ArrowLeft, Camera, Star, Receipt, Bell
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useOnboarding } from '../../context/OnboardingContext'
@@ -227,7 +227,7 @@ export default function CustomerProfilePage() {
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
   const [errors, setErrors] = useState({})
-  const [form, setForm] = useState({ name: '', email: '' })
+  const [form, setForm] = useState({ name: '', email: '', kraPin: '' })
   const [addresses, setAddresses] = useState([])
   const [newAddress, setNewAddress] = useState({ label: '', value: '' })
   const [showAddAddress, setShowAddAddress] = useState(false)
@@ -238,7 +238,7 @@ export default function CustomerProfilePage() {
       .then(res => {
         const p = res.data.data
         setProfile(p)
-        setForm({ name: p.name || '', email: p.email || '' })
+        setForm({ name: p.name || '', email: p.email || '', kraPin: p.kraPin || '' })
         setAddresses(p.addresses || [])
       })
       .catch(() => toast.error('Failed to load profile'))
@@ -250,6 +250,8 @@ export default function CustomerProfilePage() {
     if (!form.name.trim()) e.name = 'Name is required'
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       e.email = 'Enter a valid email address'
+    if (form.kraPin && !/^[A-Z]\d{9}[A-Z]$/.test(form.kraPin.toUpperCase()))
+      e.kraPin = 'KRA PIN format: A123456789Z'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -258,7 +260,12 @@ export default function CustomerProfilePage() {
     if (!validate()) return
     setSaving(true)
     try {
-      await authService.updateProfile({ name: form.name.trim(), email: form.email.trim() || null, addresses })
+      await authService.updateProfile({
+        name: form.name.trim(),
+        email: form.email.trim() || null,
+        kraPin: form.kraPin.trim().toUpperCase() || null,
+        addresses
+      })
       updateUser({ name: form.name.trim(), email: form.email.trim() || null })
       markChecklistItem('customer', 'profile')
       markMilestone('customer-profile-complete')
@@ -398,6 +405,12 @@ export default function CustomerProfilePage() {
                 </svg>
                 Browse Shop
               </Link>
+              <Link to="/alerts"
+                className="flex items-center gap-2.5 px-4 py-3 text-sm font-body text-earth-700
+                  hover:bg-earth-50 transition-colors">
+                <Bell size={14} className="text-earth-400" />
+                My Alerts
+              </Link>
             </div>
 
             {/* Contact */}
@@ -448,6 +461,12 @@ export default function CustomerProfilePage() {
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       error={errors.email} />
+                  </Field>
+                  <Field label="KRA PIN" icon={Receipt} error={errors.kraPin}>
+                    <Input placeholder="A123456789Z (optional — for B2B tax receipts)"
+                      value={form.kraPin}
+                      onChange={e => setForm(f => ({ ...f, kraPin: e.target.value.toUpperCase() }))}
+                      error={errors.kraPin} />
                   </Field>
                   <div className="flex gap-2 pt-1">
                     <button onClick={handleSave} disabled={saving}
@@ -516,6 +535,25 @@ export default function CustomerProfilePage() {
                           className="text-sm font-body text-brand-600 hover:text-brand-700 mt-0.5
                             flex items-center gap-1 transition-colors">
                           <Plus size={13} /> Add email address
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* KRA PIN — full width */}
+                  <div className="flex items-start gap-3 sm:col-span-2">
+                    <div className="w-8 h-8 bg-earth-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Receipt size={13} className="text-earth-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-earth-400 font-body uppercase tracking-wide">KRA PIN</p>
+                      {profile?.kraPin ? (
+                        <p className="text-sm font-body font-semibold text-earth-800 mt-0.5">{profile.kraPin}</p>
+                      ) : (
+                        <button onClick={() => setEditing(true)}
+                          className="text-sm font-body text-brand-600 hover:text-brand-700 mt-0.5
+                            flex items-center gap-1 transition-colors">
+                          <Plus size={13} /> Add KRA PIN for B2B tax receipts
                         </button>
                       )}
                     </div>

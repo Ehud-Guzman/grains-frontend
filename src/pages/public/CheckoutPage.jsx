@@ -13,6 +13,7 @@ import { orderService } from '../../services/order.service'
 import { paymentService } from '../../services/payment.service'
 import { couponService } from '../../services/coupon.service'
 import { authService } from '../../services/auth.service'
+import { branchService } from '../../services/branch.service'
 import { publicSettingsService } from '../../services/admin/settings.service'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, isValidKenyanPhone, normalizeKenyanPhone, getCartUnitPrice } from '../../utils/helpers'
@@ -31,13 +32,14 @@ const STEPS = [
 ]
 
 // ── UI ATOMS ──────────────────────────────────────────────────────────────────
-const Field = ({ label, error, required, children }) => (
+const Field = ({ label, error, required, hint, children }) => (
   <div>
     <label className="block text-xs font-body font-semibold text-earth-700 uppercase
       tracking-wide mb-1.5">
       {label}{required && <span className="text-red-400 normal-case font-normal ml-0.5">*</span>}
     </label>
     {children}
+    {hint && !error && <p className="text-earth-400 text-xs mt-1.5 font-body">{hint}</p>}
     {error && (
       <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 font-body">
         <span className="w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />{error}
@@ -144,8 +146,11 @@ export default function CheckoutPage() {
     deliveryAddress:     '',
     paymentMethod:       'pickup',
     mpesaPhone:          user?.phone || '',
-    specialInstructions: ''
+    specialInstructions: '',
+    preferredDriverId:   ''
   })
+
+  const [riders, setRiders] = useState([])
 
   const deliveryFee = form.deliveryMethod === 'delivery'
     ? (locationFeeData?.fee ?? orderSettings.deliveryFee)
@@ -199,16 +204,28 @@ export default function CheckoutPage() {
     authService.getProfile()
       .then(res => {
         const addrs = res.data?.data?.addresses || []
+        const savedKraPin = res.data?.data?.kraPin || ''
         setSavedAddresses(addrs)
         setForm(current => {
-          if (current.deliveryAddress.trim()) return current
           const def = addrs.find(a => a.isDefault) || addrs[0]
-          return def ? { ...current, deliveryAddress: def.value } : current
+          return {
+            ...current,
+            deliveryAddress: current.deliveryAddress.trim() ? current.deliveryAddress : (def ? def.value : current.deliveryAddress),
+            buyerKraPin: current.buyerKraPin.trim() ? current.buyerKraPin : savedKraPin
+          }
         })
       })
       .catch(() => {}) // non-fatal — free-text field still works
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
+
+  // Available riders — only relevant once delivery is chosen and a branch is known
+  useEffect(() => {
+    if (form.deliveryMethod !== 'delivery' || !branchId) { setRiders([]); return }
+    branchService.getRiders(branchId)
+      .then(res => setRiders(res.data?.data || []))
+      .catch(() => setRiders([]))
+  }, [form.deliveryMethod, branchId])
 
   // ── M-PESA CALLBACKS ───────────────────────────────────────────────────────
   const handleMpesaSuccess = useCallback(() => {
@@ -472,6 +489,7 @@ export default function CheckoutPage() {
         deliveryAddress:     form.deliveryAddress || null,
         paymentMethod:       form.paymentMethod,
         specialInstructions: form.specialInstructions || null,
+        preferredDriverId:   (form.deliveryMethod === 'delivery' && form.preferredDriverId) || undefined,
         couponCode: couponData?.code || undefined,
         deliveryCoordinates: deliveryCoordinates ?? undefined,
         orderItems: items.map(i => ({
@@ -802,6 +820,24 @@ export default function CheckoutPage() {
                             }`}
                         />
                       </Field>
+
+                      {/* Preferred rider — optional, admin still confirms the actual assignment */}
+                      {riders.length > 0 && (
+                        <Field label="Preferred Rider" hint="Optional — we'll try to assign them, but availability isn't guaranteed">
+                          <select value={form.preferredDriverId}
+                            onChange={e => set('preferredDriverId', e.target.value)}
+                            className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm font-body
+                              text-earth-800 focus:outline-none focus:ring-2 focus:ring-brand-400
+                              focus:border-transparent transition-all bg-earth-50">
+                            <option value="">No preference</option>
+                            {riders.map(r => (
+                              <option key={r._id} value={r._id}>
+                                {r.name}{r.vehicleInfo?.type ? ` — ${r.vehicleInfo.type}` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                      )}
                     </>
                   )}
 

@@ -572,6 +572,7 @@ export default function ProductPage() {
             priceRange={priceRange}
             onRangeChange={setPriceRange}
             bestTime={bestTime}
+            productId={id}
           />
         </Suspense>
       )}

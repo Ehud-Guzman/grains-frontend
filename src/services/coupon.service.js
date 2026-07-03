@@ -6,6 +6,7 @@ export const couponService = {
 
   // Admin
   getAll:    ()        => api.get('/admin/coupons'),
+  getPerformance: ()   => api.get('/admin/coupons/performance'),
   getById:   (id)      => api.get(`/admin/coupons/${id}`),
   create:    (data)    => api.post('/admin/coupons', data),
   update:    (id, data)=> api.put(`/admin/coupons/${id}`, data),

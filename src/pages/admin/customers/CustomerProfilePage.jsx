@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Phone, Mail, Plus, Lock, Unlock, Building2, FileText } from 'lucide-react'
+import { ArrowLeft, Phone, Mail, Plus, Lock, Unlock, Building2, FileText, Receipt, Printer } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { adminCustomerService } from '../../../services/admin/customer.service'
 import { adminReportService } from '../../../services/admin/report.service'
@@ -8,6 +8,10 @@ import { formatKES, formatDate, getStatusBadgeClass, getStatusLabel } from '../.
 import Spinner from '../../../components/ui/Spinner'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import toast from 'react-hot-toast'
+
+const escapeHtml = (str) => String(str ?? '').replace(/[&<>"']/g, c => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+))
 
 export default function CustomerProfilePage() {
   const { user } = useAuth()
@@ -20,6 +24,10 @@ export default function CustomerProfilePage() {
   const [lockLoading, setLockLoading] = useState(false)
   const [b2bLoading, setB2bLoading] = useState(false)
   const [stmtLoading, setStmtLoading] = useState(false)
+  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const today = new Date().toISOString().slice(0, 10)
+  const [stmtFrom, setStmtFrom] = useState(oneYearAgo)
+  const [stmtTo, setStmtTo] = useState(today)
 
   const fetchProfile = async () => {
     try {
@@ -74,11 +82,11 @@ export default function CustomerProfilePage() {
   const handleDownloadStatement = async () => {
     setStmtLoading(true)
     try {
-      const res = await adminReportService.getCustomerStatement(id, { period: 'year' })
-      const { orders = [], summary = {}, period } = res.data.data || {}
+      const res = await adminReportService.getCustomerStatement(id, { from: stmtFrom, to: stmtTo })
+      const { orders = [], summary = {} } = res.data.data || {}
       const lines = [
         `Customer Statement — ${customer.name}`,
-        `Period: ${period}`,
+        `Period: ${stmtFrom} to ${stmtTo}`,
         `Total Orders: ${summary.totalOrders || 0}`,
         `Total Spend: KES ${(summary.totalSpend || 0).toLocaleString()}`,
         `Total VAT: KES ${(summary.totalVat || 0).toLocaleString()}`,
@@ -93,9 +101,49 @@ export default function CustomerProfilePage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `statement-${customer.name?.replace(/\s+/g, '-')}.csv`
+      a.download = `statement-${customer.name?.replace(/\s+/g, '-')}-${stmtFrom}-to-${stmtTo}.csv`
       a.click()
       URL.revokeObjectURL(url)
+    } catch (err) {
+      toast.error('Could not generate statement')
+    } finally { setStmtLoading(false) }
+  }
+
+  const handlePrintStatement = async () => {
+    setStmtLoading(true)
+    try {
+      const res = await adminReportService.getCustomerStatement(id, { from: stmtFrom, to: stmtTo })
+      const { orders = [], summary = {} } = res.data.data || {}
+      const win = window.open('', '_blank')
+      win.document.write(`
+        <html><head><title>Statement — ${customer.name}</title>
+        <style>
+          body{font-family:Arial,sans-serif;padding:24px;color:#1f2937}
+          h1{font-size:18px;margin-bottom:2px} p.sub{color:#6b7280;margin-top:0;font-size:13px}
+          table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+          th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb}
+          th{background:#f9fafb}
+          .summary{display:flex;gap:24px;margin-top:16px;font-size:13px}
+          .summary div{min-width:120px}
+          .summary strong{display:block;font-size:15px;margin-top:2px}
+        </style></head><body>
+        <h1>Customer Statement — ${escapeHtml(customer.name)}</h1>
+        <p class="sub">${escapeHtml(customer.phone)} ${customer.email ? '· ' + escapeHtml(customer.email) : ''} ${customer.kraPin ? '· KRA PIN: ' + escapeHtml(customer.kraPin) : ''}</p>
+        <p class="sub">Period: ${stmtFrom} to ${stmtTo}</p>
+        <div class="summary">
+          <div>Total Orders<strong>${summary.totalOrders || 0}</strong></div>
+          <div>Total Spend<strong>KES ${(summary.totalSpend || 0).toLocaleString()}</strong></div>
+          <div>Total VAT<strong>KES ${(summary.totalVat || 0).toLocaleString()}</strong></div>
+          <div>Total Discounts<strong>KES ${(summary.totalDiscounts || 0).toLocaleString()}</strong></div>
+        </div>
+        <table><thead><tr><th>Date</th><th>Reference</th><th>Status</th><th>Items</th><th>Total</th></tr></thead>
+        <tbody>${orders.map(o => `<tr><td>${formatDate(o.createdAt)}</td><td>${escapeHtml(o.orderRef)}</td><td>${escapeHtml(o.status)}</td><td>${o.items?.length || 0}</td><td>KES ${(o.total || 0).toLocaleString()}</td></tr>`).join('')}</tbody>
+        </table>
+        </body></html>
+      `)
+      win.document.close()
+      win.focus()
+      setTimeout(() => win.print(), 300)
     } catch (err) {
       toast.error('Could not generate statement')
     } finally { setStmtLoading(false) }
@@ -148,6 +196,11 @@ export default function CustomerProfilePage() {
                   <Mail size={14} className="text-admin-400 flex-shrink-0" />{customer.email}
                 </a>
               )}
+              {customer.kraPin && (
+                <div className="flex items-center gap-2 text-admin-600">
+                  <Receipt size={14} className="text-admin-400 flex-shrink-0" />KRA PIN: {customer.kraPin}
+                </div>
+              )}
             </div>
             {customer.isLocked ? (
               isSuperAdmin && (
@@ -186,22 +239,12 @@ export default function CustomerProfilePage() {
 
           {/* Stats */}
           <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-admin font-semibold text-admin-900">Lifetime Stats</h2>
-              <button
-                onClick={handleDownloadStatement}
-                disabled={stmtLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-admin-50 border border-admin-200
-                  rounded-lg text-xs font-admin font-medium text-admin-700 hover:bg-admin-100
-                  transition-colors disabled:opacity-50"
-              >
-                <FileText size={13} /> {stmtLoading ? 'Generating…' : 'Statement'}
-              </button>
-            </div>
+            <h2 className="font-admin font-semibold text-admin-900 mb-3">Lifetime Stats</h2>
             <div className="space-y-3">
               {[
                 { label: 'Total Orders', value: customer.totalOrders || 0 },
                 { label: 'Total Spend', value: formatKES(customer.totalSpend || 0) },
+                { label: 'VAT Collected', value: formatKES(customer.totalVat || 0) },
                 { label: 'Avg Order Value', value: formatKES(customer.avgOrderValue || 0) },
                 { label: 'First Order', value: formatDate(customer.firstOrderDate) },
                 { label: 'Last Order', value: formatDate(customer.lastOrderDate) },
@@ -211,6 +254,45 @@ export default function CustomerProfilePage() {
                   <span className="font-medium text-admin-800 font-admin">{value}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Statement */}
+          <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
+            <h2 className="font-admin font-semibold text-admin-900 mb-3">Statement</h2>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div>
+                <label className="block text-xs font-admin text-admin-500 mb-1">From</label>
+                <input type="date" value={stmtFrom} max={stmtTo}
+                  onChange={e => setStmtFrom(e.target.value)}
+                  className="w-full border border-admin-200 rounded-lg px-2 py-1.5 text-xs font-admin text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400" />
+              </div>
+              <div>
+                <label className="block text-xs font-admin text-admin-500 mb-1">To</label>
+                <input type="date" value={stmtTo} min={stmtFrom} max={today}
+                  onChange={e => setStmtTo(e.target.value)}
+                  className="w-full border border-admin-200 rounded-lg px-2 py-1.5 text-xs font-admin text-admin-800 focus:outline-none focus:ring-2 focus:ring-brand-400" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDownloadStatement}
+                disabled={stmtLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-admin-50 border border-admin-200
+                  rounded-lg text-xs font-admin font-medium text-admin-700 hover:bg-admin-100
+                  transition-colors disabled:opacity-50"
+              >
+                <FileText size={13} /> CSV
+              </button>
+              <button
+                onClick={handlePrintStatement}
+                disabled={stmtLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-admin-50 border border-admin-200
+                  rounded-lg text-xs font-admin font-medium text-admin-700 hover:bg-admin-100
+                  transition-colors disabled:opacity-50"
+              >
+                <Printer size={13} /> {stmtLoading ? 'Generating…' : 'Print / PDF'}
+              </button>
             </div>
           </div>
 

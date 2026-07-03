@@ -5,6 +5,7 @@ export const adminReportService = {
   getBestSellers: (params) => api.get('/admin/reports/best-sellers', { params }),
   getSlowMovers: (params) => api.get('/admin/reports/slow-movers', { params }),
   getStockValuation: () => api.get('/admin/reports/stock-valuation'),
+  getStockTurnover: (params) => api.get('/admin/reports/stock-turnover', { params }),
   getStockMovement: (params) => api.get('/admin/reports/stock-movement', { params }),
   getCustomers: () => api.get('/admin/reports/customers'),
   getOrders: (params) => api.get('/admin/reports/orders', { params }),

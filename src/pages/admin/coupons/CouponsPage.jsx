@@ -149,7 +149,7 @@ export default function CouponsPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const res = await couponService.getAll()
+      const res = await couponService.getPerformance()
       setCoupons(res.data?.data || [])
     } catch { toast.error('Failed to load coupons') }
     finally { setLoading(false) }
@@ -171,7 +171,7 @@ export default function CouponsPage() {
   const handleToggle = async (coupon) => {
     try {
       const updated = await couponService.update(coupon._id, { isActive: !coupon.isActive })
-      setCoupons(c => c.map(x => x._id === coupon._id ? updated.data.data : x))
+      setCoupons(c => c.map(x => x._id === coupon._id ? { ...x, ...updated.data.data } : x))
     } catch { toast.error('Failed to update') }
   }
 
@@ -208,7 +208,7 @@ export default function CouponsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-admin-100 bg-admin-25">
-                {['Code', 'Discount', 'Min Order', 'Usage', 'Expires', 'Status', ''].map(h => (
+                {['Code', 'Discount', 'Min Order', 'Usage', 'Redemptions', 'Discount Given', 'Revenue', 'Expires', 'Status', ''].map(h => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -236,6 +236,15 @@ export default function CouponsPage() {
                     <td className="px-5 py-3.5 text-sm font-admin text-admin-600">
                       {c.usedCount} / {c.usageLimit ?? '∞'}
                       {exhausted && <span className="ml-1 text-xs text-red-500">(limit)</span>}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm font-admin text-admin-700 font-semibold">
+                      {c.redemptions ?? 0}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm font-admin text-red-600">
+                      {formatKES(c.totalDiscount ?? 0)}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm font-admin text-green-700 font-semibold">
+                      {formatKES(c.totalRevenue ?? 0)}
                     </td>
                     <td className="px-5 py-3.5 text-sm font-admin text-admin-600">
                       {c.expiresAt ? (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   Download, TrendingUp, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
-  Percent, Bike, Receipt
+  Percent, Bike, Receipt, RefreshCw
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -18,6 +18,7 @@ const TABS = [
   { key: 'sales',     label: 'Sales',     icon: TrendingUp   },
   { key: 'products',  label: 'Products',  icon: Package      },
   { key: 'stock',     label: 'Stock',     icon: BarChart3    },
+  { key: 'turnover',  label: 'Turnover',  icon: RefreshCw    },
   { key: 'customers', label: 'Customers', icon: Users        },
   { key: 'orders',    label: 'Orders',    icon: ShoppingCart },
   { key: 'margins',   label: 'Margins',   icon: Percent      },
@@ -307,6 +308,7 @@ export default function ReportsPage() {
       if      (tab === 'sales')     res = await adminReportService.getSales(params)
       else if (tab === 'products')  res = await adminReportService.getBestSellers({ ...params, limit: 20 })
       else if (tab === 'stock')     res = await adminReportService.getStockValuation()
+      else if (tab === 'turnover')  res = await adminReportService.getStockTurnover(params)
       else if (tab === 'customers') res = await adminReportService.getCustomers()
       else if (tab === 'orders')    res = await adminReportService.getOrders(params)
       else if (tab === 'margins')   res = await adminReportService.getMargins(params)
@@ -325,8 +327,9 @@ export default function ReportsPage() {
     try {
       const typeMap = {
         sales: 'sales', products: 'best-sellers',
-        stock: 'stock-valuation', customers: 'customers', orders: 'orders', onboarding: 'onboarding',
-        vat: 'vat'
+        stock: 'stock-valuation', turnover: 'stock-turnover',
+        customers: 'customers', orders: 'orders', onboarding: 'onboarding',
+        vat: 'vat', margins: 'margins', riders: 'riders'
       }
       const res = await adminReportService.exportCSV(typeMap[tab], { period })
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }))
@@ -556,6 +559,48 @@ export default function ReportsPage() {
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
                           {formatKES(r.totalValueKES)}
+                        </td>
+                      </tr>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* ── STOCK TURNOVER ─────────────────────────────────── */}
+              {tab === 'turnover' && (
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm font-admin text-blue-700">
+                    Turnover ratio = units sold ÷ current stock over the selected period. Higher is better
+                    (stock is moving); a low ratio with high stock signals excess/slow-moving inventory.
+                  </div>
+
+                  <DataTable
+                    title="Stock Turnover by SKU"
+                    headers={[
+                      { label: 'Product' },
+                      { label: 'Units Sold',    right: true },
+                      { label: 'Current Stock', right: true },
+                      { label: 'Turnover Ratio', right: true },
+                      { label: 'Days of Supply', right: true },
+                    ]}
+                    rows={data.rows?.slice(0, 50) || []}
+                    renderRow={(r, i) => (
+                      <tr key={i} className="hover:bg-admin-50 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
+                          <p className="text-admin-400 text-xs font-admin">{r.varietyName} · {r.packagingSize}</p>
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.unitsSold}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.currentStock}</td>
+                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
+                          r.turnoverRatio == null ? 'text-admin-400' :
+                          r.turnoverRatio >= 1 ? 'text-green-700' :
+                          r.turnoverRatio >= 0.3 ? 'text-amber-600' : 'text-red-600'
+                        }`}>
+                          {r.turnoverRatio != null ? r.turnoverRatio : '—'}
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-600">
+                          {r.daysOfSupply != null ? `${r.daysOfSupply}d` : '—'}
                         </td>
                       </tr>
                     )}
