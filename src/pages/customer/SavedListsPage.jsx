@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Trash2, ShoppingCart, Edit2, Check, X, ArrowLeft, List } from 'lucide-react'
+import { Plus, Trash2, ShoppingCart, Edit2, Check, X, ArrowLeft, List, Minus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { savedListService } from '../../services/savedList.service'
 import { useCart } from '../../context/CartContext'
@@ -61,6 +61,18 @@ export default function SavedListsPage() {
       toast.success('List deleted')
     } catch { toast.error('Could not delete') }
     finally { setDeleting(null) }
+  }
+
+  const handleRemoveItem = async (list, itemIndex) => {
+    const updatedItems = list.items.filter((_, i) => i !== itemIndex)
+    // Optimistic — the list is small and this is a low-stakes action
+    setLists(prev => prev.map(l => l._id === list._id ? { ...l, items: updatedItems } : l))
+    try {
+      await savedListService.updateList(list._id, { items: updatedItems })
+    } catch {
+      toast.error('Could not remove item')
+      setLists(prev => prev.map(l => l._id === list._id ? list : l)) // revert
+    }
   }
 
   const handleLoadToCart = (list) => {
@@ -196,16 +208,30 @@ export default function SavedListsPage() {
                   <div className="border-t border-earth-100">
                     {list.items.map((item, i) => (
                       <div key={i}
-                        className="px-4 py-2.5 flex items-center justify-between border-b border-earth-50 last:border-0">
-                        <div className="min-w-0">
+                        className="px-4 py-2.5 flex items-center justify-between gap-2 border-b border-earth-50 last:border-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm font-body font-semibold text-earth-800 truncate">{item.productName}</p>
                           <p className="text-xs font-body text-earth-400">{item.variety} · {item.packaging}</p>
                         </div>
-                        <span className="text-xs font-body font-semibold text-earth-700 ml-3 flex-shrink-0">
+                        <span className="text-xs font-body font-semibold text-earth-700 flex-shrink-0">
                           × {item.quantity}
                         </span>
+                        <button
+                          onClick={() => handleRemoveItem(list, i)}
+                          title="Remove from list"
+                          className="p-1 rounded-lg text-earth-300 hover:text-red-500 hover:bg-red-50
+                            transition-colors flex-shrink-0">
+                          <Minus size={13} />
+                        </button>
                       </div>
                     ))}
+                  </div>
+                )}
+                {expanded === list._id && (!list.items || list.items.length === 0) && (
+                  <div className="border-t border-earth-100 px-4 py-4 text-center">
+                    <p className="text-xs font-body text-earth-400">
+                      This list is empty — add products from the shop.
+                    </p>
                   </div>
                 )}
               </div>

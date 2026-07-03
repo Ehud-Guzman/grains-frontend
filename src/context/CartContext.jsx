@@ -13,18 +13,23 @@ const CART_BRANCH_KEY = 'vittorios_cart_branch'
 const hasKnownStock = (item) => typeof item.stock === 'number' && Number.isFinite(item.stock)
 
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState([])
-  const [isOpen, setIsOpen] = useState(false)
-  const { branch, branchId } = useBranch()
-
-  useEffect(() => {
+  // Hydrate synchronously from storage (reading localStorage is not async) —
+  // doing this in an effect instead left a one-render window where `items`
+  // was still `[]` while the separate persist-effect below could fire with
+  // that stale value first and overwrite the real stored cart with "[]"
+  // before the hydration landed (most visible under React 18 StrictMode's
+  // dev-only double-effect-invocation).
+  const [items, setItems] = useState(() => {
     try {
       const stored = localStorage.getItem(CART_KEY)
-      if (stored) setItems(JSON.parse(stored))
+      return stored ? JSON.parse(stored) : []
     } catch {
       localStorage.removeItem(CART_KEY)
+      return []
     }
-  }, [])
+  })
+  const [isOpen, setIsOpen] = useState(false)
+  const { branch, branchId } = useBranch()
 
   // Cart items belong to one branch's catalog (per-branch products/prices/stock).
   // If the resolved branch changes while the cart has items from another branch,

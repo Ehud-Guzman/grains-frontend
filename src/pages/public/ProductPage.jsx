@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight,
-  Bell, BellOff, TrendingDown, Clock
+  Bell, BellOff, TrendingDown, Clock, List
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { productService } from '../../services/product.service'
@@ -13,6 +13,7 @@ import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES } from '../../utils/helpers'
 import { STOCK_CONFIG, CART_FEEDBACK_DELAY_MS } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
+import AddToListModal from '../../components/lists/AddToListModal'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 // Chart is lazy — keeps recharts (~380KB) out of the product-page path until
@@ -95,6 +96,7 @@ export default function ProductPage() {
   const [bestTime, setBestTime]         = useState(null)
   const [myAlerts, setMyAlerts]         = useState([])
   const [alertLoading, setAlertLoading] = useState(false)
+  const [showAddToList, setShowAddToList] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -234,6 +236,15 @@ export default function ProductPage() {
     addItem(product, variety, packaging, quantity)
     setAdded(true)
     setTimeout(() => setAdded(false), CART_FEEDBACK_DELAY_MS)
+  }
+
+  const handleAddToList = () => {
+    if (!user || user.role !== 'customer') {
+      toast('Log in to save items to a list', { icon: '🔒' })
+      return
+    }
+    if (!variety || !packaging) return
+    setShowAddToList(true)
   }
 
   const switchVariety = (i) => {
@@ -463,17 +474,25 @@ export default function ProductPage() {
                   )
                 })()}
 
-                <button onClick={handleAddToCart} disabled={!inStock || added}
-                  className={`flex items-center justify-center gap-2 w-full py-4 rounded-xl
-                    font-body font-semibold text-base transition-all active:scale-[0.98] ${
-                      added ? 'bg-green-500 text-white'
-                      : inStock ? 'bg-brand-700 text-white hover:bg-brand-800'
-                      : 'bg-earth-100 text-earth-400 cursor-not-allowed'}`}>
-                  {added
-                    ? <><Check size={18} /> Added to Cart!</>
-                    : <><ShoppingCart size={18} /> {inStock ? 'Add to Cart' : 'Out of Stock'}</>
-                  }
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={handleAddToCart} disabled={!inStock || added}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl
+                      font-body font-semibold text-base transition-all active:scale-[0.98] ${
+                        added ? 'bg-green-500 text-white'
+                        : inStock ? 'bg-brand-700 text-white hover:bg-brand-800'
+                        : 'bg-earth-100 text-earth-400 cursor-not-allowed'}`}>
+                    {added
+                      ? <><Check size={18} /> Added to Cart!</>
+                      : <><ShoppingCart size={18} /> {inStock ? 'Add to Cart' : 'Out of Stock'}</>
+                    }
+                  </button>
+                  <button onClick={handleAddToList} title="Save to list"
+                    className="flex-shrink-0 w-14 flex items-center justify-center rounded-xl
+                      border-2 border-earth-200 text-earth-600 hover:border-brand-300
+                      hover:text-brand-700 hover:bg-brand-50 transition-all active:scale-[0.98]">
+                    <List size={18} />
+                  </button>
+                </div>
 
                 {/* Out-of-stock alert */}
                 {!inStock && !isQuoteOnly && (
@@ -604,6 +623,19 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showAddToList && variety && packaging && (
+        <AddToListModal
+          items={[{
+            productId: product._id,
+            productName: product.name,
+            variety: variety.varietyName,
+            packaging: packaging.size,
+            quantity,
+          }]}
+          onClose={() => setShowAddToList(false)}
+        />
       )}
     </div>
   )

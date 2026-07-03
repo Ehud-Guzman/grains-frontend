@@ -39,6 +39,45 @@ const Input = ({ error, ...props }) => (
   />
 )
 
+// ── AVATAR RESIZE ─────────────────────────────────────────────────────────────
+// A phone camera photo can be 10-20MB — full-size for what renders as a small
+// circular avatar. Downscale to a sensible max dimension client-side before
+// upload so we're not spending the customer's mobile data on pixels nobody
+// will ever see. Falls back to the original file if decoding/canvas fails.
+const AVATAR_MAX_DIM = 640
+const AVATAR_JPEG_QUALITY = 0.85
+const AVATAR_HARD_LIMIT_BYTES = 15 * 1024 * 1024
+
+async function resizeAvatarFile(file) {
+  if (file.size < 300 * 1024) return file // already small — not worth recompressing
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
+  const img = await new Promise((resolve, reject) => {
+    const el = new Image()
+    el.onload = () => resolve(el)
+    el.onerror = reject
+    el.src = dataUrl
+  })
+
+  if (img.width <= AVATAR_MAX_DIM && img.height <= AVATAR_MAX_DIM) return file
+
+  const scale = AVATAR_MAX_DIM / Math.max(img.width, img.height)
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(img.width * scale)
+  canvas.height = Math.round(img.height * scale)
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', AVATAR_JPEG_QUALITY))
+  if (!blob) return file // canvas export unsupported — upload the original
+  return new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+}
+
 // ── AVATAR UPLOADER ───────────────────────────────────────────────────────────
 function AvatarUploader({ avatarURL, name, onUpload, size = 'md' }) {
   const [uploading, setUploading] = useState(false)
@@ -48,13 +87,19 @@ function AvatarUploader({ avatarURL, name, onUpload, size = 'md' }) {
   const handleFile = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > AVATAR_HARD_LIMIT_BYTES) {
+      toast.error('That photo is too large (max 15MB). Try a different one.')
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => setPreview(reader.result)
     reader.readAsDataURL(file)
     setUploading(true)
     try {
+      const upload = await resizeAvatarFile(file).catch(() => file)
       const formData = new FormData()
-      formData.append('avatar', file)
+      formData.append('avatar', upload)
       const res = await authService.uploadAvatar(formData)
       onUpload(res.data.data.avatarURL)
       setPreview(null)
@@ -105,6 +150,8 @@ function AvatarUploader({ avatarURL, name, onUpload, size = 'md' }) {
 
 // ── ADDRESS CARD ──────────────────────────────────────────────────────────────
 function AddressCard({ address, onRemove, onSetDefault }) {
+  const [confirming, setConfirming] = useState(false)
+
   return (
     <div className={`relative rounded-xl border p-3.5 transition-all ${
       address.isDefault ? 'border-brand-200 bg-brand-50/60' : 'border-earth-200 bg-white hover:border-earth-300'
@@ -123,16 +170,34 @@ function AddressCard({ address, onRemove, onSetDefault }) {
         </div>
       </div>
       <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-earth-100">
-        {!address.isDefault && (
-          <button onClick={onSetDefault}
-            className="text-xs text-brand-600 hover:text-brand-700 font-body font-medium transition-colors">
-            Set as default
-          </button>
+        {confirming ? (
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-xs text-earth-500 font-body">Remove this address?</span>
+            <button onClick={() => { setConfirming(false); onRemove() }}
+              className="text-xs text-red-600 font-body font-semibold px-2 py-1
+                rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
+              Yes
+            </button>
+            <button onClick={() => setConfirming(false)}
+              className="text-xs text-earth-400 font-body px-2 py-1
+                rounded-lg hover:bg-earth-100 transition-colors">
+              No
+            </button>
+          </div>
+        ) : (
+          <>
+            {!address.isDefault && (
+              <button onClick={onSetDefault}
+                className="text-xs text-brand-600 hover:text-brand-700 font-body font-medium transition-colors">
+                Set as default
+              </button>
+            )}
+            <button onClick={() => setConfirming(true)}
+              className="text-xs text-red-500 hover:text-red-700 font-body ml-auto transition-colors flex items-center gap-1">
+              <Trash2 size={11} /> Remove
+            </button>
+          </>
         )}
-        <button onClick={onRemove}
-          className="text-xs text-red-500 hover:text-red-700 font-body ml-auto transition-colors flex items-center gap-1">
-          <Trash2 size={11} /> Remove
-        </button>
       </div>
     </div>
   )
@@ -427,7 +492,13 @@ export default function CustomerProfilePage() {
                           <CheckCircle size={9} /> Verified
                         </span>
                       </div>
-                      <p className="text-xs text-earth-400 font-body mt-0.5">Contact us to change</p>
+                      {shopInfo.phone && (
+                        <a href={`tel:${shopInfo.phone.replace(/\s/g, '')}`}
+                          className="text-xs text-brand-600 hover:text-brand-700 font-body font-medium
+                            mt-0.5 inline-flex items-center gap-1 transition-colors">
+                          <Phone size={10} /> Call to update
+                        </a>
+                      )}
                     </div>
                   </div>
 

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Package, ChevronRight, ShoppingBag, Clock,
-  UserCircle, AlertTriangle, MapPin, RotateCcw, TrendingUp, TrendingDown, List
+  UserCircle, AlertTriangle, MapPin, RotateCcw, TrendingUp, TrendingDown, List,
+  Search, X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
@@ -72,7 +73,10 @@ export default function CustomerDashboardPage() {
   const [cancelling, setCancelling] = useState(null)
   const [confirmCancel, setConfirmCancel] = useState(null)
   const [page, setPage] = useState(1)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
   const [stats, setStats] = useState(null)
+  const searchDebounce = useRef(null)
   const checklistItems = getChecklist('customer')
   const allChecklistDone = checklistItems.length > 0 && checklistItems.every(item => item.done)
 
@@ -82,11 +86,13 @@ export default function CustomerDashboardPage() {
     openCart()
   }
 
-  const fetchOrders = async (p = 1) => {
+  const fetchOrders = async (p = 1, s = search) => {
     setLoading(true)
     setFetchError(false)
     try {
-      const res = await orderService.getMyOrders({ page: p, limit: 10 })
+      const params = { page: p, limit: 10 }
+      if (s) params.search = s
+      const res = await orderService.getMyOrders(params)
       const fetchedOrders = res.data.data.orders || []
       setOrders(fetchedOrders)
       setPagination(res.data.data.pagination || { page: 1, pages: 1, total: 0 })
@@ -98,7 +104,17 @@ export default function CustomerDashboardPage() {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { fetchOrders(page) }, [page])
+  useEffect(() => { fetchOrders(page, search) }, [page, search])
+
+  // Debounce the search box, and jump back to page 1 whenever the query changes
+  useEffect(() => {
+    clearTimeout(searchDebounce.current)
+    searchDebounce.current = setTimeout(() => {
+      setSearch(searchInput.trim())
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(searchDebounce.current)
+  }, [searchInput])
 
   useEffect(() => {
     orderService.getMyStats()
@@ -188,7 +204,9 @@ export default function CustomerDashboardPage() {
         )}
 
         {/* ── Spending summary ──────────────────────────────────────── */}
-        {stats && (
+        {/* Hidden until the customer has at least one order — a brand-new
+            account shouldn't open on a grid of zeroes. */}
+        {stats && stats.allTime.orderCount > 0 && (
           <div className="grid grid-cols-2 gap-2.5 mb-5">
             <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-4">
               <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-1">
@@ -298,6 +316,31 @@ export default function CustomerDashboardPage() {
           </Link>
         </div>
 
+        {/* Order search — only worth showing once there's more than a page's
+            worth of history to dig through */}
+        {(pagination.total > 10 || search) && (
+          <div className="relative mb-4">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2
+              text-earth-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search by order reference…"
+              className="w-full pl-10 pr-9 py-2.5 bg-white border border-earth-200 rounded-xl
+                text-sm font-body text-earth-800 placeholder-earth-400 focus:outline-none
+                focus:ring-2 focus:ring-brand-400 focus:border-transparent shadow-sm transition-all"
+            />
+            {searchInput && (
+              <button onClick={() => setSearchInput('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
+                  hover:bg-earth-100 text-earth-400 transition-colors">
+                <X size={13} />
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Orders list */}
         {loading ? (
           <div className="space-y-2.5">
@@ -315,6 +358,17 @@ export default function CustomerDashboardPage() {
                 font-semibold hover:bg-brand-800 transition-colors">
               Retry
             </button>
+          </div>
+        ) : orders.length === 0 && search ? (
+          <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-12 text-center">
+            <div className="w-14 h-14 bg-earth-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Search size={22} className="text-earth-300" />
+            </div>
+            <h3 className="font-display text-xl font-semibold text-earth-800 mb-2">No matching orders</h3>
+            <p className="text-earth-500 text-sm font-body mb-6">
+              No order reference matches "{search}".
+            </p>
+            <button onClick={() => setSearchInput('')} className="btn-outline">Clear search</button>
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-12 text-center">

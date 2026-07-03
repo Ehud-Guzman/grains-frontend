@@ -1,8 +1,8 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, Fragment } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
-import { BranchProvider } from "./context/BranchContext";
+import { BranchProvider, useBranch } from "./context/BranchContext";
 import { AppSettingsProvider } from "./context/AppSettingsContext";
 import { OnboardingProvider } from "./context/OnboardingContext";
 import { CartProvider } from "./context/CartContext";
@@ -60,6 +60,15 @@ const BackupManagementPage = lazy(() => import("./pages/admin/backups/BackupMana
 const EtimsPage            = lazy(() => import("./pages/admin/settings/EtimsPage"));
 const NotFoundPage         = lazy(() => import("./pages/public/NotFoundPage"));
 
+// Remounts its subtree when the resolved storefront branch changes, so
+// branch-scoped catalog pages (Home/Catalogue/Product) refetch. Deliberately
+// NOT applied to /cart or /checkout — those hold form/cart state that a
+// branch switch must never wipe (see PublicLayout.jsx).
+function BranchKeyed({ children }) {
+  const { branchId } = useBranch();
+  return <Fragment key={branchId || "default"}>{children}</Fragment>;
+}
+
 const ADMIN_ROLES        = ["staff", "supervisor", "admin", "superadmin"];
 const SUPERVISOR_UP      = ["supervisor", "admin", "superadmin"]; // superadmin can observe
 const ADMIN_UP           = ["admin", "superadmin"];               // superadmin can observe + manage settings
@@ -101,9 +110,9 @@ export default function App() {
               <Routes>
             {/* ── PUBLIC ───────────────────────────────────────────── */}
             <Route element={<PublicLayout />}>
-              <Route path="/"                element={<HomePage />} />
-              <Route path="/shop"            element={<CataloguePage />} />
-              <Route path="/shop/:id"        element={<ProductPage />} />
+              <Route path="/"                element={<BranchKeyed><HomePage /></BranchKeyed>} />
+              <Route path="/shop"            element={<BranchKeyed><CataloguePage /></BranchKeyed>} />
+              <Route path="/shop/:id"        element={<BranchKeyed><ProductPage /></BranchKeyed>} />
               <Route path="/cart"            element={<CartPage />} />
               <Route path="/checkout"        element={<CheckoutPage />} />
               <Route path="/order-confirmed" element={<OrderConfirmPage />} />

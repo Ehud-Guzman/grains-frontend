@@ -12,6 +12,7 @@ import { useOnboarding } from '../../context/OnboardingContext'
 import { orderService } from '../../services/order.service'
 import { paymentService } from '../../services/payment.service'
 import { couponService } from '../../services/coupon.service'
+import { authService } from '../../services/auth.service'
 import { publicSettingsService } from '../../services/admin/settings.service'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, isValidKenyanPhone, normalizeKenyanPhone, getCartUnitPrice } from '../../utils/helpers'
@@ -131,6 +132,9 @@ export default function CheckoutPage() {
   const [locationFeeData, setLocationFeeData] = useState(null)
   const feeDebounce = useRef(null)
 
+  // Saved delivery addresses — quick-select instead of retyping every order
+  const [savedAddresses, setSavedAddresses] = useState([])
+
   const [form, setForm] = useState({
     name:                user?.name  || '',
     phone:               user?.phone || '',
@@ -187,6 +191,24 @@ export default function CheckoutPage() {
       setForm(current => ({ ...current, deliveryMethod: 'pickup', paymentMethod: 'pickup' }))
     }
   }, [locationFeeData, form.deliveryMethod])
+
+  // Load the customer's saved addresses and prefill the default one, so
+  // they're not retyping an address they already saved on their profile.
+  useEffect(() => {
+    if (!isAuthenticated) return
+    authService.getProfile()
+      .then(res => {
+        const addrs = res.data?.data?.addresses || []
+        setSavedAddresses(addrs)
+        setForm(current => {
+          if (current.deliveryAddress.trim()) return current
+          const def = addrs.find(a => a.isDefault) || addrs[0]
+          return def ? { ...current, deliveryAddress: def.value } : current
+        })
+      })
+      .catch(() => {}) // non-fatal — free-text field still works
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   // ── M-PESA CALLBACKS ───────────────────────────────────────────────────────
   const handleMpesaSuccess = useCallback(() => {
@@ -735,6 +757,33 @@ export default function CheckoutPage() {
                               )}
                             </div>
                           )}
+                        </div>
+                      )}
+
+                      {/* Saved addresses — quick-select */}
+                      {savedAddresses.length > 0 && (
+                        <div>
+                          <p className="text-xs font-body font-semibold text-earth-600 uppercase tracking-wide mb-2">
+                            Saved Addresses
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {savedAddresses.map((addr, i) => {
+                              const active = form.deliveryAddress === addr.value
+                              return (
+                                <button key={i} type="button"
+                                  onClick={() => set('deliveryAddress', addr.value)}
+                                  className={`text-left px-3 py-2 rounded-xl border text-xs font-body
+                                    transition-all max-w-[220px] ${
+                                      active
+                                        ? 'border-brand-500 bg-brand-50 text-brand-800'
+                                        : 'border-earth-200 bg-white text-earth-700 hover:border-earth-300'
+                                    }`}>
+                                  <span className="font-semibold block truncate">{addr.label}</span>
+                                  <span className="text-earth-500 truncate block">{addr.value}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
                         </div>
                       )}
 

@@ -1,20 +1,34 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react'
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, List } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
 import { useAppSettings } from '../../context/AppSettingsContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
+import AddToListModal from '../../components/lists/AddToListModal'
 import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartPage() {
   const { items, subtotal: total, removeItem, updateQuantity } = useCart()
+  const { user } = useAuth()
   const { orderSettings } = useAppSettings()
   const { dismissedTips, dismissTip } = useOnboarding()
+  const [showAddToList, setShowAddToList] = useState(false)
   const vatEnabled = orderSettings.vatEnabled === true
   const vatRate    = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
   const vatAmount  = vatEnabled ? Math.round(total * vatRate / 100) : 0
   const showCartTip = !dismissedTips['customer-cart-tip']
+
+  const handleSaveAsList = () => {
+    if (!user || user.role !== 'customer') {
+      toast('Log in to save this cart as a list', { icon: '🔒' })
+      return
+    }
+    setShowAddToList(true)
+  }
 
   if (items.length === 0) return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4">
@@ -182,11 +196,30 @@ export default function CartPage() {
                   text-earth-700 hover:text-earth-900 transition-colors mt-2">
                 ← Continue Shopping
               </Link>
+
+              <button onClick={handleSaveAsList}
+                className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-body
+                  font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                <List size={13} /> Save this cart as a list
+              </button>
             </div>
             </div>
           </div>
         </div>
       </div>
+
+      {showAddToList && (
+        <AddToListModal
+          items={items.map(i => ({
+            productId: i.productId,
+            productName: i.productName,
+            variety: i.variety,
+            packaging: i.packaging,
+            quantity: i.quantity,
+          }))}
+          onClose={() => setShowAddToList(false)}
+        />
+      )}
     </div>
   )
 }

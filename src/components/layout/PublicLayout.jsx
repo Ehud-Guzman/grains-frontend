@@ -5,11 +5,9 @@ import Footer from './Footer'
 import CartDrawer from '../cart/CartDrawer'
 import Spinner from '../ui/Spinner'
 import { useAppSettings } from '../../context/AppSettingsContext'
-import { useBranch } from '../../context/BranchContext'
 
 export default function PublicLayout() {
   const { hasLoaded, isLoading, maintenanceMode, maintenanceMessage, shopInfo } = useAppSettings()
-  const { branchId } = useBranch()
 
   if (isLoading && !hasLoaded) {
     return (
@@ -46,9 +44,11 @@ export default function PublicLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-cream">
       <Navbar />
-      {/* Key by branch: when the resolved branch changes, remount the page so
-          product lists/details refetch against the new branch's catalog */}
-      <main className="flex-1 page-enter" key={branchId || 'default'}>
+      {/* NOTE: branch-triggered remounting is scoped per-route via
+          <BranchKeyed> in App.jsx (catalog pages only) — not here. Keying the
+          whole Outlet would also remount /checkout and /cart on a branch
+          switch, wiping the checkout form and any in-progress cart edits. */}
+      <main className="flex-1 page-enter">
         <Outlet />
       </main>
       <Footer />

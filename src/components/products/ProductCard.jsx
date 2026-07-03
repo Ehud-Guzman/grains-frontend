@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Eye, Tag, Check } from 'lucide-react'
+import { ShoppingCart, Eye, Tag, Check, List } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
 import { formatKES, getPriceRange, getStockStatus } from '../../utils/helpers'
 import { STOCK_CONFIG as stockConfig } from '../../utils/constants'
 import { getOptimizedImageUrl } from '../../utils/image'
+import AddToListModal from '../lists/AddToListModal'
 
 // ── PRICE CHANGE BADGE ────────────────────────────────────────────────────────
 function PriceChangeBadge({ priceChange }) {
@@ -23,7 +26,7 @@ function PriceChangeBadge({ priceChange }) {
 }
 
 // ── FULL CARD (default) ───────────────────────────────────────────────────────
-function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added, priceChange }) {
+function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, onAddToList, adding, added, priceChange }) {
   const cfg = stockConfig[stockStatus] || stockConfig.out
 
   return (
@@ -121,18 +124,26 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
 
         {/* Cart button */}
         {inStock && firstPkg ? (
-          <button onClick={onQuickAdd} disabled={adding}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
-              text-sm font-body font-semibold transition-all duration-200 ${
-                added
-                  ? 'bg-green-500 text-white'
-                  : 'bg-earth-900 text-white hover:bg-earth-800 active:scale-[0.98]'
-              }`}>
-            {added
-              ? <><Check size={15} /> Added!</>
-              : <><ShoppingCart size={15} /> Add to Cart</>
-            }
-          </button>
+          <div className="flex gap-1.5">
+            <button onClick={onQuickAdd} disabled={adding}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl
+                text-sm font-body font-semibold transition-all duration-200 ${
+                  added
+                    ? 'bg-green-500 text-white'
+                    : 'bg-earth-900 text-white hover:bg-earth-800 active:scale-[0.98]'
+                }`}>
+              {added
+                ? <><Check size={15} /> Added!</>
+                : <><ShoppingCart size={15} /> Add to Cart</>
+              }
+            </button>
+            <button onClick={onAddToList} title="Save to list"
+              className="flex-shrink-0 w-10 flex items-center justify-center rounded-xl
+                border border-earth-200 text-earth-500 hover:border-brand-300
+                hover:text-brand-700 hover:bg-brand-50 transition-all">
+              <List size={15} />
+            </button>
+          </div>
         ) : (
           <div className="w-full py-2.5 rounded-xl text-sm font-body font-medium text-center
             bg-earth-50 text-earth-400 border border-earth-100">
@@ -145,7 +156,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
 }
 
 // ── COMPACT CARD (2-column grid) ──────────────────────────────────────────────
-function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, adding, added, priceChange }) {
+function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, onAddToList, adding, added, priceChange }) {
   const cfg = stockConfig[stockStatus] || stockConfig.out
 
   return (
@@ -183,10 +194,10 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
 
         {/* Cart quick-add on hover */}
         {inStock && firstPkg && (
-          <div className="absolute bottom-0 left-0 right-0 p-2
+          <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1
             translate-y-full group-hover:translate-y-0 transition-transform duration-200">
             <button onClick={onQuickAdd} disabled={adding}
-              className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-xl
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl
                 text-xs font-body font-semibold transition-all ${
                   added
                     ? 'bg-green-500 text-white'
@@ -196,6 +207,12 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
                 ? <><Check size={12} /> Added!</>
                 : <><ShoppingCart size={12} /> Add to Cart</>
               }
+            </button>
+            <button onClick={onAddToList} title="Save to list"
+              className="flex-shrink-0 w-8 flex items-center justify-center rounded-xl
+                bg-white/90 backdrop-blur-sm text-earth-600 hover:bg-white hover:text-brand-700
+                transition-all">
+              <List size={13} />
             </button>
           </div>
         )}
@@ -234,8 +251,10 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
 // ── MAIN EXPORT ───────────────────────────────────────────────────────────────
 export default function ProductCard({ product, compact = false, priceChange }) {
   const { addItem } = useCart()
+  const { user } = useAuth()
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
+  const [showAddToList, setShowAddToList] = useState(false)
 
   const firstVariety = product.varieties?.[0]
   const imageURL     = firstVariety?.imageURLs?.[0] || product.imageURLs?.[0]
@@ -259,7 +278,36 @@ export default function ProductCard({ product, compact = false, priceChange }) {
     setTimeout(() => { setAdding(false); setAdded(false) }, 1400)
   }
 
-  const props = { product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd: handleQuickAdd, adding, added, priceChange }
+  const handleAddToList = (e) => {
+    e.preventDefault()
+    if (!firstAvail) return
+    if (!user || user.role !== 'customer') {
+      toast('Log in to save items to a list', { icon: '🔒' })
+      return
+    }
+    setShowAddToList(true)
+  }
 
-  return compact ? <CompactCard {...props} /> : <FullCard {...props} />
+  const props = {
+    product, firstVariety, firstPkg, imageURL, inStock, stockStatus,
+    onQuickAdd: handleQuickAdd, onAddToList: handleAddToList, adding, added, priceChange,
+  }
+
+  return (
+    <>
+      {compact ? <CompactCard {...props} /> : <FullCard {...props} />}
+      {showAddToList && firstAvail && (
+        <AddToListModal
+          items={[{
+            productId: product._id,
+            productName: product.name,
+            variety: firstAvail.variety.varietyName,
+            packaging: firstAvail.pkg.size,
+            quantity: 1,
+          }]}
+          onClose={() => setShowAddToList(false)}
+        />
+      )}
+    </>
+  )
 }
