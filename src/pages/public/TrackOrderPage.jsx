@@ -4,7 +4,7 @@ import { Search, Phone, Package, CheckCircle, Clock, XCircle, Truck, ChevronRigh
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
 import { useShopInfo } from '../../context/AppSettingsContext'
-import { formatKES, formatDate, getStatusLabel } from '../../utils/helpers'
+import { formatKES, formatDate, getStatusLabel, normalizeKenyanPhone } from '../../utils/helpers'
 
 // ── STATUS CONFIG ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -92,7 +92,7 @@ export default function TrackOrderPage() {
     setError('')
     setOrder(null)
     try {
-      const res = await orderService.trackOrder(phone.trim(), normalizedRef)
+      const res = await orderService.trackOrder(normalizeKenyanPhone(phone), normalizedRef)
       setOrder(res.data.data)
     } catch (err) {
       setError(err.response?.data?.message || 'Order not found. Check your phone number and reference.')

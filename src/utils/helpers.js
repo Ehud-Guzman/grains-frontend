@@ -6,13 +6,16 @@ export const formatKES = (amount) => {
   return `KES ${Number(amount).toLocaleString('en-KE')}`
 }
 
-// Format date to human readable
+// Format date to human readable.
+// timeZone is pinned to EAT — the backend stores UTC and the business runs on
+// Nairobi time, so dates must not shift with the viewer's device timezone.
 export const formatDate = (date) => {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('en-KE', {
     day: 'numeric',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: 'Africa/Nairobi'
   })
 }
 
@@ -24,7 +27,8 @@ export const formatDateTime = (date) => {
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'Africa/Nairobi'
   })
 }
 
@@ -107,7 +111,24 @@ export const getInitials = (name = '') => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-// Validate Kenyan phone number
+// Strip spaces, dashes and parentheses so "0712 345 678" (the format our own
+// placeholders show) validates and submits cleanly.
+export const normalizeKenyanPhone = (phone) => {
+  return (phone || '').replace(/[\s\-()]/g, '')
+}
+
+// Validate Kenyan phone number (accepts spaced/dashed input)
 export const isValidKenyanPhone = (phone) => {
-  return /^(\+254|0)[17]\d{8}$/.test(phone)
+  return /^(\+254|0)[17]\d{8}$/.test(normalizeKenyanPhone(phone))
+}
+
+// Effective unit price for a cart item, honouring volume pricing tiers so the
+// cart/checkout totals match what the backend will actually charge.
+export const getCartUnitPrice = (item) => {
+  const tiers = item.pricingTiers || []
+  if (tiers.length === 0) return item.priceKES
+  const active = [...tiers]
+    .sort((a, b) => b.minQty - a.minQty)
+    .find(t => item.quantity >= t.minQty)
+  return active ? active.priceKES : item.priceKES
 }

@@ -4,7 +4,7 @@ import { Eye, EyeOff, UserPlus, ArrowLeft, Shield } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import toast from 'react-hot-toast'
-import { isValidKenyanPhone } from '../../utils/helpers'
+import { isValidKenyanPhone, normalizeKenyanPhone } from '../../utils/helpers'
 
 const getStrength = (pw) => {
   if (!pw) return { score: 0, label: '', color: '' }
@@ -34,8 +34,12 @@ export default function RegisterPage() {
   const validate = () => {
     const e = {}
     if (!form.name.trim() || form.name.length < 2) e.name = 'Name must be at least 2 characters'
-    if (!isValidKenyanPhone(form.phone)) e.phone = 'Enter a valid Kenyan number (e.g. 0712345678)'
-    if (form.password.length < 8) e.password = 'Password must be at least 8 characters'
+    if (!isValidKenyanPhone(form.phone)) e.phone = 'Enter a valid Kenyan number (e.g. 0712 345 678)'
+    // Mirrors the backend password policy so rejections happen inline, not
+    // as a server error after submit.
+    if (form.password.length < 8)            e.password = 'Password must be at least 8 characters'
+    else if (!/[A-Z]/.test(form.password))   e.password = 'Password must contain at least one uppercase letter'
+    else if (!/[0-9]/.test(form.password))   e.password = 'Password must contain at least one number'
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -46,7 +50,7 @@ export default function RegisterPage() {
     if (!validate()) return
     setLoading(true)
     try {
-      const user = await register(form)
+      const user = await register({ ...form, phone: normalizeKenyanPhone(form.phone) })
       toast.success(`Welcome, ${user.name.split(' ')[0]}!`)
       navigate('/dashboard', { replace: true })
     } catch (err) {

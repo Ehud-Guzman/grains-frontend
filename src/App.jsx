@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
+import { BranchProvider } from "./context/BranchContext";
 import { AppSettingsProvider } from "./context/AppSettingsContext";
 import { OnboardingProvider } from "./context/OnboardingContext";
 import { CartProvider } from "./context/CartContext";
@@ -57,10 +58,9 @@ const UserManagementPage = lazy(() => import("./pages/admin/users/UserManagement
 const BranchManagementPage = lazy(() => import("./pages/admin/branches/BranchManagementPage"));
 const BackupManagementPage = lazy(() => import("./pages/admin/backups/BackupManagementPage"));
 const EtimsPage            = lazy(() => import("./pages/admin/settings/EtimsPage"));
+const NotFoundPage         = lazy(() => import("./pages/public/NotFoundPage"));
 
 const ADMIN_ROLES        = ["staff", "supervisor", "admin", "superadmin"];
-const BUSINESS_ROLES     = ["staff", "supervisor", "admin"];
-const ALL_EXCEPT_STAFF   = ["supervisor", "admin", "superadmin"]; // superadmin can observe
 const SUPERVISOR_UP      = ["supervisor", "admin", "superadmin"]; // superadmin can observe
 const ADMIN_UP           = ["admin", "superadmin"];               // superadmin can observe + manage settings
 const ADMIN_ONLY_ROLES   = ["admin"];
@@ -71,6 +71,7 @@ export default function App() {
     <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
+        <BranchProvider>
         <AppSettingsProvider>
           <OnboardingProvider>
             <CartProvider>
@@ -268,12 +269,13 @@ export default function App() {
             </Route>
 
             {/* ── FALLBACK ─────────────────────────────────────────── */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
               </Routes>
               </Suspense>
             </CartProvider>
           </OnboardingProvider>
         </AppSettingsProvider>
+        </BranchProvider>
       </AuthProvider>
     </BrowserRouter>
     </ErrorBoundary>

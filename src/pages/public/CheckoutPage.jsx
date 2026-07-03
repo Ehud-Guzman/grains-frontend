@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import {
-  ArrowLeft, ArrowRight, Check, MapPin, CreditCard,
-  User, ShoppingBag, Truck, Store, Smartphone, Navigation, X
+  ArrowLeft, ArrowRight, Check, MapPin, CreditCard, User,
+  ShoppingBag, Truck, Store, Smartphone, Navigation, X, RefreshCw, AlertTriangle
 } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
+import { useBranch } from '../../context/BranchContext'
 import { useAppSettings } from '../../context/AppSettingsContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { orderService } from '../../services/order.service'
@@ -13,7 +14,7 @@ import { paymentService } from '../../services/payment.service'
 import { couponService } from '../../services/coupon.service'
 import { publicSettingsService } from '../../services/admin/settings.service'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
-import { formatKES, isValidKenyanPhone } from '../../utils/helpers'
+import { formatKES, isValidKenyanPhone, normalizeKenyanPhone, getCartUnitPrice } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
 import Spinner from '../../components/ui/Spinner'
@@ -105,7 +106,8 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disable
 export default function CheckoutPage() {
   const { items, subtotal: total, clearCart } = useCart()
   const { user, isAuthenticated } = useAuth()
-  const { orderSettings, shopInfo, isLoading: settingsLoading, hasLoaded } = useAppSettings()
+  const { branchId } = useBranch()
+  const { orderSettings, shopInfo, isLoading: settingsLoading, hasLoaded, loadFailed, refreshSettings } = useAppSettings()
   const { dismissedTips, dismissTip, markChecklistItem, markMilestone } = useOnboarding()
   const navigate = useNavigate()
 
@@ -206,7 +208,7 @@ export default function CheckoutPage() {
       if (loading) return
       setShowMpesa(false)
       setLoading(true)
-      paymentService.initiate(placedOrder.orderId, form.mpesaPhone)
+      paymentService.initiate(placedOrder.orderId, normalizeKenyanPhone(form.mpesaPhone))
         .then(() => { setLoading(false); setShowMpesa(true) })
         .catch(err => {
           setLoading(false)
@@ -245,6 +247,36 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center px-4">
         <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  // Settings failed to load — we'd be showing default fees/VAT/minimums that
+  // don't match what the server will charge. Block checkout until they load.
+  if (loadFailed && !placedOrder) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-earth-200 shadow-warm p-6 text-center">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={24} className="text-amber-500" />
+          </div>
+          <h2 className="font-display text-xl text-earth-900 mb-2">Checkout is warming up</h2>
+          <p className="text-earth-600 text-sm font-body leading-relaxed mb-5">
+            We couldn't load the latest prices and delivery fees. This usually
+            clears in a few seconds — your cart is safe.
+          </p>
+          <button
+            onClick={() => refreshSettings()}
+            disabled={settingsLoading}
+            className="btn-primary w-full justify-center flex items-center gap-2 disabled:opacity-60"
+          >
+            <RefreshCw size={15} className={settingsLoading ? 'animate-spin' : ''} />
+            {settingsLoading ? 'Retrying…' : 'Try Again'}
+          </button>
+          <Link to="/cart" className="block mt-3 text-sm font-body text-earth-500 hover:text-earth-800 transition-colors">
+            ← Back to cart
+          </Link>
+        </div>
       </div>
     )
   }
@@ -348,7 +380,14 @@ export default function CheckoutPage() {
     if (step === 0) {
       if (!form.name.trim())  e.name = 'Name is required'
       if (!form.phone.trim()) e.phone = 'Phone number is required'
-      else if (!isValidKenyanPhone(form.phone)) e.phone = 'Enter a valid Kenyan number (e.g. 0712345678)'
+      else if (!isValidKenyanPhone(form.phone)) e.phone = 'Enter a valid Kenyan number (e.g. 0712 345 678)'
+      if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+        e.email = 'Enter a valid email address'
+      }
+      // KRA PIN: letter + 9 digits + letter (e.g. A012345678B)
+      if (form.buyerKraPin.trim() && !/^[A-Z]\d{9}[A-Z]$/.test(form.buyerKraPin.trim())) {
+        e.buyerKraPin = 'Enter a valid KRA PIN (e.g. A012345678B)'
+      }
     }
     if (step === 1 && form.deliveryMethod === 'delivery' && !form.deliveryAddress.trim()) {
       e.deliveryAddress = 'Please enter a delivery address'
@@ -393,6 +432,7 @@ export default function CheckoutPage() {
 
   // ── PLACE ORDER ────────────────────────────────────────────────────────────
   const submit = async () => {
+    if (loading) return
     if (belowMinimum) {
       toast.error(`Minimum order value is ${formatKES(orderSettings.minimumOrderValue)}`)
       return
@@ -401,9 +441,10 @@ export default function CheckoutPage() {
     setLoading(true)
     try {
       const orderData = {
+        branchId:            branchId ?? undefined, // resolved shop branch; backend falls back to default
         name:                form.name,
-        phone:               form.phone,
-        email:               form.email || undefined,
+        phone:               normalizeKenyanPhone(form.phone),
+        email:               form.email.trim() || undefined,
         buyerKraPin:         form.buyerKraPin.trim() || undefined,
         deliveryMethod:      form.deliveryMethod,
         deliveryAddress:     form.deliveryAddress || null,
@@ -433,7 +474,7 @@ export default function CheckoutPage() {
       if (form.paymentMethod === 'mpesa') {
         setPlacedOrder({ orderId, orderRef, total: orderTotal })
         try {
-          await paymentService.initiate(orderId, form.mpesaPhone)
+          await paymentService.initiate(orderId, normalizeKenyanPhone(form.mpesaPhone))
           setShowMpesa(true)
         } catch (err) {
           const msg = err.response?.data?.message || 'M-Pesa request failed'
@@ -463,7 +504,16 @@ export default function CheckoutPage() {
         }
       })
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Something went wrong. Please try again.')
+      if (!err.response) {
+        // Timeout / network drop — the order may still have been created
+        // server-side. Warn before the user retries into a duplicate.
+        toast.error(
+          'We could not confirm whether your order went through. Please check "Track Order" with your phone number before trying again, to avoid placing it twice.',
+          { duration: 9000 }
+        )
+      } else {
+        toast.error(err.response?.data?.message || 'Something went wrong. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -585,13 +635,15 @@ export default function CheckoutPage() {
                     <Input type="tel" placeholder="0712 345 678" value={form.phone}
                       onChange={e => set('phone', e.target.value)} error={errors.phone} />
                   </Field>
-                  <Field label="Email Address">
+                  <Field label="Email Address" error={errors.email}>
                     <Input type="email" placeholder="john@example.com (optional)"
-                      value={form.email} onChange={e => set('email', e.target.value)} />
+                      value={form.email} onChange={e => set('email', e.target.value)}
+                      error={errors.email} />
                   </Field>
-                  <Field label="KRA PIN (optional — for B2B tax receipt)">
+                  <Field label="KRA PIN (optional — for B2B tax receipt)" error={errors.buyerKraPin}>
                     <Input placeholder="A012345678B" value={form.buyerKraPin}
                       onChange={e => set('buyerKraPin', e.target.value.toUpperCase())}
+                      error={errors.buyerKraPin}
                       className="font-mono" />
                   </Field>
                 </div>
@@ -864,7 +916,7 @@ export default function CheckoutPage() {
                             </span>
                           </div>
                           <span className="text-earth-800 font-semibold font-body flex-shrink-0">
-                            {formatKES(item.priceKES * item.quantity)}
+                            {formatKES(getCartUnitPrice(item) * item.quantity)}
                           </span>
                         </div>
                       ))}
@@ -1039,7 +1091,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-body font-semibold text-earth-800">
-                        {formatKES(item.priceKES * item.quantity)}
+                        {formatKES(getCartUnitPrice(item) * item.quantity)}
                       </p>
                       <p className="text-xs text-earth-400">×{item.quantity}</p>
                     </div>

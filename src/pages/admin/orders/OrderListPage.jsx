@@ -141,9 +141,12 @@ export default function OrderListPage() {
       if (statusFilter) params.status = statusFilter
       if (searchQuery)  params.search = searchQuery
       const res = await adminOrderService.getAll(params)
-      setOrders(res.data.data || [])
+      const data = res.data.data || []
+      setOrders(data)
       setPagination(res.data.pagination || { page: 1, pages: 1, total: 0 })
-      setSelected([])
+      // Keep the admin's in-progress bulk selection across the 60s background
+      // poll — only drop ids that are no longer in the visible list.
+      setSelected(prev => prev.filter(id => data.some(o => o._id === id)))
     } catch {}
     finally { setLoading(false); setRefreshing(false) }
   }, [page, statusFilter, searchQuery])
@@ -382,14 +385,24 @@ export default function OrderListPage() {
                 className={`border-b border-admin-50 last:border-0 transition-colors ${
                   selected.includes(order._id) ? 'bg-brand-50/40' : 'hover:bg-admin-50/50'
                 }`}>
-                {/* Full row tap → navigate */}
-                <button className="w-full text-left p-4"
-                  onClick={() => navigate(`/admin/orders/${order._id}`)}>
+                {/* Full row tap → navigate (div, not button — the select
+                    checkbox inside must stay a real, keyboard-reachable button) */}
+                <div role="button" tabIndex={0}
+                  className="w-full text-left p-4 cursor-pointer"
+                  onClick={() => navigate(`/admin/orders/${order._id}`)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && e.target === e.currentTarget) {
+                      navigate(`/admin/orders/${order._id}`)
+                    }
+                  }}>
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       {/* Checkbox — tap to select without navigating */}
                       {!isSuperAdmin && (
-                        <div onClick={e => { e.stopPropagation(); toggleSelect(order._id) }}
+                        <button type="button"
+                          aria-pressed={selected.includes(order._id)}
+                          aria-label={`Select order ${order.orderRef}`}
+                          onClick={e => { e.stopPropagation(); toggleSelect(order._id) }}
                           className={`w-4 h-4 rounded border-2 flex items-center justify-center
                             flex-shrink-0 transition-all ${
                               selected.includes(order._id)
@@ -399,7 +412,7 @@ export default function OrderListPage() {
                           {selected.includes(order._id) && (
                             <Check size={10} className="text-white" />
                           )}
-                        </div>
+                        </button>
                       )}
                       <span className="font-admin font-bold text-admin-800 text-sm tracking-wide">
                         {order.orderRef}
@@ -424,7 +437,7 @@ export default function OrderListPage() {
                       {formatKES(order.total)}
                     </span>
                   </div>
-                </button>
+                </div>
               </div>
             )
           })
@@ -607,7 +620,10 @@ export default function OrderListPage() {
       {/* ── Bulk reject modal ────────────────────────────────────────── */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50
-          flex items-end sm:items-center justify-center p-0 sm:p-4">
+          flex items-end sm:items-center justify-center p-0 sm:p-4"
+          role="dialog" aria-modal="true" aria-label="Reject orders"
+          onClick={e => { if (e.target === e.currentTarget) { setShowRejectModal(false); setRejectReason('') } }}
+          onKeyDown={e => { if (e.key === 'Escape') { setShowRejectModal(false); setRejectReason('') } }}>
           <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-6
             shadow-2xl border-t sm:border border-admin-100">
             <div className="flex items-center gap-3 mb-4">

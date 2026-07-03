@@ -18,10 +18,15 @@ export function OrderConfirmPage() {
   const phone          = state?.phone
   const name           = state?.name
 
+  // paymentPaid: M-Pesa payment already confirmed while the customer waited.
+  // paymentSwitched: customer chose "pay on pickup" after the STK push failed —
+  //   the order record still says M-Pesa, so the team must arrange payment.
   // paymentFailed: initiate() itself failed, no STK push was ever sent.
   // paymentTimeout: STK push was sent but the customer never completed it.
-  const paymentIssue = Boolean(state?.paymentFailed || state?.paymentTimeout)
-  const isMpesa = paymentMethod === 'mpesa' && !paymentIssue
+  const paymentPaid     = Boolean(state?.paymentPaid)
+  const paymentSwitched = Boolean(state?.paymentSwitched)
+  const paymentIssue    = Boolean(state?.paymentFailed || state?.paymentTimeout)
+  const isMpesa = paymentMethod === 'mpesa' && !paymentIssue && !paymentPaid
 
   const handleCopy = () => {
     if (!ref) return
@@ -68,15 +73,22 @@ export function OrderConfirmPage() {
           </div>
 
           <h1 className="font-display text-3xl font-bold text-cream mb-2">
-            {paymentIssue ? 'Order Received — Payment Not Completed' : 'Order Placed!'}
+            {paymentIssue ? 'Order Received — Payment Not Completed'
+              : paymentPaid ? 'Payment Received!'
+              : 'Order Placed!'}
           </h1>
           <p className="text-white/70 font-body text-sm max-w-xs mx-auto leading-relaxed">
             {paymentIssue
               ? `Your order was saved but the M-Pesa payment ${state?.paymentTimeout ? "wasn't completed" : "couldn't be sent"}. Our team will call you shortly to arrange payment.`
-              : <>
-                  {name ? `Thank you, ${name.split(' ')[0]}!` : 'Thank you!'}{' '}
-                  We'll review and confirm within <span className="text-white font-semibold">2 hours</span>.
-                </>}
+              : paymentPaid
+                ? <>
+                    {name ? `Thank you, ${name.split(' ')[0]}!` : 'Thank you!'}{' '}
+                    Your M-Pesa payment is confirmed — we'll start preparing your order.
+                  </>
+                : <>
+                    {name ? `Thank you, ${name.split(' ')[0]}!` : 'Thank you!'}{' '}
+                    We'll review and confirm within <span className="text-white font-semibold">2 hours</span>.
+                  </>}
           </p>
         </div>
       </div>
@@ -137,7 +149,23 @@ export function OrderConfirmPage() {
           </div>
         )}
 
-        {/* ── M-Pesa tip ───────────────────────────────────────────────── */}
+        {/* ── M-Pesa payment confirmed ─────────────────────────────────── */}
+        {paymentPaid && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+              <CheckCircle size={15} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm font-body font-semibold text-green-800">Payment Confirmed</p>
+              <p className="text-green-700 text-xs font-body mt-0.5 leading-relaxed">
+                Your M-Pesa payment went through — no further action needed.
+                You'll receive an M-Pesa confirmation SMS from Safaricom.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── M-Pesa tip (prompt sent, not yet confirmed) ──────────────── */}
         {isMpesa && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
             <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -148,6 +176,23 @@ export function OrderConfirmPage() {
               <p className="text-green-700 text-xs font-body mt-0.5 leading-relaxed">
                 Check your phone for an STK push prompt. Enter your M-Pesa PIN to complete payment.
                 If you didn't receive it, our team will call to confirm manually.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Switched to pay-on-pickup after failed STK ───────────────── */}
+        {paymentSwitched && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertTriangle size={15} className="text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-body font-semibold text-amber-800">Paying on Pickup</p>
+              <p className="text-amber-700 text-xs font-body mt-0.5 leading-relaxed">
+                You chose to pay when collecting your order instead of M-Pesa.
+                Our team will confirm this with you when they review the order —
+                keep your reference <strong>{ref}</strong> handy.
               </p>
             </div>
           </div>

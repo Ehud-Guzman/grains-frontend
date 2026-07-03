@@ -76,9 +76,17 @@ function KpiSkeleton() {
   )
 }
 
+// Thin role switch: superadmin gets its own dashboard component. Kept as a
+// wrapper so each variant has a stable hook order — an early return above
+// other hook calls violates the Rules of Hooks.
 export default function AdminDashboardPage() {
   const { user } = useAuth()
   if (user?.role === 'superadmin') return <SuperAdminDashboardPage />
+  return <BusinessDashboardPage />
+}
+
+function BusinessDashboardPage() {
+  const { user } = useAuth()
   const { getChecklist } = useOnboarding()
   const [kpis, setKpis]             = useState(null)
   const [lowStock, setLowStock]     = useState([])
@@ -275,7 +283,7 @@ export default function AdminDashboardPage() {
               />
               <YAxis
                 tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
-                tickFormatter={v => `${(v / 1000).toFixed(0)}K`}
+                tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : `${v}`}
                 axisLine={false} tickLine={false} width={36}
               />
               <Tooltip

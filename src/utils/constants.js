@@ -65,8 +65,8 @@ export const STOCK_CONFIG = {
   out: { dot: 'bg-red-400',   text: 'text-red-500',   label: 'Out of Stock', badge: 'bg-red-50 text-red-600 border-red-200'        },
 }
 
-export const MPESA_POLL_TIMEOUT_SECONDS = 60
-export const MPESA_SUCCESS_REDIRECT_DELAY_MS = 1200
+export const MPESA_POLL_TIMEOUT_SECONDS = 120
+export const MPESA_SUCCESS_REDIRECT_DELAY_MS = 1500
 export const CART_FEEDBACK_DELAY_MS = 1800
 
 export const ORDER_STATUS_CONFIG = {

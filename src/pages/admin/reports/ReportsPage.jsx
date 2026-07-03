@@ -164,7 +164,7 @@ const SalesLineChart = ({ data }) => {
           <YAxis
             tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
             axisLine={false} tickLine={false}
-            tickFormatter={v => `${(v / 1000).toFixed(0)}K`}
+            tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : `${v}`}
           />
           <Tooltip
             content={<ChartTooltip valueFormatter={v => formatKES(v)} />}

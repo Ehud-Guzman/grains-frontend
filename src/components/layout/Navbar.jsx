@@ -7,7 +7,9 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import { useBranch } from '../../context/BranchContext'
 import { useShopInfo, useCategories } from '../../context/AppSettingsContext'
+import { branchService } from '../../services/branch.service'
 import SearchAutocomplete from '../ui/SearchAutocomplete'
 
 // ── Category icon map ─────────────────────────────────────────────────────────
@@ -159,6 +161,98 @@ function CategoryMarquee({ categories }) {
   )
 }
 
+// ── BranchSwitcher — shows the resolved shop branch, lets the customer pick ──
+// Two variants: dropdown chip (TopBar, dark bg) and inline accordion (drawer).
+function BranchSwitcher({ inline = false }) {
+  const { branch, resolving, switchBranch } = useBranch()
+  const [open, setOpen] = useState(false)
+  const [branches, setBranches] = useState(null) // null = not yet fetched
+  const ref = useRef()
+
+  // Lazy-fetch the branch list only when the switcher is first opened
+  useEffect(() => {
+    if (!open || branches) return
+    branchService.getAll()
+      .then(res => setBranches(res.data?.data || []))
+      .catch(() => setBranches([]))
+  }, [open, branches])
+
+  useEffect(() => {
+    if (!open || inline) return
+    const fn = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [open, inline])
+
+  const label = resolving && !branch ? 'Finding your branch…' : (branch?.name || 'Select branch')
+
+  const pick = (b) => {
+    setOpen(false)
+    if (b._id !== branch?._id) switchBranch(b)
+  }
+
+  const list = (
+    branches === null ? (
+      <p className="px-3 py-2 text-xs text-earth-400 font-body">Loading…</p>
+    ) : branches.length === 0 ? (
+      <p className="px-3 py-2 text-xs text-earth-400 font-body">No branches available</p>
+    ) : (
+      branches.map(b => (
+        <button
+          key={b._id}
+          onClick={() => pick(b)}
+          className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm font-body
+            transition-colors ${
+              b._id === branch?._id
+                ? 'bg-brand-50 text-brand-700 font-semibold'
+                : 'text-earth-700 hover:bg-earth-100'
+            }`}
+        >
+          <MapPin size={13} className={b._id === branch?._id ? 'text-brand-500' : 'text-earth-400'} />
+          <span className="flex-1 truncate">{b.name}</span>
+          {b.location && <span className="text-[10px] text-earth-400 truncate max-w-[90px]">{b.location}</span>}
+        </button>
+      ))
+    )
+  )
+
+  if (inline) {
+    return (
+      <div>
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="flex items-center gap-2 w-full text-left text-sm font-body font-medium text-earth-700"
+        >
+          <MapPin size={15} className="text-brand-500 flex-shrink-0" />
+          <span className="flex-1 truncate">{label}</span>
+          <ChevronDown size={14} className={`text-earth-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {open && <div className="mt-2 rounded-xl border border-earth-200 overflow-hidden">{list}</div>}
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 hover:text-white transition-colors"
+      >
+        <MapPin size={10} className="text-brand-400" />
+        <span>{label}</span>
+        <ChevronDown size={10} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 w-60 bg-white rounded-xl border border-earth-200
+          shadow-[0_8px_32px_rgba(0,0,0,0.14)] z-50 overflow-hidden py-1
+          animate-in fade-in slide-in-from-top-1 duration-150">
+          {list}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── TopBar ────────────────────────────────────────────────────────────────────
 function TopBar({ shopInfo }) {
   return (
@@ -167,16 +261,14 @@ function TopBar({ shopInfo }) {
         <div className="flex items-center justify-between h-8 text-[11px] font-body text-brand-200">
 
           <div className="flex items-center gap-5">
+            {/* Keep this honest: no free-delivery rule exists in settings or
+                checkout — don't promise one here. */}
             <div className="flex items-center gap-1.5">
               <Truck size={11} className="text-brand-300 flex-shrink-0" />
-              <span>Free delivery on orders over <span className="text-white font-semibold">KES 50,000</span></span>
+              <span>Wholesale &amp; retail grains — <span className="text-white font-semibold">order online for pickup or delivery</span></span>
             </div>
-            {shopInfo?.location && (
-              <div className="hidden lg:flex items-center gap-1.5">
-                <MapPin size={10} className="text-brand-400" />
-                <span>{shopInfo.location}</span>
-              </div>
-            )}
+            {/* Resolved shop branch + switcher (replaces the static location label) */}
+            <BranchSwitcher />
           </div>
 
           <div className="flex items-center gap-4">
@@ -580,6 +672,11 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+
+            {/* Shop branch (mobile) */}
+            <div className="px-4 py-3 border-b border-earth-200">
+              <BranchSwitcher inline />
+            </div>
 
             {/* Categories */}
             <div className="px-4 pt-4 pb-2">

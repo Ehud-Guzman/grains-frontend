@@ -2,18 +2,33 @@ import { useState, useEffect, useRef } from 'react'
 import { Phone, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { paymentService } from '../../services/payment.service'
 import { formatKES } from '../../utils/helpers'
+import { MPESA_POLL_TIMEOUT_SECONDS, MPESA_SUCCESS_REDIRECT_DELAY_MS } from '../../utils/constants'
 
-const POLL_INTERVAL = 5000   // poll every 5 seconds
-const TIMEOUT_MS    = 120000 // 2 minutes total
+const POLL_INTERVAL = 5000 // poll every 5 seconds
+const TIMEOUT_MS    = MPESA_POLL_TIMEOUT_SECONDS * 1000
 
 export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuccess, onFailure }) {
-  const [secondsLeft, setSecondsLeft] = useState(120)
+  const [secondsLeft, setSecondsLeft] = useState(MPESA_POLL_TIMEOUT_SECONDS)
   const [status, setStatus]           = useState('pending') // pending | paid | failed | timeout
   const [message, setMessage]         = useState('')
   const [consecutiveErrors, setConsecutiveErrors] = useState(0)
   const pollRef    = useRef(null)
   const countdownRef = useRef(null)
   const startTime  = useRef(Date.now())
+  const statusRef  = useRef('pending')
+
+  // Terminal states stay on screen — the failed/timeout view has its own
+  // "Try Again" / "Pay on Pickup" / "View order" actions, so navigation only
+  // happens when the customer picks one (not out from under them).
+  const settle = (nextStatus, msg) => {
+    if (statusRef.current !== 'pending') return
+    statusRef.current = nextStatus
+    setStatus(nextStatus)
+    if (msg) setMessage(msg)
+    clearInterval(pollRef.current)
+    clearInterval(countdownRef.current)
+    if (nextStatus === 'paid') setTimeout(() => onSuccess?.(), MPESA_SUCCESS_REDIRECT_DELAY_MS)
+  }
 
   // ── POLLING ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -24,29 +39,12 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
         const paymentStatus = res.data.data.paymentStatus
 
         if (paymentStatus === 'paid') {
-          setStatus('paid')
-          clearInterval(pollRef.current)
-          clearInterval(countdownRef.current)
-          setTimeout(() => onSuccess?.(), 1500)
+          settle('paid')
           return
         }
 
         if (paymentStatus === 'failed') {
-          setStatus('failed')
-          setMessage('Payment was cancelled or failed. You can retry or choose a different method.')
-          clearInterval(pollRef.current)
-          clearInterval(countdownRef.current)
-          onFailure?.('failed')
-          return
-        }
-
-        // Check timeout
-        if (Date.now() - startTime.current >= TIMEOUT_MS) {
-          setStatus('timeout')
-          setMessage('No response received. Your order is saved — you can pay on pickup or try again.')
-          clearInterval(pollRef.current)
-          clearInterval(countdownRef.current)
-          onFailure?.('timeout')
+          settle('failed', 'Payment was cancelled or failed. You can retry or choose a different method.')
         }
       } catch {
         // Network error — keep polling and show warning after repeated failures
@@ -61,21 +59,21 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
   }, [orderId])
 
   // ── COUNTDOWN ───────────────────────────────────────────────────────────────
+  // The countdown owns the timeout: it fires even when status polls are failing
+  // (e.g. the customer's data connection dropped after the STK push went out),
+  // so the screen can never get stuck at 0s "checking payment status".
   useEffect(() => {
     countdownRef.current = setInterval(() => {
-      setSecondsLeft(s => {
-        if (s <= 1) {
-          clearInterval(countdownRef.current)
-          return 0
-        }
-        return s - 1
-      })
+      setSecondsLeft(s => Math.max(0, s - 1))
+      if (Date.now() - startTime.current >= TIMEOUT_MS) {
+        settle('timeout', 'No response received. Your order is saved — you can pay on pickup or try again.')
+      }
     }, 1000)
 
     return () => clearInterval(countdownRef.current)
   }, [])
 
-  const progress = (secondsLeft / 120) * 100
+  const progress = (secondsLeft / MPESA_POLL_TIMEOUT_SECONDS) * 100
 
   // ── PAID ─────────────────────────────────────────────────────────────────────
   if (status === 'paid') {
@@ -115,6 +113,10 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
             Pay on Pickup Instead
           </button>
         </div>
+        <button onClick={() => onFailure?.('continue')}
+          className="mt-4 text-sm text-earth-400 hover:text-earth-700 font-body underline transition-colors">
+          Skip for now — view my order
+        </button>
       </div>
     )
   }

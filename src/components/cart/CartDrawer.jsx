@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { X, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
-import { formatKES } from '../../utils/helpers'
+import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartDrawer() {
@@ -56,7 +56,7 @@ export default function CartDrawer() {
                 <div className="flex-1 min-w-0">
                   <p className="font-body font-medium text-earth-900 text-sm truncate">{item.productName}</p>
                   <p className="text-earth-500 text-xs">{item.variety} · {item.packaging}</p>
-                  <p className="text-brand-600 font-medium text-sm mt-1">{formatKES(item.priceKES * item.quantity)}</p>
+                  <p className="text-brand-600 font-medium text-sm mt-1">{formatKES(getCartUnitPrice(item) * item.quantity)}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <button onClick={() => updateQuantity(item.key, item.quantity - 1)}
                       className="w-7 h-7 rounded-lg bg-earth-100 hover:bg-earth-200 flex items-center justify-center transition-colors">

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { publicSettingsService } from '../services/admin/settings.service'
 import { productService } from '../services/product.service'
 import { DEFAULT_SHOP_INFO } from '../utils/constants'
+import { useBranch } from './BranchContext'
 
 const DEFAULT_SETTINGS = {
   shopName: DEFAULT_SHOP_INFO.name,
@@ -68,7 +69,12 @@ export function AppSettingsProvider({ children }) {
   const [settings, setSettings] = useState(() => normalizeSettings())
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
+  // True when the last fetch failed and we're running on defaults. Money-
+  // sensitive flows (checkout) must not trust delivery fee / VAT / minimum
+  // order values while this is set.
+  const [loadFailed, setLoadFailed] = useState(false)
   const [categories, setCategories] = useState([])
+  const { branchId } = useBranch()
 
   const refreshSettings = async () => {
     setIsLoading(true)
@@ -77,9 +83,11 @@ export function AppSettingsProvider({ children }) {
       const nextSettings = normalizeSettings(res.data?.data)
       setSettings(nextSettings)
       setHasLoaded(true)
+      setLoadFailed(false)
       return nextSettings
     } catch (error) {
       setHasLoaded(true)
+      setLoadFailed(true)
       return settings
     } finally {
       setIsLoading(false)
@@ -89,25 +97,31 @@ export function AppSettingsProvider({ children }) {
   const applySettings = (nextSettings) => {
     setSettings(normalizeSettings(nextSettings))
     setHasLoaded(true)
+    setLoadFailed(false)
     setIsLoading(false)
   }
 
+  // Refetch when the resolved shop branch changes — settings (min order, VAT,
+  // delivery zones) and categories are per-branch. The branchId param rides in
+  // automatically via the api.js request interceptor; force bypasses the
+  // module-level categories cache which is keyed per session, not per branch.
   useEffect(() => {
     refreshSettings()
-    productService.getCategories()
+    productService.getCategories({ force: true })
       .then(res => setCategories(res.data?.data || []))
       .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [branchId])
 
   const value = useMemo(() => ({
     ...settings,
     isLoading,
     hasLoaded,
+    loadFailed,
     categories,
     refreshSettings,
     applySettings,
-  }), [settings, isLoading, hasLoaded, categories])
+  }), [settings, isLoading, hasLoaded, loadFailed, categories])
 
   return (
     <AppSettingsContext.Provider value={value}>

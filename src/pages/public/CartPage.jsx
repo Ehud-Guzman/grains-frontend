@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext'
 import { useAppSettings } from '../../context/AppSettingsContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
-import { formatKES } from '../../utils/helpers'
+import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartPage() {
@@ -89,7 +89,10 @@ export default function CartPage() {
                   </div>
 
                   <p className="text-brand-600 text-xs font-body font-semibold mb-3">
-                    {formatKES(item.priceKES)} / bag
+                    {formatKES(getCartUnitPrice(item))} / bag
+                    {getCartUnitPrice(item) < item.priceKES && (
+                      <span className="text-green-600 ml-1.5">volume price</span>
+                    )}
                   </p>
 
                   <div className="flex items-center justify-between">
@@ -113,7 +116,7 @@ export default function CartPage() {
 
                     {/* Line total */}
                     <span className="font-display font-bold text-earth-900">
-                      {formatKES(item.priceKES * item.quantity)}
+                      {formatKES(getCartUnitPrice(item) * item.quantity)}
                     </span>
                   </div>
                 </div>
@@ -145,7 +148,7 @@ export default function CartPage() {
                       {item.productName} ×{item.quantity}
                     </span>
                     <span className="text-earth-900 font-body font-semibold flex-shrink-0">
-                      {formatKES(item.priceKES * item.quantity)}
+                      {formatKES(getCartUnitPrice(item) * item.quantity)}
                     </span>
                   </div>
                 ))}

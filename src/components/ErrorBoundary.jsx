@@ -1,5 +1,13 @@
 import { Component } from 'react'
 
+// Netlify deploys are atomic: a deploy mid-session makes the old hashed lazy
+// chunks 404, which surfaces here as a dynamic-import failure. One automatic
+// reload picks up the new bundle; the flag prevents a reload loop if the
+// error is something else.
+const isChunkLoadError = (error) =>
+  /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError/i
+    .test(error?.message || '')
+
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
@@ -11,6 +19,12 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    if (isChunkLoadError(error) && !sessionStorage.getItem('chunk_reload')) {
+      sessionStorage.setItem('chunk_reload', '1')
+      window.location.reload()
+      return
+    }
+    sessionStorage.removeItem('chunk_reload')
     // In production this would go to Sentry / error tracking
     console.error('[ErrorBoundary] Uncaught error:', error, info.componentStack)
   }

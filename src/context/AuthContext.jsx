@@ -25,23 +25,55 @@ export const AuthProvider = ({ children }) => {
         return
       }
       try {
-        const res = await authService.refresh()
+        // Long timeout: a Render cold start takes ~30s and must not be treated
+        // as a dead session.
+        const res = await authService.refresh({ timeout: 65000 })
         const { accessToken, user: freshUser } = res.data.data
         setToken(accessToken)
         const userData = freshUser || JSON.parse(stored)
         localStorage.setItem('user', JSON.stringify(userData))
         setUser(userData)
         if (storedBranch) setCurrentBranch(JSON.parse(storedBranch))
-      } catch {
-        // Refresh failed (cookie expired or revoked) — clear stale local state
-        clearToken()
-        localStorage.removeItem('user')
-        localStorage.removeItem('currentBranch')
+      } catch (err) {
+        // Only clear local state when the server actually rejected the cookie.
+        // Network errors / timeouts keep the stored session so the next visit
+        // can retry the restore.
+        if (err.response) {
+          clearToken()
+          localStorage.removeItem('user')
+          localStorage.removeItem('currentBranch')
+        }
       } finally {
         setIsLoading(false)
       }
     }
     restore()
+  }, [])
+
+  // ── SESSION SYNC ──────────────────────────────────────────────────────────
+  // 1) The axios interceptor dispatches 'auth:session-expired' when a token
+  //    refresh is rejected mid-session — clear React state so ProtectedRoute
+  //    redirects with the current location preserved.
+  // 2) Cross-tab: logging out in another tab removes 'user' from localStorage;
+  //    mirror that here so this tab doesn't keep acting logged-in.
+  useEffect(() => {
+    const onExpired = () => {
+      setUser(null)
+      setCurrentBranch(null)
+    }
+    const onStorage = (e) => {
+      if (e.key === 'user' && e.newValue === null) {
+        clearToken()
+        setUser(null)
+        setCurrentBranch(null)
+      }
+    }
+    window.addEventListener('auth:session-expired', onExpired)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener('auth:session-expired', onExpired)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [])
 
   // ── ADMIN INACTIVITY TIMEOUT ──────────────────────────────────────────────
@@ -109,7 +141,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Admin — clear any stale session before branch selection completes
-    sessionStorage.removeItem('accessToken')
+    clearToken()
     localStorage.removeItem('user')
     localStorage.removeItem('currentBranch')
     setUser(null)

@@ -16,8 +16,9 @@ export const authService = {
   // No body payload needed; withCredentials on the axios instance handles it.
   logout: () => api.post('/auth/logout'),
 
-  // refreshToken sent as cookie; empty body is intentional
-  refresh: () => api.post('/auth/refresh'),
+  // refreshToken sent as cookie; empty body is intentional.
+  // Callers may pass axios config (e.g. a longer timeout for cold starts).
+  refresh: (config) => api.post('/auth/refresh', {}, config),
 
   changePassword: (currentPassword, newPassword) =>
     api.post('/auth/change-password', { currentPassword, newPassword }),

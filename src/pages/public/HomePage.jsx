@@ -148,7 +148,8 @@ function PromoBannerCarousel({ banners }) {
 
         {/* Blurred backdrop */}
         {p.imageUrl ? (
-          <img src={p.imageUrl} alt="" aria-hidden="true"
+          // Heavily blurred backdrop — a tiny transform is plenty
+          <img src={getOptimizedImageUrl(p.imageUrl, { width: 480 })} alt="" aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover scale-110"
             style={{ filter: 'blur(20px) brightness(0.4) saturate(1.3)' }} />
         ) : (
@@ -158,7 +159,7 @@ function PromoBannerCarousel({ banners }) {
         {/* Crisp image — right side, natural ratio */}
         {p.imageUrl && (
           <div className="absolute inset-0 flex items-center justify-end pr-6 lg:pr-12 pointer-events-none">
-            <img src={p.imageUrl} alt={p.title}
+            <img src={getOptimizedImageUrl(p.imageUrl, { width: 640 })} alt={p.title}
               className="h-[90%] w-auto max-w-[40%] object-contain drop-shadow-2xl" />
           </div>
         )}
@@ -245,7 +246,7 @@ function FeaturedPromoCards({ promos, allProducts }) {
                   overflow-hidden shadow-warm hover:shadow-warm-lg hover:-translate-y-1 transition-all group">
                 <div className="relative h-36 bg-earth-100">
                   {img
-                    ? <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ? <img src={getOptimizedImageUrl(img, { width: 448, height: 288 })} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     : <div className="w-full h-full flex items-center justify-center"><Package size={28} className="text-earth-300" /></div>
                   }
                   <span className="absolute top-2 left-2 bg-brand-600 text-white text-[10px] font-body

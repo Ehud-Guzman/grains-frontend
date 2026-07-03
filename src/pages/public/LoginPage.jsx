@@ -1,166 +1,14 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Eye, EyeOff, LogIn, Lock, X, ArrowLeft,
-  CheckCircle, MapPin, Building2, ShoppingBag, Shield,
+  Eye, EyeOff, LogIn, ArrowLeft, Clock,
+  MapPin, Building2, ShoppingBag, Shield, Phone,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
-import { authService } from '../../services/auth.service'
+import { normalizeKenyanPhone } from '../../utils/helpers'
 
 const ADMIN_ROLES = ['admin', 'superadmin', 'supervisor', 'staff']
-
-// ── PASSWORD STRENGTH ─────────────────────────────────────────────────────────
-const getStrength = (pw) => {
-  if (!pw) return { score: 0, label: '', color: '' }
-  let score = 0
-  if (pw.length >= 8)  score++
-  if (pw.length >= 12) score++
-  if (/[A-Z]/.test(pw)) score++
-  if (/[0-9]/.test(pw)) score++
-  if (/[^A-Za-z0-9]/.test(pw)) score++
-  if (score <= 1) return { score, label: 'Weak',   color: 'bg-red-400'   }
-  if (score <= 3) return { score, label: 'Fair',   color: 'bg-amber-400' }
-  return              { score, label: 'Strong', color: 'bg-green-500'  }
-}
-
-// ── CHANGE PASSWORD MODAL ─────────────────────────────────────────────────────
-function ChangePasswordModal({ onClose }) {
-  const [form, setForm] = useState({ current: '', next: '', confirm: '' })
-  const [show, setShow] = useState({ current: false, next: false, confirm: false })
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [done, setDone]       = useState(false)
-
-  const strength = getStrength(form.next)
-  const toggle   = (field) => setShow(s => ({ ...s, [field]: !s[field] }))
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    if (form.next.length < 8)      return setError('New password must be at least 8 characters')
-    if (form.next !== form.confirm) return setError('Passwords do not match')
-    if (form.current === form.next) return setError('New password must be different from current')
-    setLoading(true)
-    try {
-      await authService.changePassword(form.current, form.next)
-      setDone(true)
-      setTimeout(onClose, 2500)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to change password. Check your current password.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-earth-200">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-earth-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Lock size={15} className="text-brand-600" />
-            </div>
-            <h3 className="font-display font-semibold text-earth-900">Change Password</h3>
-          </div>
-          <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-800 transition-colors">
-            <X size={16} />
-          </button>
-        </div>
-
-        <div className="p-5">
-          {done ? (
-            <div className="text-center py-6">
-              <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CheckCircle size={28} className="text-green-500" />
-              </div>
-              <p className="font-display font-semibold text-earth-900 mb-1">Password Updated</p>
-              <p className="text-earth-500 text-sm font-body">Your password has been changed successfully</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                { key: 'current', label: 'Current Password',    placeholder: 'Your current password', autoFocus: true },
-                { key: 'next',    label: 'New Password',         placeholder: 'At least 8 characters'  },
-                { key: 'confirm', label: 'Confirm New Password', placeholder: 'Repeat new password'    },
-              ].map(({ key, label, placeholder, autoFocus }) => (
-                <div key={key}>
-                  <label className="block text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-1.5">
-                    {label}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={show[key] ? 'text' : 'password'}
-                      value={form[key]}
-                      onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                      placeholder={placeholder}
-                      required
-                      autoFocus={autoFocus}
-                      autoComplete={key === 'current' ? 'current-password' : 'new-password'}
-                      className={`w-full border rounded-xl px-4 py-2.5 pr-10 text-sm font-body
-                        text-earth-900 placeholder-earth-400 focus:outline-none focus:ring-2
-                        focus:border-transparent bg-white transition-colors ${
-                          key === 'confirm' && form.confirm
-                            ? form.next !== form.confirm ? 'border-red-300 focus:ring-red-300'
-                            : 'border-green-300 focus:ring-green-300'
-                            : 'border-earth-200 focus:ring-brand-400'
-                        }`}
-                    />
-                    <button type="button" onClick={() => toggle(key)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-700 p-0.5">
-                      {show[key] ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {key === 'next' && form.next && (
-                    <div className="mt-2">
-                      <div className="flex gap-1 mb-1">
-                        {[1,2,3,4,5].map(i => (
-                          <div key={i} className={`h-1 flex-1 rounded-full transition-all ${
-                            i <= strength.score ? strength.color : 'bg-earth-200'
-                          }`} />
-                        ))}
-                      </div>
-                      <p className={`text-xs font-body ${
-                        strength.score <= 1 ? 'text-red-500' :
-                        strength.score <= 3 ? 'text-amber-500' : 'text-green-600'
-                      }`}>{strength.label}</p>
-                    </div>
-                  )}
-                  {key === 'confirm' && form.confirm && (
-                    form.next !== form.confirm
-                      ? <p className="text-red-500 text-xs mt-1 font-body">Passwords do not match</p>
-                      : form.next.length >= 8
-                        ? <p className="text-green-600 text-xs mt-1 font-body flex items-center gap-1">
-                            <CheckCircle size={11} /> Passwords match
-                          </p>
-                        : null
-                  )}
-                </div>
-              ))}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700 font-body">
-                  {error}
-                </div>
-              )}
-
-              <button type="submit" disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 text-white
-                  rounded-xl text-sm font-body font-semibold hover:bg-brand-700 transition-all
-                  disabled:opacity-60 active:scale-[0.98]">
-                {loading
-                  ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Updating…</>
-                  : <><Lock size={15} /> Update Password</>
-                }
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── BRANCH SELECTOR ───────────────────────────────────────────────────────────
 function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack }) {
@@ -246,31 +94,37 @@ export default function LoginPage() {
   const { login, selectBranch } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const from = location.state?.from?.pathname || '/dashboard'
+  const signedOutForInactivity = searchParams.get('reason') === 'inactivity'
 
-  const [form, setForm]                           = useState({ phone: '', password: '' })
-  const [showPass, setShowPass]                   = useState(false)
-  const [loading, setLoading]                     = useState(false)
-  const [error, setError]                         = useState('')
-  const [showChangePassword, setShowChangePassword] = useState(false)
-  const [branchStep, setBranchStep]               = useState(null)
+  const [form, setForm]             = useState({ phone: '', password: '' })
+  const [showPass, setShowPass]     = useState(false)
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState('')
+  const [branchStep, setBranchStep] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const result = await login(form.phone, form.password)
+      const result = await login(normalizeKenyanPhone(form.phone), form.password)
       if (result.requiresBranchSelection) {
         setLoading(false)
         setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
         return
       }
+      // Honour the page the user was heading to, as long as it belongs to
+      // their portal — otherwise land them on their own dashboard.
       const { role } = result.user
-      if (ADMIN_ROLES.includes(role))  navigate('/admin/dashboard',  { replace: true })
-      else if (role === 'driver')      navigate('/driver/dashboard', { replace: true })
-      else {
-        const target = ['/login', '/register', '/'].includes(from) ? '/dashboard' : from
+      if (ADMIN_ROLES.includes(role)) {
+        navigate(from.startsWith('/admin') ? from : '/admin/dashboard', { replace: true })
+      } else if (role === 'driver') {
+        navigate(from.startsWith('/driver') ? from : '/driver/dashboard', { replace: true })
+      } else {
+        const target = ['/login', '/register', '/'].includes(from) || from.startsWith('/admin') || from.startsWith('/driver')
+          ? '/dashboard' : from
         navigate(target, { replace: true })
       }
     } catch (err) {
@@ -283,7 +137,7 @@ export default function LoginPage() {
 
   const handleBranchSelect = async (preAuthToken, branchId) => {
     await selectBranch(preAuthToken, branchId)
-    navigate('/admin/dashboard', { replace: true })
+    navigate(from.startsWith('/admin') ? from : '/admin/dashboard', { replace: true })
   }
 
   return (
@@ -325,6 +179,15 @@ export default function LoginPage() {
         {/* Center — floating form */}
         <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-10">
           <div className="w-full max-w-sm">
+
+            {/* Signed out due to inactivity */}
+            {signedOutForInactivity && (
+              <div className="mb-4 flex items-start gap-2.5 bg-amber-50/95 border border-amber-200
+                rounded-xl px-4 py-3 text-sm font-body text-amber-800">
+                <Clock size={15} className="flex-shrink-0 mt-0.5 text-amber-500" />
+                You were signed out after 30 minutes of inactivity. Sign in to continue.
+              </div>
+            )}
 
             {/* Branch selection */}
             {branchStep && (
@@ -391,10 +254,14 @@ export default function LoginPage() {
                         <label className="text-sm font-body font-medium text-earth-700">
                           Password
                         </label>
-                        <button type="button" onClick={() => setShowChangePassword(true)}
-                          className="text-xs text-brand-600 hover:text-brand-800 font-body font-medium transition-colors">
-                          Change password
-                        </button>
+                        {shopInfo.phone && (
+                          <a href={`tel:${shopInfo.phone.replace(/\s/g, '')}`}
+                            className="text-xs text-brand-600 hover:text-brand-800 font-body
+                              font-medium transition-colors inline-flex items-center gap-1">
+                            <Phone size={11} />
+                            Forgot? Call us
+                          </a>
+                        )}
                       </div>
                       <div className="relative">
                         <input
@@ -468,10 +335,6 @@ export default function LoginPage() {
         </div>
 
       </div>
-
-      {showChangePassword && (
-        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
-      )}
     </>
   )
 }

@@ -97,10 +97,15 @@ function ItemRow({ item, index, onChange, onRemove, canRemove, inputClass }) {
 }
 
 // ── CREATE MODAL ─────────────────────────────────────────────────────────────
+// datetime-local expects local wall-clock time; toISOString() would prefill
+// UTC, which is 3 hours behind EAT — every intake would default 3h early.
+const toLocalDatetimeValue = (d = new Date()) =>
+  new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+
 function CreateModal({ onClose, onCreated }) {
   const [form, setForm] = useState({
     ...EMPTY_FORM,
-    arrivedAt: new Date().toISOString().slice(0, 16),
+    arrivedAt: toLocalDatetimeValue(),
     items: [{ ...EMPTY_ITEM }],
   })
   const [saving, setSaving] = useState(false)

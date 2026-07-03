@@ -1,12 +1,21 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
+import { useBranch } from './BranchContext'
+import { getCartUnitPrice } from '../utils/helpers'
 
 const CartContext = createContext(null)
 const CART_KEY = 'vittorios_cart'
+const CART_BRANCH_KEY = 'vittorios_cart_branch'
+
+// stock === null means "unknown" (reorder from an old order snapshot) — the
+// quantity is then validated server-side at checkout instead of client-side.
+// (Must be null, not Infinity: Infinity does not survive JSON persistence.)
+const hasKnownStock = (item) => typeof item.stock === 'number' && Number.isFinite(item.stock)
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([])
   const [isOpen, setIsOpen] = useState(false)
+  const { branch, branchId } = useBranch()
 
   useEffect(() => {
     try {
@@ -16,6 +25,20 @@ export const CartProvider = ({ children }) => {
       localStorage.removeItem(CART_KEY)
     }
   }, [])
+
+  // Cart items belong to one branch's catalog (per-branch products/prices/stock).
+  // If the resolved branch changes while the cart has items from another branch,
+  // clear it — otherwise checkout would 404 on the other branch's product IDs.
+  useEffect(() => {
+    if (!branchId) return
+    const cartBranch = localStorage.getItem(CART_BRANCH_KEY)
+    if (cartBranch && cartBranch !== branchId && items.length > 0) {
+      setItems([])
+      localStorage.removeItem(CART_KEY)
+      toast(`Cart cleared — now shopping from ${branch?.name || 'a different branch'}`, { icon: '🧺' })
+    }
+    localStorage.setItem(CART_BRANCH_KEY, branchId)
+  }, [branchId, branch?.name, items.length])
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items))
@@ -46,6 +69,9 @@ export const CartProvider = ({ children }) => {
         variety: variety.varietyName,
         packaging: packaging.size,
         priceKES: packaging.priceKES,
+        // Volume tiers travel with the item so cart/checkout totals match the
+        // tiered price the backend actually charges.
+        pricingTiers: packaging.pricingTiers || [],
         stock: packaging.stock,
         imageURL: variety.imageURLs?.[0] || product.imageURLs?.[0] || null,
         quantity
@@ -61,7 +87,7 @@ export const CartProvider = ({ children }) => {
     if (quantity < 1) return
     setItems(prev => prev.map(i => {
       if (i.key !== key) return i
-      if (quantity > i.stock) {
+      if (hasKnownStock(i) && quantity > i.stock) {
         toast.error(`Only ${i.stock} bags available`)
         return i
       }
@@ -85,7 +111,8 @@ export const CartProvider = ({ children }) => {
       variety:     item.variety,
       packaging:   item.packaging,
       priceKES:    item.unitPrice,
-      stock:       Infinity, // stock not known from order snapshot; validated at checkout
+      pricingTiers: [],
+      stock:       null, // stock not known from order snapshot; validated at checkout
       imageURL:    null,
       quantity:    item.quantity
     }))
@@ -96,7 +123,8 @@ export const CartProvider = ({ children }) => {
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
 
-  const subtotal = items.reduce((sum, i) => sum + (i.priceKES * i.quantity), 0)
+  // Tier-aware subtotal — matches the server-side price derivation
+  const subtotal = items.reduce((sum, i) => sum + (getCartUnitPrice(i) * i.quantity), 0)
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0)
 
   return (

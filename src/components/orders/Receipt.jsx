@@ -26,6 +26,12 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    const onKeyDown = (e) => { if (e.key === 'Escape') onClose?.() }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
   const { kraPin, receiptFooterNote } = receiptConfig
   const customerName  = order.userId?.name  || order.guestId?.name  || order.name  || '—'
   const customerPhone = order.userId?.phone || order.guestId?.phone || order.phone || '—'

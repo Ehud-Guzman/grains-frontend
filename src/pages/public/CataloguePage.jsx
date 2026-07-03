@@ -101,7 +101,12 @@ export default function CataloguePage() {
   }
   const page = Number(searchParams.get('page') || 1)
 
+  // Monotonic request id — on slow networks two fetches can be in flight at
+  // once and the older response must not overwrite the newer one.
+  const fetchSeq = useRef(0)
+
   const fetchProducts = useCallback(async () => {
+    const seq = ++fetchSeq.current
     setLoading(true)
     try {
       const params = { page, limit: 12 }
@@ -112,10 +117,15 @@ export default function CataloguePage() {
       if (filters.maxPrice)      params.maxPrice      = filters.maxPrice
       if (search)                params.search        = search
       const res = await productService.getAll(params)
+      if (seq !== fetchSeq.current) return // stale response — a newer fetch won
       setProducts(res.data.data || [])
       setPagination(res.data.pagination)
-    } catch { setProducts([]) }
-    finally { setLoading(false) }
+    } catch {
+      if (seq === fetchSeq.current) setProducts([])
+    }
+    finally {
+      if (seq === fetchSeq.current) setLoading(false)
+    }
   }, [filters.category, filters.inStock, filters.maxPrice, filters.minPrice, filters.packagingSize, page, search])
 
   useEffect(() => {

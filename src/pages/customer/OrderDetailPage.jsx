@@ -38,9 +38,8 @@ export default function CustomerOrderDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await orderService.getMyOrders({ limit: 100 })
-        const found = (res.data.data.orders || []).find(o => o._id === id)
-        setOrder(found || null)
+        const res = await orderService.getMyOrder(id)
+        setOrder(res.data.data || null)
       } catch { setOrder(null) }
       finally { setLoading(false) }
     }

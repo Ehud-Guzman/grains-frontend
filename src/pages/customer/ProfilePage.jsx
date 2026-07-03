@@ -10,6 +10,7 @@ import { useShopInfo } from '../../context/AppSettingsContext'
 import { authService } from '../../services/auth.service'
 import { formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
+import ChangePasswordModal from '../../components/auth/ChangePasswordModal'
 import toast from 'react-hot-toast'
 
 // ── FIELD ─────────────────────────────────────────────────────────────────────
@@ -165,6 +166,7 @@ export default function CustomerProfilePage() {
   const [addresses, setAddresses] = useState([])
   const [newAddress, setNewAddress] = useState({ label: '', value: '' })
   const [showAddAddress, setShowAddAddress] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
     authService.getProfile()
@@ -538,16 +540,20 @@ export default function CustomerProfilePage() {
                   Last changed: {profile?.passwordChangedAt ? formatDate(profile.passwordChangedAt) : 'Never'}
                 </p>
               </div>
-              <Link to="/login"
+              <button onClick={() => setShowChangePassword(true)}
                 className="text-xs text-brand-600 hover:text-brand-700 font-body font-semibold
                   px-3 py-2 rounded-xl border border-brand-100 hover:bg-brand-50 transition-colors flex-shrink-0">
                 Change →
-              </Link>
+              </button>
             </div>
           </div>
 
         </div>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
     </div>
   )
 }
