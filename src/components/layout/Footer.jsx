@@ -18,7 +18,7 @@ export default function Footer() {
       {/* Top accent line */}
       <div className="h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
 
-      <div className="container-page pt-14 pb-6 relative">
+      <div className="container-page pt-14 pb-24 relative">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
           {/* ── Brand ──────────────────────────────────────────────── */}
@@ -39,8 +39,8 @@ export default function Footer() {
             </Link>
 
             <p className="text-earth-600 text-sm leading-relaxed mb-5">
-              Quality grains and cereals sourced directly and delivered fresh.
-              Serving Nairobi and surrounding areas since 2020.
+              Quality grains and cereals sourced directly and delivered fresh
+              to your doorstep since 2020.
             </p>
 
             {/* WhatsApp CTA */}
@@ -180,7 +180,7 @@ export default function Footer() {
 
         {/* ── Bottom bar ──────────────────────────────────────────── */}
         <div className="mt-12 pt-6 border-t border-earth-200 flex flex-col sm:flex-row
-          items-center justify-between gap-3">
+          items-center justify-between gap-3 sm:pr-28">
           <p className="text-earth-500 text-xs font-body">
             © {new Date().getFullYear()} Vittorios Grains & Cereals. All rights reserved.
           </p>
