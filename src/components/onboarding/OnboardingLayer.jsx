@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { X, LifeBuoy, CheckCircle2, ShoppingCart, Lightbulb, Package, Search, CreditCard, MapPin, Star, Compass } from 'lucide-react'
@@ -26,6 +26,23 @@ const TIPS = [
 function HelpCenter() {
   const { helpCenterOpen, openHelpCenter, closeHelpCenter, currentExperience, getChecklist } = useOnboarding()
   const [tab, setTab] = useState('start')
+  const [fabLift, setFabLift] = useState(0)
+
+  useEffect(() => {
+    function updateFabLift() {
+      const footer = document.querySelector('footer')
+      if (!footer) { setFabLift(0); return }
+      const overlap = window.innerHeight - footer.getBoundingClientRect().top
+      setFabLift(overlap > 0 ? overlap + 12 : 0)
+    }
+    updateFabLift()
+    window.addEventListener('scroll', updateFabLift, { passive: true })
+    window.addEventListener('resize', updateFabLift)
+    return () => {
+      window.removeEventListener('scroll', updateFabLift)
+      window.removeEventListener('resize', updateFabLift)
+    }
+  }, [])
 
   const items     = getChecklist(currentExperience)
   const doneCount = items.filter(item => item.done).length
@@ -42,7 +59,8 @@ function HelpCenter() {
       {/* FAB */}
       <button
         onClick={openHelpCenter}
-        className="fixed bottom-5 right-5 z-[110] inline-flex items-center gap-2 rounded-full border border-brand-300 bg-white px-4 py-3 text-sm font-body font-semibold text-brand-700 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all hover:-translate-y-0.5 hover:bg-brand-50"
+        style={{ bottom: `${20 + fabLift}px` }}
+        className="fixed right-5 z-[110] inline-flex items-center gap-2 rounded-full border border-brand-300 bg-white px-4 py-3 text-sm font-body font-semibold text-brand-700 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all hover:-translate-y-0.5 hover:bg-brand-50"
       >
         <LifeBuoy size={16} />
         Help
