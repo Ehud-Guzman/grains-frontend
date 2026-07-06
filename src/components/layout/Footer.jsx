@@ -18,7 +18,7 @@ export default function Footer() {
       {/* Top accent line */}
       <div className="h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
 
-      <div className="container-page py-14 relative">
+      <div className="container-page pt-14 pb-6 relative">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
           {/* ── Brand ──────────────────────────────────────────────── */}
