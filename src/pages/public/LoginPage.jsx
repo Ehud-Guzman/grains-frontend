@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Eye, EyeOff, LogIn, ArrowLeft, Clock,
-  MapPin, Building2, ShoppingBag, Shield, Phone,
+  MapPin, Building2, ShoppingBag, Shield,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -260,14 +260,11 @@ export default function LoginPage() {
                         <label className="text-sm font-body font-medium text-earth-700">
                           Password
                         </label>
-                        {shopInfo.phone && (
-                          <a href={`tel:${shopInfo.phone.replace(/\s/g, '')}`}
-                            className="text-xs text-brand-600 hover:text-brand-800 font-body
-                              font-medium transition-colors inline-flex items-center gap-1">
-                            <Phone size={11} />
-                            Forgot? Call us
-                          </a>
-                        )}
+                        <Link to="/forgot-password"
+                          className="text-xs text-brand-600 hover:text-brand-800 font-body
+                            font-medium transition-colors">
+                          Forgot password?
+                        </Link>
                       </div>
                       <div className="relative">
                         <input

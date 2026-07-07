@@ -215,7 +215,10 @@ export default function CouponsPage() {
             </thead>
             <tbody>
               {coupons.map(c => {
-                const expired = c.expiresAt && new Date(c.expiresAt) < new Date()
+                // expiresAt is a date-only value (midnight UTC) — add a full day before
+                // comparing so this badge agrees with the backend, which treats the
+                // coupon as valid through end-of-day Nairobi time, not from 00:00 UTC.
+                const expired = c.expiresAt && (new Date(c.expiresAt).getTime() + 24 * 60 * 60 * 1000) < Date.now()
                 const exhausted = c.usageLimit !== null && c.usedCount >= c.usageLimit
                 return (
                   <tr key={c._id} className="border-b border-admin-50 last:border-0 hover:bg-admin-25 transition-colors">

@@ -27,6 +27,7 @@ const OrderConfirmPage = lazy(() => import("./pages/public/OrderConfirmPage").th
 const TrackOrderPage = lazy(() => import("./pages/public/TrackOrderPage"));
 const LoginPage = lazy(() => import("./pages/public/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/public/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/public/ForgotPasswordPage"));
 
 // Customer pages
 const CustomerDashboardPage = lazy(() => import("./pages/customer/DashboardPage"));
@@ -151,8 +152,9 @@ export default function App() {
             </Route>
 
             {/* ── AUTH ─────────────────────────────────────────────── */}
-            <Route path="/login"    element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login"           element={<LoginPage />} />
+            <Route path="/register"        element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
             {/* ── DRIVER PORTAL ────────────────────────────────────── */}
             <Route path="/driver" element={

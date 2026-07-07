@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Package, Users, CreditCard, TrendingUp, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Package, Users, CreditCard, TrendingUp, RefreshCw, Receipt as ReceiptIcon } from 'lucide-react'
 import { adminAlertService } from '../../../services/admin/alert.service'
 import { formatDate } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
@@ -57,7 +57,7 @@ export default function AdminAlertsPage() {
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
   if (!data) return null
 
-  const { lowStock, dormantCustomers, paymentFailures, orderSpike } = data
+  const { lowStock, dormantCustomers, paymentFailures, orderSpike, etimsFailures } = data
   const dormantTotal = (dormantCustomers?.d30 || 0) + (dormantCustomers?.d60 || 0) + (dormantCustomers?.d90 || 0)
 
   return (
@@ -150,6 +150,30 @@ export default function AdminAlertsPage() {
             </div>
           )}
         </AlertCard>
+
+        {/* eTIMS submission failures */}
+        {etimsFailures && (
+          <AlertCard icon={ReceiptIcon} title="eTIMS Filing Failures" tone={etimsFailures.count > 0 ? 'red' : 'green'} count={etimsFailures.count}>
+            {etimsFailures.count === 0 ? (
+              <p className="text-sm font-admin text-admin-500">No orders stuck unfiled with KRA.</p>
+            ) : (
+              <div className="space-y-2">
+                {etimsFailures.items.slice(0, 8).map((o) => (
+                  <div key={o._id} className="text-sm font-admin text-admin-700 flex items-center justify-between">
+                    <Link to={`/admin/orders/${o._id}`} className="flex items-center gap-1.5 hover:text-brand-600">
+                      <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
+                      {o.orderRef}
+                    </Link>
+                    <span className="text-admin-400 text-xs">{formatDate(o.updatedAt)}</span>
+                  </div>
+                ))}
+                <p className="text-xs font-admin text-admin-400 mt-1">
+                  A background job retries these automatically — open an order to resubmit manually.
+                </p>
+              </div>
+            )}
+          </AlertCard>
+        )}
 
       </div>
     </div>

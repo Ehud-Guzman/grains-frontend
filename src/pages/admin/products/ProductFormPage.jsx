@@ -429,7 +429,7 @@ export default function ProductFormPage() {
   const [errors, setErrors]     = useState({})
   const [form, setForm]         = useState({
     name: '', category: '', customCategory: '',
-    description: '', imageURLs: [], isActive: false,
+    description: '', imageURLs: [], isActive: false, taxable: true,
     seasonTag: '',
     varieties: [emptyVariety()]
   })
@@ -447,6 +447,7 @@ export default function ProductFormPage() {
           description:    p.description || '',
           imageURLs:      p.imageURLs || [],
           isActive:       p.isActive || false,
+          taxable:        p.taxable !== false,
           varieties: (p.varieties || []).map(v => ({
             ...v,
             _id: v._id || Math.random().toString(36).slice(2),
@@ -507,6 +508,7 @@ export default function ProductFormPage() {
     description: form.description.trim(),
     imageURLs: form.imageURLs,
     isActive,
+    taxable: form.taxable,
     seasonTag: form.seasonTag || undefined,
     varieties: form.varieties.map(v => ({
       varietyName: v.varietyName.trim(),
@@ -619,6 +621,28 @@ export default function ProductFormPage() {
             <ImageUploader label="Product Images (shown when no variety image)"
               images={form.imageURLs}
               onChange={urls => setForm(f => ({ ...f, imageURLs: urls }))} />
+          </div>
+
+          <div className="mt-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div
+                onClick={() => setForm(f => ({ ...f, taxable: !f.taxable }))}
+                className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0
+                  border-2 transition-all cursor-pointer ${
+                    form.taxable
+                      ? 'bg-brand-500 border-brand-500'
+                      : 'border-admin-300 hover:border-brand-400'
+                  }`}>
+                {form.taxable && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-xs font-admin text-admin-600">
+                Subject to VAT — uncheck for VAT-exempt products (e.g. by-products)
+              </span>
+            </label>
           </div>
         </div>
 

@@ -23,6 +23,11 @@ export const authService = {
   changePassword: (currentPassword, newPassword) =>
     api.post('/auth/change-password', { currentPassword, newPassword }),
 
+  forgotPassword: (phone) => api.post('/auth/forgot-password', { phone }),
+
+  resetPassword: (phone, otp, newPassword) =>
+    api.post('/auth/reset-password', { phone, otp, newPassword }),
+
   getProfile: () => api.get('/auth/me'),
 
   updateProfile: (data) => api.put('/auth/me', data),

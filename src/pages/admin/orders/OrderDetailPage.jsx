@@ -83,6 +83,7 @@ export default function AdminOrderDetailPage() {
   const [assigningDriver, setAssigningDriver] = useState(false)
   const [confirmingPayment, setConfirmingPayment] = useState(false)
   const [mpesaRef, setMpesaRef] = useState('')
+  const [mpesaAmount, setMpesaAmount] = useState('')
   const [showMpesaRefInput, setShowMpesaRefInput] = useState(false)
   const [showCashAmountInput, setShowCashAmountInput] = useState(false)
   const [cashReceivedAmount, setCashReceivedAmount] = useState('')
@@ -173,12 +174,14 @@ export default function AdminOrderDetailPage() {
     const ref = mpesaRef.trim().toUpperCase()
     if (!ref) return toast.error('Enter the M-Pesa transaction reference')
     if (!/^[A-Z0-9]{10}$/.test(ref)) return toast.error('Reference must be 10 uppercase letters/numbers (e.g. QDK14KSHD7)')
+    if (mpesaAmount === '' || mpesaAmount == null) return toast.error('Enter the amount shown on the M-Pesa confirmation')
     setConfirmingPayment(true)
     try {
-      await adminPaymentService.confirmManual(id, ref)
+      await adminPaymentService.confirmManual(id, ref, Number(mpesaAmount))
       toast.success('M-Pesa payment confirmed')
       setShowMpesaRefInput(false)
       setMpesaRef('')
+      setMpesaAmount('')
       fetchOrder()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to confirm payment')
@@ -261,8 +264,10 @@ export default function AdminOrderDetailPage() {
             {/* Right — actions */}
             <div className="flex items-center gap-2 flex-wrap justify-end">
 
-              {/* eTIMS status badge */}
-              {order.etimsStatus && (
+              {/* eTIMS status badge — 'not_required' (the schema default for orders
+                  that haven't reached an invoiceable state) is deliberately excluded
+                  here, same as the old undefined/missing-field case was */}
+              {order.etimsStatus && order.etimsStatus !== 'not_required' && (
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-admin font-medium ${
                   order.etimsStatus === 'submitted' ? 'bg-green-50 border-green-200 text-green-700' :
                   order.etimsStatus === 'failed'    ? 'bg-red-50 border-red-200 text-red-700' :
@@ -708,17 +713,28 @@ export default function AdminOrderDetailPage() {
                             font-mono text-admin-800 focus:outline-none focus:ring-2
                             focus:ring-green-400 focus:border-transparent bg-admin-50 uppercase"
                         />
+                        <p className="text-xs font-admin text-admin-500">Amount shown on the M-Pesa confirmation (KES):</p>
+                        <input
+                          type="number"
+                          min="0"
+                          value={mpesaAmount}
+                          onChange={e => setMpesaAmount(e.target.value)}
+                          placeholder={`e.g. ${Math.round(order?.total || 0)}`}
+                          className="w-full border border-admin-200 rounded-lg px-3 py-2 text-sm
+                            text-admin-800 focus:outline-none focus:ring-2
+                            focus:ring-green-400 focus:border-transparent bg-admin-50"
+                        />
                         <div className="flex gap-2">
                           <button
                             onClick={handleConfirmMpesaPayment}
-                            disabled={confirmingPayment || mpesaRef.length !== 10}
+                            disabled={confirmingPayment || mpesaRef.length !== 10 || mpesaAmount === ''}
                             className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm
                               font-admin font-semibold hover:bg-green-700 disabled:opacity-50
                               transition-colors">
                             {confirmingPayment ? 'Confirming…' : 'Confirm'}
                           </button>
                           <button
-                            onClick={() => { setShowMpesaRefInput(false); setMpesaRef('') }}
+                            onClick={() => { setShowMpesaRefInput(false); setMpesaRef(''); setMpesaAmount('') }}
                             className="px-4 py-2 border border-admin-200 text-admin-600
                               rounded-lg text-sm font-admin hover:bg-admin-50 transition-colors">
                             Cancel
