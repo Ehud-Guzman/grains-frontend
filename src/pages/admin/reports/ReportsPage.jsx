@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
-  Download, TrendingUp, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
-  Percent, Bike, Receipt, RefreshCw
+  Download, TrendingUp, TrendingDown, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
+  Percent, Bike, Receipt, RefreshCw, History, AlertCircle
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -10,15 +10,20 @@ import {
 import { adminReportService } from '../../../services/admin/report.service'
 import { formatKES } from '../../../utils/helpers'
 import { useShopInfo } from '../../../context/AppSettingsContext'
+import { useAuth } from '../../../context/AuthContext'
 import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
+
+const EXPORT_ROLES = ['admin', 'superadmin'] // must mirror requireMinRole('admin') on /export/:type
 
 const TABS = [
   { key: 'sales',     label: 'Sales',     icon: TrendingUp   },
   { key: 'products',  label: 'Products',  icon: Package      },
   { key: 'stock',     label: 'Stock',     icon: BarChart3    },
   { key: 'turnover',  label: 'Turnover',  icon: RefreshCw    },
+  { key: 'slow-movers', label: 'Slow Movers', icon: TrendingDown },
+  { key: 'stock-movement', label: 'Stock Movement', icon: History },
   { key: 'customers', label: 'Customers', icon: Users        },
   { key: 'orders',    label: 'Orders',    icon: ShoppingCart },
   { key: 'margins',   label: 'Margins',   icon: Percent      },
@@ -55,7 +60,8 @@ const PRINT_STYLES = `
 // ── PRINT HEADER ──────────────────────────────────────────────────────────────
 const PrintHeader = ({ shopInfo, tab, period }) => {
   const periodLabel = PERIODS.find(p => p.value === period)?.label ?? ''
-  const periodText  = tab !== 'stock' && tab !== 'customers' ? `Period: ${periodLabel}` : 'All time'
+  const NO_PERIOD_TABS = ['stock', 'customers', 'onboarding', 'slow-movers']
+  const periodText  = !NO_PERIOD_TABS.includes(tab) ? `Period: ${periodLabel}` : 'All time'
   const today       = new Date().toLocaleDateString('en-KE', {
     day: 'numeric', month: 'long', year: 'numeric'
   })
@@ -293,15 +299,19 @@ const DataTable = ({ title, headers, rows, renderRow, emptyMessage = 'No data fo
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ReportsPage() {
   const shopInfo = useShopInfo()
+  const { user } = useAuth()
+  const canExport = EXPORT_ROLES.includes(user?.role)
   const [tab,       setTab]       = useState('sales')
   const [period,    setPeriod]    = useState('month')
   const [data,      setData]      = useState(null)
   const [loading,   setLoading]   = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [exporting, setExporting] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
     setData(null)
+    setLoadError(false)
     try {
       const params = { period }
       let res
@@ -309,6 +319,8 @@ export default function ReportsPage() {
       else if (tab === 'products')  res = await adminReportService.getBestSellers({ ...params, limit: 20 })
       else if (tab === 'stock')     res = await adminReportService.getStockValuation()
       else if (tab === 'turnover')  res = await adminReportService.getStockTurnover(params)
+      else if (tab === 'slow-movers')    res = await adminReportService.getSlowMovers()
+      else if (tab === 'stock-movement') res = await adminReportService.getStockMovement(params)
       else if (tab === 'customers') res = await adminReportService.getCustomers()
       else if (tab === 'orders')    res = await adminReportService.getOrders(params)
       else if (tab === 'margins')   res = await adminReportService.getMargins(params)
@@ -316,18 +328,20 @@ export default function ReportsPage() {
       else if (tab === 'onboarding') res = await adminReportService.getOnboarding()
       else if (tab === 'vat')        res = await adminReportService.getVat(params)
       setData(res.data.data)
-    } catch { /* errors handled by api interceptor */ }
+    } catch { setLoadError(true) /* toast already shown by api interceptor */ }
     finally { setLoading(false) }
   }
 
   useEffect(() => { fetchData() }, [tab, period])
 
   const handleExport = async () => {
+    if (!canExport) return
     setExporting(true)
     try {
       const typeMap = {
         sales: 'sales', products: 'best-sellers',
         stock: 'stock-valuation', turnover: 'stock-turnover',
+        'slow-movers': 'slow-movers', 'stock-movement': 'stock-movement',
         customers: 'customers', orders: 'orders', onboarding: 'onboarding',
         vat: 'vat', margins: 'margins', riders: 'riders'
       }
@@ -368,13 +382,15 @@ export default function ReportsPage() {
               <Printer size={15} />
               Print
             </button>
-            <button onClick={handleExport} disabled={exporting || loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl
-                text-sm font-admin font-semibold hover:bg-brand-600 disabled:opacity-50
-                transition-colors shadow-admin">
-              <Download size={15} />
-              {exporting ? 'Exporting…' : 'Export CSV'}
-            </button>
+            {canExport && (
+              <button onClick={handleExport} disabled={exporting || loading}
+                className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl
+                  text-sm font-admin font-semibold hover:bg-brand-600 disabled:opacity-50
+                  transition-colors shadow-admin">
+                <Download size={15} />
+                {exporting ? 'Exporting…' : 'Export CSV'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -395,7 +411,7 @@ export default function ReportsPage() {
         </div>
 
         {/* ── Period filter ────────────────────────────────────────── */}
-        {!['stock', 'customers', 'onboarding'].includes(tab) && (
+        {!['stock', 'customers', 'onboarding', 'slow-movers'].includes(tab) && (
           <div className="flex gap-2 mb-5" data-no-print>
             {PERIODS.map(p => (
               <button key={p.value} onClick={() => setPeriod(p.value)}
@@ -418,6 +434,16 @@ export default function ReportsPage() {
 
           {loading ? (
             <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+          ) : loadError ? (
+            <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
+              <AlertCircle size={28} className="text-red-300 mx-auto mb-3" />
+              <p className="text-admin-500 font-admin font-medium mb-3">Couldn't load this report</p>
+              <button onClick={fetchData}
+                className="px-4 py-2 bg-admin-900 text-white rounded-lg text-sm font-admin font-semibold
+                  hover:bg-admin-800 transition-colors">
+                Retry
+              </button>
+            </div>
           ) : !data ? (
             <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
               <BarChart3 size={28} className="text-admin-300 mx-auto mb-3" />
@@ -612,6 +638,89 @@ export default function ReportsPage() {
                         <td className="px-5 py-3.5 text-right font-admin text-admin-600">
                           {r.daysOfSupply != null ? `${r.daysOfSupply}d` : '—'}
                         </td>
+                      </tr>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* ── SLOW MOVERS ────────────────────────────────────── */}
+              {tab === 'slow-movers' && (
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm font-admin text-blue-700">
+                    Products with no orders (approved or beyond) in the last {data.days} days.
+                    {' '}{data.count} product{data.count === 1 ? '' : 's'} found.
+                  </div>
+
+                  <DataTable
+                    title="Slow-Moving Products"
+                    headers={[
+                      { label: 'Product' },
+                      { label: 'Category' },
+                      { label: 'Varieties',          right: true },
+                      { label: 'Days Without Sale',  right: true },
+                    ]}
+                    rows={data.slowMovers || []}
+                    emptyMessage="No slow-moving products — everything has sold recently"
+                    renderRow={(r, i) => (
+                      <tr key={i} className="hover:bg-admin-50 transition-colors">
+                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">{r.name}</td>
+                        <td className="px-5 py-3.5 font-admin text-admin-600">{r.category || '—'}</td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.varietyCount}</td>
+                        <td className="px-5 py-3.5 text-right font-admin font-bold text-amber-600">{r.daysWithoutSale}d</td>
+                      </tr>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* ── STOCK MOVEMENT ─────────────────────────────────── */}
+              {tab === 'stock-movement' && (
+                <>
+                  {data.truncated && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm font-admin text-amber-700">
+                      Showing the most recent {data.count.toLocaleString()} movements — narrow the period to see all activity in this range.
+                    </div>
+                  )}
+
+                  {Object.keys(data.summary || {}).length > 0 && (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      {Object.entries(data.summary).map(([type, qty]) => (
+                        <KpiTile key={type} label={type.replace(/_/g, ' ')} value={qty} />
+                      ))}
+                    </div>
+                  )}
+
+                  <DataTable
+                    title="Stock Movement Log"
+                    headers={[
+                      { label: 'Date' },
+                      { label: 'Product' },
+                      { label: 'Type' },
+                      { label: 'Qty Change',     right: true },
+                      { label: 'Balance After',  right: true },
+                      { label: 'By' },
+                    ]}
+                    rows={data.logs?.slice(0, 100) || []}
+                    emptyMessage="No stock movements in this period"
+                    renderRow={(r, i) => (
+                      <tr key={i} className="hover:bg-admin-50 transition-colors">
+                        <td className="px-5 py-3.5 font-admin text-admin-600 text-xs">
+                          {new Date(r.timestamp).toLocaleString('en-KE')}
+                        </td>
+                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">
+                          {r.productId?.name || '—'}
+                        </td>
+                        <td className="px-5 py-3.5 font-admin text-admin-600 capitalize">
+                          {r.changeType?.replace(/_/g, ' ')}
+                        </td>
+                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
+                          r.quantityChange >= 0 ? 'text-green-700' : 'text-red-600'
+                        }`}>
+                          {r.quantityChange > 0 ? '+' : ''}{r.quantityChange}
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.balanceAfter}</td>
+                        <td className="px-5 py-3.5 font-admin text-admin-600 text-xs">{r.performedBy?.name || '—'}</td>
                       </tr>
                     )}
                   />
