@@ -65,9 +65,24 @@ export function BranchProvider({ children }) {
 
     const stored = readStored()
 
-    // A manual choice is the user's explicit word — don't geolocate over it
+    // A manual choice is the user's explicit word — don't geolocate over it,
+    // but do confirm it's still a real, active branch (it may have been
+    // deactivated since the pick was made) before trusting it for the session.
     if (stored?.source === 'manual') {
-      setResolving(false)
+      branchService.getAll()
+        .then((res) => {
+          const branches = res.data?.data || []
+          const stillActive = branches.some(b => b._id === stored.branch._id)
+          if (stillActive) {
+            setResolving(false)
+          } else {
+            localStorage.removeItem(BRANCH_KEY)
+            setShopBranchId(null)
+            toast(`${stored.branch.name} is no longer available — switching branches`, { icon: '⚠️' })
+            window.location.reload() // re-run full resolution (geo/default) from a clean slate
+          }
+        })
+        .catch(() => setResolving(false)) // can't verify right now — keep the manual pick rather than disrupt the session
       return
     }
 

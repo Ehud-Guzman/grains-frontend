@@ -156,14 +156,20 @@ function BranchModal({ branch, onClose, onSaved }) {
           <div className="space-y-3 pt-1">
             {[
               { key: 'isDefault', label: 'Set as default branch', desc: 'Public shop uses this branch for products and settings' },
-              { key: 'isActive',  label: 'Active',                desc: 'Inactive branches are hidden from public shop' },
-            ].map(({ key, label, desc }) => (
-              <label key={key} className="flex items-start gap-3 cursor-pointer group">
+              {
+                key: 'isActive', label: 'Active',
+                desc: isEdit && branch.isDefault
+                  ? 'The default branch can’t be deactivated — set another branch as default first'
+                  : 'Inactive branches are hidden from public shop',
+                disabled: isEdit && branch.isDefault,
+              },
+            ].map(({ key, label, desc, disabled }) => (
+              <label key={key} className={`flex items-start gap-3 group ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <div
-                  onClick={() => set(key, !form[key])}
-                  className={`relative w-10 h-5 rounded-full transition-all mt-0.5 cursor-pointer flex-shrink-0 ${
-                    form[key] ? 'bg-brand-500' : 'bg-admin-200'
-                  }`}>
+                  onClick={() => { if (!disabled) set(key, !form[key]) }}
+                  className={`relative w-10 h-5 rounded-full transition-all mt-0.5 flex-shrink-0 ${
+                    disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                  } ${form[key] ? 'bg-brand-500' : 'bg-admin-200'}`}>
                   <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm
                     transition-transform ${form[key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </div>

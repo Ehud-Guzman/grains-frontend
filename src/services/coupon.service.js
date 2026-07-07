@@ -1,8 +1,10 @@
-import api from './api';
+import api, { getShopBranchId } from './api';
 
 export const couponService = {
-  // Public — validate a coupon code before placing order
-  validate: (code, subtotal) => api.post('/coupons/validate', { code, subtotal }),
+  // Public — validate a coupon code before placing order. Must scope to the
+  // resolved storefront branch (not the default branch) or a coupon valid at
+  // the customer's actual branch reads as invalid, and vice versa.
+  validate: (code, subtotal) => api.post('/coupons/validate', { code, subtotal, branchId: getShopBranchId() }),
 
   // Admin
   getAll:    ()        => api.get('/admin/coupons'),

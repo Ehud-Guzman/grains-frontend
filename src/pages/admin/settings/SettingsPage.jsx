@@ -648,6 +648,66 @@ export default function SettingsPage() {
                 ))}
               </div>
 
+              {/* Branch coordinates — always visible, not just in distance-pricing mode.
+                  These also drive the storefront's nearest-branch geolocation match
+                  (branch.service.js findNearestBranch), independent of how this branch
+                  prices delivery, so a flat-fee branch must still be able to set them. */}
+              <div className="bg-admin-50 border border-admin-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} className="text-brand-500 flex-shrink-0" />
+                  <p className="text-sm font-admin font-semibold text-admin-800">Shop / Branch Location</p>
+                </div>
+                <p className="text-xs font-admin text-admin-500">
+                  The GPS origin used for distance-based delivery pricing and for matching nearby customers to this branch on the public shop. Click the button to set from your current location, or enter manually.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Latitude">
+                    <Input type="number" step="any"
+                      placeholder="e.g. 0.5635"
+                      value={form.branchLat ?? ''}
+                      onChange={e => set('branchLat', e.target.value === '' ? null : Number(e.target.value))} />
+                  </Field>
+                  <Field label="Longitude">
+                    <Input type="number" step="any"
+                      placeholder="e.g. 34.5606"
+                      value={form.branchLng ?? ''}
+                      onChange={e => set('branchLng', e.target.value === '' ? null : Number(e.target.value))} />
+                  </Field>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!navigator.geolocation) {
+                      toast.error('Geolocation not supported by this browser')
+                      return
+                    }
+                    navigator.geolocation.getCurrentPosition(
+                      ({ coords }) => {
+                        set('branchLat', Math.round(coords.latitude  * 1e6) / 1e6)
+                        set('branchLng', Math.round(coords.longitude * 1e6) / 1e6)
+                        toast.success('Branch location set — save settings to apply')
+                      },
+                      () => toast.error('Could not detect location')
+                    )
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-admin font-semibold text-brand-600
+                    hover:text-brand-700 transition-colors"
+                >
+                  <MapPin size={12} /> Use my current location
+                </button>
+                {form.branchLat && form.branchLng ? (
+                  <p className="text-xs font-admin text-green-700 bg-green-50 border border-green-200
+                    rounded-lg px-3 py-2">
+                    Set: {form.branchLat}, {form.branchLng}
+                  </p>
+                ) : (
+                  <p className="text-xs font-admin text-amber-700 bg-amber-50 border border-amber-200
+                    rounded-lg px-3 py-2">
+                    Not set — this branch won't be matched to nearby customers on the public shop and will be skipped by location-based delivery pricing until coordinates are set.
+                  </p>
+                )}
+              </div>
+
               {/* ── FLAT MODE ── */}
               {form.deliveryPricingMode !== 'distance' && (
                 <Field label="Delivery Fee (KES)" hint="Set to 0 for free delivery">
@@ -659,58 +719,6 @@ export default function SettingsPage() {
               {/* ── DISTANCE MODE ── */}
               {form.deliveryPricingMode === 'distance' && (
                 <div className="space-y-5">
-                  {/* Branch coordinates */}
-                  <div className="bg-admin-50 border border-admin-200 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={14} className="text-brand-500 flex-shrink-0" />
-                      <p className="text-sm font-admin font-semibold text-admin-800">Shop / Branch Location</p>
-                    </div>
-                    <p className="text-xs font-admin text-admin-500">
-                      The GPS origin used to measure distance to the customer. Click the button to set from your current location, or enter manually.
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Latitude">
-                        <Input type="number" step="any"
-                          placeholder="e.g. 0.5635"
-                          value={form.branchLat ?? ''}
-                          onChange={e => set('branchLat', e.target.value === '' ? null : Number(e.target.value))} />
-                      </Field>
-                      <Field label="Longitude">
-                        <Input type="number" step="any"
-                          placeholder="e.g. 34.5606"
-                          value={form.branchLng ?? ''}
-                          onChange={e => set('branchLng', e.target.value === '' ? null : Number(e.target.value))} />
-                      </Field>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!navigator.geolocation) {
-                          toast.error('Geolocation not supported by this browser')
-                          return
-                        }
-                        navigator.geolocation.getCurrentPosition(
-                          ({ coords }) => {
-                            set('branchLat', Math.round(coords.latitude  * 1e6) / 1e6)
-                            set('branchLng', Math.round(coords.longitude * 1e6) / 1e6)
-                            toast.success('Branch location set — save settings to apply')
-                          },
-                          () => toast.error('Could not detect location')
-                        )
-                      }}
-                      className="flex items-center gap-1.5 text-xs font-admin font-semibold text-brand-600
-                        hover:text-brand-700 transition-colors"
-                    >
-                      <MapPin size={12} /> Use my current location
-                    </button>
-                    {form.branchLat && form.branchLng && (
-                      <p className="text-xs font-admin text-green-700 bg-green-50 border border-green-200
-                        rounded-lg px-3 py-2">
-                        Set: {form.branchLat}, {form.branchLng}
-                      </p>
-                    )}
-                  </div>
-
                   {/* Fallback flat fee */}
                   <Field label="Fallback Fee (KES)"
                     hint="Applied if customer location is unavailable or outside all bands">
