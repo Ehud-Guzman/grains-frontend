@@ -7,6 +7,7 @@ export const adminProductService = {
   toggleActive: (id) => api.patch(`/admin/products/${id}/toggle-active`),
   duplicate: (id) => api.post(`/admin/products/${id}/duplicate`),
   delete: (id) => api.delete(`/admin/products/${id}`),
+  getPriceLog: (id) => api.get(`/admin/products/${id}/price-log`),
   uploadImages: (formData) => api.post('/admin/products/upload-images', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),

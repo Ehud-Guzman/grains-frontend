@@ -158,7 +158,14 @@ export default function CheckoutPage() {
   const vatEnabled     = orderSettings.vatEnabled === true
   const vatRate        = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
   const couponDiscount = couponData?.discountAmount ?? 0
-  const vatBase        = vatEnabled ? Math.max(0, total - couponDiscount) : 0
+  // Mirrors order.service.js exactly: VAT applies only to taxable lines, and the
+  // coupon discount is shared proportionally between taxable/exempt value so an
+  // exempt line isn't taxed just because a discount was applied elsewhere.
+  const taxableSubtotal = items.reduce(
+    (sum, i) => sum + (i.taxable !== false ? getCartUnitPrice(i) * i.quantity : 0), 0
+  )
+  const discountShare  = total > 0 ? taxableSubtotal / total : 0
+  const vatBase        = vatEnabled ? Math.max(0, taxableSubtotal - couponDiscount * discountShare) : 0
   const vatAmount      = vatEnabled ? Math.round(vatBase * vatRate / 100) : 0
   const orderTotal     = Math.max(0, total + deliveryFee + vatAmount - couponDiscount)
   const belowMinimum = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue

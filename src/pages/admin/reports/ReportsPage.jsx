@@ -532,16 +532,23 @@ export default function ReportsPage() {
               {tab === 'stock' && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
-                    <KpiTile label="Stock Value (Selling Price)" value={formatKES(data.totalStockValueKES)} />
+                    <KpiTile label="Stock Value (Cost Price)" value={formatKES(data.totalStockValueKES)} />
                     <KpiTile label="Line Items"        value={data.itemCount} />
                   </div>
+                  {data.rowsMissingCostPrice > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm font-admin text-amber-700">
+                      {data.rowsMissingCostPrice} line{data.rowsMissingCostPrice === 1 ? '' : 's'} have no cost price set
+                      and fall back to selling price — those figures overstate true cost value. Set a cost price on
+                      each packaging size for an accurate total.
+                    </div>
+                  )}
 
                   <DataTable
                     title="Stock Valuation"
                     headers={[
                       { label: 'Product' },
                       { label: 'Stock',   right: true },
-                      { label: 'Price',   right: true },
+                      { label: 'Unit Value',   right: true },
                       { label: 'Value',   right: true },
                     ]}
                     rows={data.rows?.slice(0, 50) || []}
@@ -555,7 +562,10 @@ export default function ReportsPage() {
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.stock}</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-500">
-                          {formatKES(r.priceKES)}
+                          {formatKES(r.unitValueKES)}
+                          {r.usedRetailFallback && (
+                            <span className="ml-1 text-amber-600" title="No cost price set — using selling price">*</span>
+                          )}
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
                           {formatKES(r.totalValueKES)}

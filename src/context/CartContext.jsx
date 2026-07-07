@@ -77,6 +77,9 @@ export const CartProvider = ({ children }) => {
         // Volume tiers travel with the item so cart/checkout totals match the
         // tiered price the backend actually charges.
         pricingTiers: packaging.pricingTiers || [],
+        // Backend defaults a missing/undefined taxable to "taxable" — mirror that
+        // here so checkout's VAT estimate matches order.service.js's vatBase calc.
+        taxable: product.taxable !== false,
         stock: packaging.stock,
         imageURL: variety.imageURLs?.[0] || product.imageURLs?.[0] || null,
         quantity

@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Trash2, Upload, X,
-  ChevronDown, ChevronUp, Save, Eye, Package, Info, Layers
+  ChevronDown, ChevronUp, Save, Eye, Package, Info, Layers, History
 } from 'lucide-react'
 import { adminProductService } from '../../../services/admin/product.service'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
+import { formatKES } from '../../../utils/helpers'
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const PACKAGING_SIZES = ['45kg', '50kg', '90kg', '100kg', 'Bulk', 'Custom']
@@ -418,6 +419,86 @@ function VarietySection({ variety, index, onChange, onRemove, canRemove, errors 
   )
 }
 
+// ── PRICE HISTORY (audit trail) ─────────────────────────────────────────────
+function PriceHistorySection({ productId }) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [logs, setLogs] = useState(null)
+
+  const handleToggle = async () => {
+    const next = !open
+    setOpen(next)
+    if (next && logs === null) {
+      setLoading(true)
+      try {
+        const res = await adminProductService.getPriceLog(productId)
+        setLogs(res.data?.data || [])
+      } catch {
+        toast.error('Failed to load price history')
+        setLogs([])
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
+      <button type="button" onClick={handleToggle}
+        className="flex items-center justify-between w-full text-left">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 bg-brand-50 rounded-lg flex items-center justify-center">
+            <History size={14} className="text-brand-600" />
+          </div>
+          <h2 className="font-admin font-bold text-admin-900">Price History</h2>
+        </div>
+        {open ? <ChevronUp size={16} className="text-admin-400" /> : <ChevronDown size={16} className="text-admin-400" />}
+      </button>
+
+      {open && (
+        <div className="mt-4">
+          {loading ? (
+            <div className="flex justify-center py-6"><Spinner size={20} /></div>
+          ) : logs.length === 0 ? (
+            <p className="text-xs font-admin text-admin-400 py-2">No recorded price changes for this product yet.</p>
+          ) : (
+            <div className="overflow-x-auto -mx-5 px-5">
+              <table className="w-full text-xs font-admin">
+                <thead>
+                  <tr className="text-admin-400 border-b border-admin-100">
+                    <th className="text-left py-2 pr-3 font-medium">Date</th>
+                    <th className="text-left py-2 pr-3 font-medium">Variety / Size</th>
+                    <th className="text-right py-2 pr-3 font-medium">Old Price</th>
+                    <th className="text-right py-2 pr-3 font-medium">New Price</th>
+                    <th className="text-left py-2 pr-3 font-medium">Changed By</th>
+                    <th className="text-left py-2 font-medium">Season</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map(log => (
+                    <tr key={log._id} className="border-b border-admin-50 last:border-0">
+                      <td className="py-2 pr-3 text-admin-600 whitespace-nowrap">
+                        {new Date(log.changedAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td className="py-2 pr-3 text-admin-700">{log.varietyName} · {log.packaging}</td>
+                      <td className="py-2 pr-3 text-right text-admin-500">{formatKES(log.oldPrice)}</td>
+                      <td className={`py-2 pr-3 text-right font-semibold ${
+                        log.newPrice > log.oldPrice ? 'text-red-600' : 'text-green-700'
+                      }`}>{formatKES(log.newPrice)}</td>
+                      <td className="py-2 pr-3 text-admin-600">{log.changedBy?.name || '—'}</td>
+                      <td className="py-2 text-admin-500">{log.seasonTag || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── MAIN FORM ─────────────────────────────────────────────────────────────────
 export default function ProductFormPage() {
   const { id } = useParams()
@@ -713,6 +794,9 @@ export default function ProductFormPage() {
             </Select>
           </Field>
         </div>
+
+        {/* ── PRICE HISTORY (edit mode only) ───────────────────────────── */}
+        {isEdit && <PriceHistorySection productId={id} />}
       </div>
 
       {/* ── STICKY SAVE BAR ────────────────────────────────────────────── */}

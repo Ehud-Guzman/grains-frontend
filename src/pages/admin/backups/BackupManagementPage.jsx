@@ -272,9 +272,19 @@ export default function BackupManagementPage() {
     try {
       const res = await adminBackupService.restore(restoreFile, confirmation)
       const preRestoreId = res.data?.data?.preRestoreBackup?.id
-      toast.success(preRestoreId
-        ? `Restored. Safety snapshot created: ${preRestoreId}`
-        : 'Backup restored successfully')
+      const writeErrors = res.data?.data?.writeErrors || []
+      if (writeErrors.length > 0) {
+        const summary = writeErrors.map(e => `${e.collection} (${e.failed}/${e.total} rows lost)`).join(', ')
+        toast.error(
+          `Restore completed with data loss — some records failed to restore: ${summary}. ` +
+          `Safety snapshot: ${preRestoreId}`,
+          { duration: 15000 }
+        )
+      } else {
+        toast.success(preRestoreId
+          ? `Restored. Safety snapshot created: ${preRestoreId}`
+          : 'Backup restored successfully')
+      }
       setRestoreFile(null)
       await loadBackups(true)
     } catch (err) {
