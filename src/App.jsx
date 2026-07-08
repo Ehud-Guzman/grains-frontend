@@ -14,7 +14,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 // Layouts
 import PublicLayout from "./components/layout/PublicLayout";
-import AdminLayout from "./components/admin/AdminLayout";
+// Lazy — keeps the entire admin chunk (and everything manualChunks merges
+// into it) out of the storefront's initial modulepreload graph.
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
 
 // Public pages
 const HomePage = lazy(() => import("./pages/public/HomePage"));

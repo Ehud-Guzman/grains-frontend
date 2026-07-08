@@ -579,7 +579,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <p className="font-body font-bold text-earth-900 text-sm">{title}</p>
-                  <p className="text-earth-400 text-xs mt-0.5">{desc}</p>
+                  <p className="text-earth-500 text-xs mt-0.5">{desc}</p>
                 </div>
               </div>
             ))}
@@ -645,7 +645,7 @@ export default function HomePage() {
 
                       {/* CTA */}
                       <div className="flex items-center gap-1 mt-4 text-[10px] font-body font-bold
-                        uppercase tracking-[0.18em] text-earth-400 group-hover:text-brand-500
+                        uppercase tracking-[0.18em] text-earth-500 group-hover:text-brand-500
                         transition-colors">
                         Explore
                         <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
@@ -675,7 +675,7 @@ export default function HomePage() {
               <h2 className="font-display text-2xl sm:text-3xl text-earth-900 font-bold">
                 Featured Products
               </h2>
-              <p className="text-earth-400 text-sm font-body mt-1 max-w-2xl">
+              <p className="text-earth-500 text-sm font-body mt-1 max-w-2xl">
                 Start with a wider look at our grains, beans, rice, feed, and pantry staples.
               </p>
             </div>
@@ -702,7 +702,7 @@ export default function HomePage() {
             </div>
           ) : featured.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-earth-400 font-body">No products available yet.</p>
+              <p className="text-earth-500 font-body">No products available yet.</p>
             </div>
           ) : (
             <div className={`grid gap-4 transition-all duration-300 ${

@@ -58,9 +58,9 @@ export default function Footer() {
 
           {/* ── Quick links ─────────────────────────────────────────── */}
           <div>
-            <h4 className="font-body font-bold text-earth-800 text-sm uppercase tracking-widest mb-5">
+            <h3 className="font-body font-bold text-earth-800 text-sm uppercase tracking-widest mb-5">
               Quick Links
-            </h4>
+            </h3>
             <ul className="space-y-2.5">
               {quickLinks.map(link => (
                 <li key={link.to}>
@@ -78,9 +78,9 @@ export default function Footer() {
 
           {/* ── Contact ─────────────────────────────────────────────── */}
           <div>
-            <h4 className="font-body font-bold text-earth-800 text-sm uppercase tracking-widest mb-5">
+            <h3 className="font-body font-bold text-earth-800 text-sm uppercase tracking-widest mb-5">
               Contact Us
-            </h4>
+            </h3>
             <ul className="space-y-4">
               {(shopInfo.phones?.length > 0 || shopInfo.phone) && (
                 <li>
@@ -153,9 +153,9 @@ export default function Footer() {
 
           {/* ── Location ────────────────────────────────────────────── */}
           <div>
-            <h4 className="font-body font-bold text-earth-800 text-sm uppercase tracking-widest mb-5">
+            <h3 className="font-body font-bold text-earth-800 text-sm uppercase tracking-widest mb-5">
               Find Us
-            </h4>
+            </h3>
             <div className="flex items-start gap-3 mb-5">
               <div className="w-8 h-8 bg-brand-50 border border-brand-200 rounded-lg
                 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -184,7 +184,7 @@ export default function Footer() {
           <p className="text-earth-500 text-xs font-body">
             © {new Date().getFullYear()} Vittorios Grains & Cereals. All rights reserved.
           </p>
-          <p className="text-earth-400 text-xs font-body">
+          <p className="text-earth-500 text-xs font-body">
             Designed & maintained by{' '}
             <a href="https://glimmerink.co.ke/" target="_blank" rel="noopener noreferrer"
               className="text-brand-500 hover:text-brand-600 transition-colors font-semibold">
