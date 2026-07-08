@@ -290,7 +290,7 @@ export default function ForgotPasswordPage() {
 
       <div className="relative z-10 pb-2 sm:pb-3 text-center flex-shrink-0">
         <p className="text-white/30 text-xs font-body">
-          Vittorios Grains &amp; Cereals · Bungoma, Kenya
+          Vittorios Grains &amp; Cereals · Nairobi, Kenya
         </p>
       </div>
     </div>

@@ -390,7 +390,7 @@ export default function SettingsPage() {
               </Field>
               <Field label="Location">
                 <Input value={form.shopLocation} onChange={e => set('shopLocation', e.target.value)}
-                  placeholder="Bungoma, Kenya" />
+                  placeholder="Nairobi, Kenya" />
               </Field>
               <Field label="Business Hours" hint="e.g. Mon – Sat: 7:00 AM – 7:00 PM">
                 <Input value={form.shopHours} onChange={e => set('shopHours', e.target.value)}

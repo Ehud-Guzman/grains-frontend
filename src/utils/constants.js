@@ -53,7 +53,7 @@ export const DEFAULT_SHOP_INFO = {
   phone: '+254 799 031 449',
   email: 'vittoriostrades@gmail.com',
   hours: 'Mon – Sat: 7:00 AM – 7:00 PM',
-  location: 'Bungoma, Kenya',
+  location: 'Nairobi, Kenya',
   whatsapp: ''
 }
 

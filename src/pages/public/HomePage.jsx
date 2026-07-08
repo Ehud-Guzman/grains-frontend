@@ -502,7 +502,7 @@ export default function HomePage() {
 
               {/* Stats row */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5">
-                {['50+ products', 'Bulk from 45 kg', 'Bungoma & beyond'].map(s => (
+                {['50+ products', 'Bulk from 45 kg', 'Nairobi & beyond'].map(s => (
                   <span key={s} className="flex items-center gap-2 text-sm font-body text-brand-200/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
                     {s}
