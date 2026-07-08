@@ -18,7 +18,7 @@ export default defineConfig({
         // them would silently download ~1.4MB in the background for every
         // public visitor, undoing the modulepreload split above. They still
         // load normally on demand when someone actually visits those routes.
-        globIgnores: ['**/portal-admin-*.js', '**/portal-driver-*.js', '**/vendor-charts-*.js', '**/vendor-pdf-*.js'],
+        globIgnores: ['**/admin-*.js', '**/driver-*.js', '**/vendor-charts-*.js', '**/vendor-pdf-*.js'],
         // /admin and /driver are behind auth and change constantly — never
         // serve them from cache or fall back to the offline page for them.
         navigateFallback: '/offline.html',
@@ -56,17 +56,16 @@ export default defineConfig({
     chunkSizeWarningLimit: 800,
 
     modulePreload: {
-      // By default Vite modulepreloads every chunk reachable via ANY
-      // dynamic import(), not just the entry's static graph — so the
-      // admin/driver portals (route-lazy, but still reachable from the
-      // router config) were being fetched on every public storefront
-      // visit. Strip them from the root HTML's preload list; they still
-      // get fetched normally the moment someone actually navigates there.
+      // Vite's default preloader eagerly preloads any chunk that's the
+      // target of MULTIPLE different lazy import() call sites (its "shared
+      // chunk" heuristic) — catches vendor-charts (recharts, used by
+      // several admin AND customer pages) and vendor-pdf (jsPDF/html2canvas,
+      // used by Receipt + admin reports). Strip them from the root HTML's
+      // preload list; they still load normally the moment a page that
+      // actually uses them is visited.
       resolveDependencies: (_filename, deps, { hostType }) =>
         hostType === 'html'
-          ? deps.filter((dep) =>
-              !dep.includes('portal-admin') && !dep.includes('portal-driver') && !dep.includes('vendor-charts')
-            )
+          ? deps.filter((dep) => !dep.includes('vendor-charts') && !dep.includes('vendor-pdf'))
           : deps,
     },
 
@@ -101,20 +100,25 @@ export default defineConfig({
             return 'vendor-react';
           }
 
-          // ── App route chunks ──────────────────────────────────────────────
-          // Split by portal so a customer never downloads admin code and
-          // vice versa. Path matching is intentionally broad — subdirectories
-          // are included automatically.
+          // Admin/driver pages are intentionally NOT force-merged into one
+          // chunk — that used to make every single admin page visit
+          // download all ~20 admin pages' code bundled together (flagged
+          // by Lighthouse as unused JS), and made the merged chunk big
+          // enough to trip Vite's "shared chunk" eager-preload heuristic
+          // on every page, admin or not. Each lazy-loaded page now gets
+          // its own natural per-route chunk; chunkFileNames below just
+          // prefixes them so they stay easy to identify/exclude.
+        },
 
+        chunkFileNames: (chunkInfo) => {
+          const id = chunkInfo.facadeModuleId || '';
           if (id.includes('/pages/admin/') || id.includes('/components/admin/')) {
-            return 'portal-admin';
+            return 'assets/admin-[name]-[hash].js';
           }
-
           if (id.includes('/pages/driver/') || id.includes('/components/driver/')) {
-            return 'portal-driver';
+            return 'assets/driver-[name]-[hash].js';
           }
-
-          // customer pages + public shop land in the default entry chunk
+          return 'assets/[name]-[hash].js';
         },
       },
     },
