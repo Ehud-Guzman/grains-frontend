@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Trash2, ShoppingCart, Edit2, Check, X, ArrowLeft, List, Minus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { savedListService } from '../../services/savedList.service'
+import { productService } from '../../services/product.service'
 import { useCart } from '../../context/CartContext'
 import { formatKES } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
@@ -17,6 +18,7 @@ export default function SavedListsPage() {
   const [editName, setEditName]   = useState('')
   const [deleting, setDeleting]   = useState(null)
   const [expanded, setExpanded]   = useState(null)
+  const [loadingCart, setLoadingCart] = useState(null)
 
   const load = async () => {
     setLoading(true)
@@ -75,18 +77,58 @@ export default function SavedListsPage() {
     }
   }
 
-  const handleLoadToCart = (list) => {
+  const handleLoadToCart = async (list) => {
     if (!list.items?.length) { toast('This list is empty', { icon: '📋' }); return }
-    reorderItems(list.items.map(i => ({
-      productId: i.productId,
-      productName: i.productName,
-      variety: i.variety,
-      packaging: i.packaging,
-      unitPrice: 0, // unknown from list — user will see real price at checkout
-      quantity: i.quantity,
-    })))
-    openCart()
-    toast.success(`${list.items.length} items added from "${list.name}"`)
+    setLoadingCart(list._id)
+    try {
+      // List items only carry productId/variety/packaging — fetch each product
+      // fresh so the cart gets a real, current priceKES/pricingTiers/stock
+      // instead of a stale or fabricated price.
+      const productIds = [...new Set(list.items.map(i => i.productId))]
+      const results = await Promise.allSettled(productIds.map(id => productService.getById(id)))
+      const productsById = new Map()
+      results.forEach((res, idx) => {
+        if (res.status === 'fulfilled') productsById.set(productIds[idx], res.value.data?.data)
+      })
+
+      const resolved = []
+      let unavailable = 0
+      for (const item of list.items) {
+        const product = productsById.get(item.productId)
+        const variety = product?.varieties?.find(v => v.varietyName === item.variety)
+        const packaging = variety?.packaging?.find(p => p.size === item.packaging)
+        if (!product || !variety || !packaging) { unavailable++; continue }
+        resolved.push({
+          productId: product._id,
+          productName: product.name,
+          variety: variety.varietyName,
+          packaging: packaging.size,
+          priceKES: packaging.priceKES,
+          pricingTiers: packaging.pricingTiers || [],
+          taxable: product.taxable !== false,
+          stock: packaging.stock,
+          imageURL: variety.imageURLs?.[0] || product.imageURLs?.[0] || null,
+          quantity: item.quantity,
+        })
+      }
+
+      if (resolved.length === 0) {
+        toast.error('None of these items are available anymore')
+        return
+      }
+
+      reorderItems(resolved)
+      openCart()
+      if (unavailable > 0) {
+        toast(`${resolved.length} item${resolved.length !== 1 ? 's' : ''} added — ${unavailable} no longer available`, { icon: '⚠️' })
+      } else {
+        toast.success(`${resolved.length} item${resolved.length !== 1 ? 's' : ''} added from "${list.name}"`)
+      }
+    } catch {
+      toast.error('Could not load list to cart')
+    } finally {
+      setLoadingCart(null)
+    }
   }
 
   return (
@@ -184,9 +226,12 @@ export default function SavedListsPage() {
                       </button>
                       <button
                         onClick={() => handleLoadToCart(list)}
+                        disabled={loadingCart === list._id}
                         title="Load to cart"
-                        className="p-2 rounded-xl text-brand-600 hover:bg-brand-50 border border-brand-100 transition-colors">
-                        <ShoppingCart size={15} />
+                        className="p-2 rounded-xl text-brand-600 hover:bg-brand-50 border border-brand-100 transition-colors disabled:opacity-40">
+                        {loadingCart === list._id
+                          ? <Spinner size="sm" />
+                          : <ShoppingCart size={15} />}
                       </button>
                       <button
                         onClick={() => { setEditingId(list._id); setEditName(list.name) }}

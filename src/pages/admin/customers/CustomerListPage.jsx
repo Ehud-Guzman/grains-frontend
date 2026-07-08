@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { Search, ChevronRight, Users, Building2 } from 'lucide-react'
 import { adminCustomerService } from '../../../services/admin/customer.service'
 import { formatKES, formatDate } from '../../../utils/helpers'
@@ -20,7 +21,9 @@ export default function CustomerListPage() {
         const res = await adminCustomerService.getAll({ search, page, limit: 20 })
         setCustomers(res.data.data.customers)
         setPagination(res.data.pagination || { page: 1, pages: 1, total: res.data.data.customers.length })
-      } catch {}
+      } catch {
+        toast.error('Failed to load customers')
+      }
       finally { setLoading(false) }
     }, 300)
     return () => clearTimeout(t)

@@ -218,7 +218,9 @@ function StaffModal({ branch, onClose }) {
         const allU = usersRes.data?.data || []
         const staffIds = new Set((staffRes.data?.data || []).map(u => u._id))
         setAllUsers(allU.filter(u => u.role !== 'superadmin' && !staffIds.has(u._id)))
-      } catch {}
+      } catch {
+        toast.error('Failed to load branch staff')
+      }
       finally { setLoading(false) }
     }
     fetchAll()

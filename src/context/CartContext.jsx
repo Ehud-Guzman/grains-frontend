@@ -108,20 +108,24 @@ export const CartProvider = ({ children }) => {
     localStorage.removeItem(CART_KEY)
   }, [])
 
-  // Bulk-load items from a previous order (reorder flow).
-  // Clears the cart first, then loads all items at their original quantities.
-  // Stock is unknown at this point (user sees errors at checkout if OOS).
+  // Bulk-load items from a previous order (reorder flow) or a saved list
+  // (which resolves live product data before calling this). Clears the cart
+  // first, then loads all items at their original quantities. `priceKES` wins
+  // when provided (saved-list path with live prices); order-reorder items
+  // only carry `unitPrice`, and stock is unknown from an order snapshot
+  // (validated server-side at checkout instead).
   const reorderItems = useCallback((orderItems) => {
     const cartItems = orderItems.map(item => ({
-      key:         `${item.productId}-${item.variety}-${item.packaging}`,
+      key:         item.key || `${item.productId}-${item.variety}-${item.packaging}`,
       productId:   item.productId,
       productName: item.productName,
       variety:     item.variety,
       packaging:   item.packaging,
-      priceKES:    item.unitPrice,
-      pricingTiers: [],
-      stock:       null, // stock not known from order snapshot; validated at checkout
-      imageURL:    null,
+      priceKES:    item.priceKES ?? item.unitPrice,
+      pricingTiers: item.pricingTiers || [],
+      taxable:     item.taxable !== false,
+      stock:       item.stock ?? null,
+      imageURL:    item.imageURL || null,
       quantity:    item.quantity
     }))
     setItems(cartItems)

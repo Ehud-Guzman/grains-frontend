@@ -580,7 +580,7 @@ export default function ProductFormPage() {
     if (!form.varieties.length) e.varietiesEmpty = 'At least one variety is required'
 
     setErrors(e)
-    return Object.keys(e).length === 0
+    return e
   }
 
   const buildPayload = (isActive) => ({
@@ -610,9 +610,10 @@ export default function ProductFormPage() {
   })
 
   const handleSubmit = async (activate) => {
-    if (!validate()) {
+    const e = validate()
+    if (Object.keys(e).length > 0) {
       toast.error('Please fix the errors before saving')
-      const errorIdxs = Object.keys(errors.varieties || {}).map(Number)
+      const errorIdxs = Object.keys(e.varieties || {}).map(Number)
       setForm(f => ({
         ...f,
         varieties: f.varieties.map((v, i) => errorIdxs.includes(i) ? { ...v, collapsed: false } : v)

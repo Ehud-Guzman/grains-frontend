@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   GitBranch, Users, ShoppingCart, Package, TrendingUp, Shield,
   Settings2, Activity, RefreshCw, ArrowUpRight, CheckCircle,
@@ -134,7 +135,9 @@ export default function SuperAdminDashboardPage() {
       if (kpiRes.status === 'fulfilled')    setKpis(kpiRes.value.data?.data)
       if (logRes.status === 'fulfilled')    setLogs(logRes.value.data?.data?.logs || logRes.value.data?.data || [])
       setLastRefreshed(new Date())
-    } catch {}
+    } catch {
+      if (!silent) toast.error('Failed to load dashboard data')
+    }
     finally { setLoading(false); setRefreshing(false) }
   }
 

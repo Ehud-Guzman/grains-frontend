@@ -93,7 +93,9 @@ export default function AdminOrderDetailPage() {
     try {
       const res = await adminOrderService.getById(id)
       setOrder(res.data.data)
-    } catch {}
+    } catch {
+      toast.error('Failed to load order')
+    }
     finally { setLoading(false) }
   }
 

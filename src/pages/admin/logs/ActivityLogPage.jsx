@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   Shield, ChevronRight, LogIn, LogOut,
   ShoppingCart, Package, Layers, CreditCard, Users, RefreshCw,
@@ -267,7 +268,9 @@ export default function ActivityLogPage() {
       const d = res.data.data
       setLogs(d.logs || [])
       setPagination({ page: d.page, pages: d.pages, total: d.total })
-    } catch {}
+    } catch {
+      toast.error('Failed to load activity logs')
+    }
     finally { setLoading(false) }
   }, [page, category, dateFrom, dateTo, branchFilter])
 

@@ -114,8 +114,10 @@ export default function CartPage() {
                     <div className="flex items-center gap-1 bg-earth-50 rounded-lg border
                       border-earth-200 p-0.5">
                       <button onClick={() => updateQuantity(item.key, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
                         className="w-7 h-7 rounded-md bg-white border border-earth-200 flex
-                          items-center justify-center hover:bg-earth-100 transition-colors shadow-sm">
+                          items-center justify-center hover:bg-earth-100 transition-colors shadow-sm
+                          disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed">
                         <Minus size={12} className="text-earth-600" />
                       </button>
                       <span className="w-7 text-center text-sm font-body font-bold text-earth-900">

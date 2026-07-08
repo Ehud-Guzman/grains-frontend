@@ -82,6 +82,10 @@ export default function EtimsPage() {
   }
 
   const save = async () => {
+    if (form.enabled && (!form.tin.trim() || !form.bhfId.trim() || !form.deviceId.trim())) {
+      toast.error('TIN, Branch ID, and Device Serial Number are required to enable eTIMS')
+      return
+    }
     setSaving(true)
     try {
       await globalSettingsService.update(form)

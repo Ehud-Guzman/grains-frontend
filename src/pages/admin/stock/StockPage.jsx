@@ -38,7 +38,9 @@ export default function StockPage() {
     try {
       const res = await adminStockService.getOverview()
       setRows(res.data.data || [])
-    } catch {}
+    } catch {
+      toast.error('Failed to load stock overview')
+    }
     finally { setLoading(false) }
   }
 

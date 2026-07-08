@@ -33,7 +33,9 @@ export default function CustomerProfilePage() {
     try {
       const res = await adminCustomerService.getProfile(id)
       setCustomer(res.data.data)
-    } catch {}
+    } catch {
+      toast.error('Failed to load customer profile')
+    }
     finally { setLoading(false) }
   }
 

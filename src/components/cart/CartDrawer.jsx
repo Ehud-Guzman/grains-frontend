@@ -59,7 +59,8 @@ export default function CartDrawer() {
                   <p className="text-brand-600 font-medium text-sm mt-1">{formatKES(getCartUnitPrice(item) * item.quantity)}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <button onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                      className="w-7 h-7 rounded-lg bg-earth-100 hover:bg-earth-200 flex items-center justify-center transition-colors">
+                      disabled={item.quantity <= 1}
+                      className="w-7 h-7 rounded-lg bg-earth-100 hover:bg-earth-200 flex items-center justify-center transition-colors disabled:opacity-40 disabled:hover:bg-earth-100 disabled:cursor-not-allowed">
                       <Minus size={12} />
                     </button>
                     <span className="text-sm font-medium text-earth-900 w-6 text-center">{item.quantity}</span>

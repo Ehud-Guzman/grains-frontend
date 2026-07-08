@@ -5,6 +5,7 @@ import { adminBranchService } from '../../../services/admin/branch.service'
 import { formatDate } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../../context/AuthContext'
 
 const ALL_PERMISSIONS = [
   { key: 'manage_branches', label: 'Manage Branches', desc: 'Create, edit, and deactivate branches' },
@@ -300,6 +301,7 @@ function Modal({ modal, onClose, onSave }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function UserManagementPage() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal]   = useState(null)
@@ -310,7 +312,9 @@ export default function UserManagementPage() {
     try {
       const res = await adminUserService.getAll()
       setUsers(res.data.data || [])
-    } catch {}
+    } catch {
+      toast.error('Failed to load users')
+    }
     finally { setLoading(false) }
   }
 
@@ -413,8 +417,9 @@ export default function UserManagementPage() {
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => setModal({ type: 'role', user, form: { role: user.role } })}
-                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700 transition-colors"
-                        title="Change role">
+                        disabled={user._id === currentUser?.id}
+                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        title={user._id === currentUser?.id ? "You can't change your own role" : 'Change role'}>
                         <Edit size={15} />
                       </button>
                       <button onClick={() => setModal({ type: 'password', user, form: {} })}
@@ -432,12 +437,13 @@ export default function UserManagementPage() {
                         <Settings2 size={15} />
                       </button>
                       <button onClick={() => handleLock(user)}
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        disabled={user._id === currentUser?.id}
+                        className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed ${
                           user.isLocked
                             ? 'hover:bg-green-50 text-admin-400 hover:text-green-600'
                             : 'hover:bg-red-50 text-admin-400 hover:text-red-600'
                         }`}
-                        title={user.isLocked ? 'Unlock account' : 'Lock account'}>
+                        title={user._id === currentUser?.id ? "You can't lock your own account" : (user.isLocked ? 'Unlock account' : 'Lock account')}>
                         {user.isLocked ? <Unlock size={15} /> : <Lock size={15} />}
                       </button>
                     </div>

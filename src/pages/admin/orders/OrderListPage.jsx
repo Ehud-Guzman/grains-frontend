@@ -147,7 +147,9 @@ export default function OrderListPage() {
       // Keep the admin's in-progress bulk selection across the 60s background
       // poll — only drop ids that are no longer in the visible list.
       setSelected(prev => prev.filter(id => data.some(o => o._id === id)))
-    } catch {}
+    } catch {
+      if (!silent) toast.error('Failed to load orders')
+    }
     finally { setLoading(false); setRefreshing(false) }
   }, [page, statusFilter, searchQuery])
 

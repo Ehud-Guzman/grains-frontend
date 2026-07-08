@@ -390,7 +390,9 @@ export default function ProductListPage() {
       if (statusFilter === 'active')   data = data.filter(p => p.isActive)
       if (statusFilter === 'inactive') data = data.filter(p => !p.isActive)
       setProducts(data)
-    } catch {}
+    } catch {
+      toast.error('Failed to load products')
+    }
     finally { setLoading(false) }
   }, [search, categoryFilter, statusFilter])
 

@@ -3,7 +3,6 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { Truck, List, LogOut, Menu, X, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
-import api from '../../services/api'
 
 const NAV = [
   { to: '/driver/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -17,11 +16,7 @@ export default function DriverLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken')
-      await api.post('/auth/logout', { refreshToken })
-    } catch {}
-    logout()
+    await logout()
     navigate('/login')
   }
 
@@ -35,7 +30,7 @@ export default function DriverLayout() {
             <Truck size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-admin font-bold leading-tight">{shopInfo?.shopName || 'Driver Portal'}</p>
+            <p className="text-sm font-admin font-bold leading-tight">{shopInfo?.name || 'Driver Portal'}</p>
             <p className="text-xs text-white/60 leading-tight">Delivery Dashboard</p>
           </div>
         </div>
