@@ -627,28 +627,26 @@ export default function HomePage() {
                   {categories.map((cat, i) => (
                     <Link key={cat}
                       to={`/shop?category=${encodeURIComponent(cat)}`}
-                      className="group bg-white rounded-2xl border border-earth-100 p-5
-                        flex flex-col justify-between min-h-[140px] shadow-sm
+                      className="group bg-white rounded-2xl border border-earth-100 p-4
+                        flex items-center gap-3 shadow-sm
                         hover:shadow-md hover:-translate-y-1 hover:border-earth-200
                         transition-all duration-300"
                     >
-                      {/* Top accent dot */}
-                      <div className={`w-2.5 h-2.5 rounded-full ${ACCENTS[i % ACCENTS.length]} mb-4`} />
+                      {/* Accent dot */}
+                      <div className={`w-2.5 h-2.5 rounded-full ${ACCENTS[i % ACCENTS.length]} flex-shrink-0`} />
 
-                      {/* Category name */}
-                      <div className="flex-1 flex items-center">
+                      {/* Category name + CTA */}
+                      <div className="flex-1 min-w-0">
                         <h3 className="font-display text-[1.05rem] leading-snug font-bold text-earth-900
-                          group-hover:text-brand-700 transition-colors">
+                          group-hover:text-brand-700 transition-colors truncate">
                           {cat}
                         </h3>
-                      </div>
-
-                      {/* CTA */}
-                      <div className="flex items-center gap-1 mt-4 text-[10px] font-body font-bold
-                        uppercase tracking-[0.18em] text-earth-500 group-hover:text-brand-500
-                        transition-colors">
-                        Explore
-                        <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        <div className="flex items-center gap-1 mt-1 text-[10px] font-body font-bold
+                          uppercase tracking-[0.18em] text-earth-500 group-hover:text-brand-500
+                          transition-colors">
+                          Explore
+                          <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        </div>
                       </div>
                     </Link>
                   ))}
