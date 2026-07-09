@@ -7,7 +7,7 @@ import ProductSpotlight from '../../components/ui/ProductSpotlight'
 import CTABanner from '../../components/ui/CTABanner'
 import SkeletonCard from '../../components/ui/SkeletonCard'
 import GridToggle from '../../components/ui/GridToggle'
-import { useShopInfo, useCategories } from '../../context/AppSettingsContext'
+import { useShopInfo } from '../../context/AppSettingsContext'
 import { getOptimizedImageUrl } from '../../utils/image'
 import { promotionService } from '../../services/promotion.service'
 import { formatKES } from '../../utils/helpers'
@@ -146,22 +146,27 @@ function PromoBannerCarousel({ banners }) {
       <div className="relative h-52 sm:h-64 lg:h-72 w-full"
         style={{ transition: 'opacity 280ms ease', opacity: visible ? 1 : 0 }}>
 
-        {/* Blurred backdrop */}
-        {p.imageUrl ? (
-          // Heavily blurred backdrop — a tiny transform is plenty
-          <img src={getOptimizedImageUrl(p.imageUrl, { width: 480 })} alt="" aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover scale-110"
-            style={{ filter: 'blur(20px) brightness(0.4) saturate(1.3)' }} />
+        {/* Media: full-bleed cover video, or the blurred-backdrop + crisp cutout
+            treatment for images (a video reads better full-bleed than as a
+            small cutout, so it skips that treatment entirely) */}
+        {p.mediaType === 'video' && p.videoUrl ? (
+          <video key={p._id} src={p.videoUrl} poster={p.imageUrl || undefined}
+            muted loop autoPlay playsInline
+            className="absolute inset-0 w-full h-full object-cover" />
+        ) : p.imageUrl ? (
+          <>
+            {/* Heavily blurred backdrop — a tiny transform is plenty */}
+            <img src={getOptimizedImageUrl(p.imageUrl, { width: 480 })} alt="" aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover scale-110"
+              style={{ filter: 'blur(20px) brightness(0.4) saturate(1.3)' }} />
+            {/* Crisp image — right side, natural ratio */}
+            <div className="absolute inset-0 flex items-center justify-end pr-6 lg:pr-12 pointer-events-none">
+              <img src={getOptimizedImageUrl(p.imageUrl, { width: 640 })} alt={p.title}
+                className="h-[90%] w-auto max-w-[40%] object-contain drop-shadow-2xl" />
+            </div>
+          </>
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-brand-800 via-brand-700 to-earth-800" />
-        )}
-
-        {/* Crisp image — right side, natural ratio */}
-        {p.imageUrl && (
-          <div className="absolute inset-0 flex items-center justify-end pr-6 lg:pr-12 pointer-events-none">
-            <img src={getOptimizedImageUrl(p.imageUrl, { width: 640 })} alt={p.title}
-              className="h-[90%] w-auto max-w-[40%] object-contain drop-shadow-2xl" />
-          </div>
         )}
 
         {/* Left gradient for text legibility */}
@@ -372,7 +377,6 @@ function PriceTicker({ products, priceChanges }) {
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const shopInfo   = useShopInfo()
-  const categories = useCategories()
   const [featured, setFeatured]         = useState([])
   const [moreProducts, setMoreProducts] = useState([])
   const [spotlight, setSpotlight]       = useState([])
@@ -586,76 +590,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── Categories ───────────────────────────────────────────────── */}
-      {categories.length > 0 && (
-        <section className="py-14 bg-earth-50 border-y border-earth-100">
-          <div className="container-page">
-
-            {/* Header row */}
-            <div className="flex items-end justify-between mb-10">
-              <div>
-                <p className="text-[10px] font-body font-bold uppercase tracking-[0.28em] text-brand-500 mb-2">
-                  What we carry
-                </p>
-                <h2 className="font-display text-2xl sm:text-3xl text-earth-900 font-bold leading-tight">
-                  Shop by Category
-                </h2>
-              </div>
-              <Link to="/shop"
-                className="group flex items-center gap-1.5 text-sm font-body font-semibold
-                  text-earth-500 hover:text-brand-600 transition-colors flex-shrink-0">
-                All products
-                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Cards */}
-            {(() => {
-              const ACCENTS = [
-                'bg-amber-500',
-                'bg-emerald-600',
-                'bg-orange-500',
-                'bg-yellow-600',
-                'bg-rose-500',
-                'bg-brand-500',
-                'bg-teal-600',
-                'bg-indigo-500',
-              ]
-              return (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {categories.map((cat, i) => (
-                    <Link key={cat}
-                      to={`/shop?category=${encodeURIComponent(cat)}`}
-                      className="group bg-white rounded-2xl border border-earth-100 p-4
-                        flex items-center gap-3 shadow-sm
-                        hover:shadow-md hover:-translate-y-1 hover:border-earth-200
-                        transition-all duration-300"
-                    >
-                      {/* Accent dot */}
-                      <div className={`w-2.5 h-2.5 rounded-full ${ACCENTS[i % ACCENTS.length]} flex-shrink-0`} />
-
-                      {/* Category name + CTA */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-display text-[1.05rem] leading-snug font-bold text-earth-900
-                          group-hover:text-brand-700 transition-colors truncate">
-                          {cat}
-                        </h3>
-                        <div className="flex items-center gap-1 mt-1 text-[10px] font-body font-bold
-                          uppercase tracking-[0.18em] text-earth-500 group-hover:text-brand-500
-                          transition-colors">
-                          Explore
-                          <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )
-            })()}
-          </div>
-        </section>
-      )}
 
       {/* ── Promo carousel ───────────────────────────────────────────────── */}
       <PromoBannerCarousel banners={banners} />
