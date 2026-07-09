@@ -197,9 +197,15 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
           <Input type="number" min="0" placeholder="0"
             value={pkg.stock}
             onChange={e => onChange({ ...pkg, stock: e.target.value })}
-            disabled={pkg.quoteOnly}
-            className={pkg.quoteOnly ? 'opacity-40 cursor-not-allowed' : ''}
+            disabled={pkg.quoteOnly || pkg.isExisting}
+            title={pkg.isExisting ? 'Edit stock from the Stock page, not here' : undefined}
+            className={(pkg.quoteOnly || pkg.isExisting) ? 'opacity-40 cursor-not-allowed' : ''}
           />
+          {pkg.isExisting && !pkg.quoteOnly && (
+            <p className="text-admin-400 text-[11px] mt-1 leading-snug">
+              Use the <Link to="/admin/stock" className="text-brand-600 hover:underline">Stock page</Link> to adjust
+            </p>
+          )}
         </div>
 
         {/* Low stock alert */}
@@ -536,6 +542,11 @@ export default function ProductFormPage() {
             packaging: (v.packaging || []).map(pkg => ({
               ...pkg,
               _id: pkg._id || Math.random().toString(36).slice(2),
+              // Existing packaging's stock can only move through the Stock page
+              // (stock.service.js is the sole write path — see project notes) —
+              // the backend silently ignores whatever this form submits for it,
+              // so the field is locked here rather than lying about taking effect.
+              isExisting: true,
               customSize: PACKAGING_SIZES.includes(pkg.size) ? '' : pkg.size,
               size: PACKAGING_SIZES.includes(pkg.size) ? pkg.size : 'Custom',
               priceKES: pkg.priceKES ?? '',
