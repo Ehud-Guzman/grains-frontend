@@ -15,6 +15,7 @@ import { STOCK_CONFIG, CART_FEEDBACK_DELAY_MS } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import AddToListModal from '../../components/lists/AddToListModal'
 import { getOptimizedImageUrl } from '../../utils/image'
+import { trackViewItem } from '../../utils/analytics'
 
 // Chart is lazy — keeps recharts (~380KB) out of the product-page path until
 // there's actually history to draw.
@@ -113,6 +114,7 @@ export default function ProductPage() {
       .then(res => {
         const p = res.data.data
         setProduct(p)
+        trackViewItem(p, p.varieties?.[0]?.packaging?.[0])
         return productService.getAll({ category: p.category, limit: 8, isActive: true })
           .then(r => {
             const others = (r.data.data || []).filter(x => x._id !== id)

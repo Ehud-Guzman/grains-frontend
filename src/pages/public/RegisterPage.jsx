@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import toast from 'react-hot-toast'
 import { isValidKenyanPhone, normalizeKenyanPhone } from '../../utils/helpers'
+import { trackSignUp } from '../../utils/analytics'
 
 const getStrength = (pw) => {
   if (!pw) return { score: 0, label: '', color: '' }
@@ -51,6 +52,7 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       const user = await register({ ...form, phone: normalizeKenyanPhone(form.phone) })
+      trackSignUp()
       toast.success(`Welcome, ${user.name.split(' ')[0]}!`)
       navigate('/dashboard', { replace: true })
     } catch (err) {

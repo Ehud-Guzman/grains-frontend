@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { normalizeKenyanPhone } from '../../utils/helpers'
+import { trackLogin } from '../../utils/analytics'
 
 const ADMIN_ROLES = ['admin', 'superadmin', 'supervisor', 'staff']
 
@@ -115,6 +116,7 @@ export default function LoginPage() {
         setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
         return
       }
+      trackLogin()
       // Honour the page the user was heading to, as long as it belongs to
       // their portal — otherwise land them on their own dashboard.
       const { role } = result.user

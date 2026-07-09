@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import toast from 'react-hot-toast'
 import { useBranch } from './BranchContext'
 import { getCartUnitPrice } from '../utils/helpers'
+import { trackAddToCart } from '../utils/analytics'
 
 const CartContext = createContext(null)
 const CART_KEY = 'vittorios_cart'
@@ -60,6 +61,7 @@ export const CartProvider = ({ children }) => {
           return prev
         }
         toast.success('Cart updated')
+        trackAddToCart(product, variety, packaging, quantity)
         return prev.map(i => i.key === key ? { ...i, quantity: newQty } : i)
       }
       if (quantity > packaging.stock) {
@@ -67,6 +69,7 @@ export const CartProvider = ({ children }) => {
         return prev
       }
       toast.success(`${product.name} added to cart`)
+      trackAddToCart(product, variety, packaging, quantity)
       return [...prev, {
         key,
         productId: product._id,

@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { captureException } from '../utils/sentry'
 
 // Netlify deploys are atomic: a deploy mid-session makes the old hashed lazy
 // chunks 404, which surfaces here as a dynamic-import failure. One automatic
@@ -25,7 +26,9 @@ export default class ErrorBoundary extends Component {
       return
     }
     sessionStorage.removeItem('chunk_reload')
-    // In production this would go to Sentry / error tracking
+    // Chunk-load errors are deploy-timing noise (handled above by reload),
+    // not real bugs — don't spend Sentry quota on them.
+    captureException(error, { contexts: { react: { componentStack: info.componentStack } } })
     console.error('[ErrorBoundary] Uncaught error:', error, info.componentStack)
   }
 

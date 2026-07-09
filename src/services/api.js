@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { captureException } from '../utils/sentry'
 
 // ── IN-MEMORY TOKEN STORE ─────────────────────────────────────────────────────
 // Storing the access token in sessionStorage exposes it to XSS. Keeping it in a
@@ -100,9 +101,23 @@ const processQueue = (error, token = null) => {
   failedQueue = []
 }
 
+// Only unexpected failures (5xx, or no response at all — network/timeout/CORS)
+// go to Sentry. Routine 4xx (validation errors, wrong password, 401s handled
+// by the refresh flow below) are expected user-facing outcomes, not bugs —
+// reporting those would drown real errors in noise. Request/response bodies
+// and headers are deliberately not attached here, on top of the DSN-level
+// beforeSend scrub in utils/sentry.js.
+const isUnexpectedError = (error) => !error.response || error.response.status >= 500
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (isUnexpectedError(error)) {
+      captureException(error, {
+        contexts: { http: { url: error.config?.url, method: error.config?.method, status: error.response?.status } },
+      })
+    }
+
     const originalRequest = error.config
 
     if (NO_REFRESH_PATHS.some(path => originalRequest?.url?.includes(path))) {

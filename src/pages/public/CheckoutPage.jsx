@@ -18,6 +18,7 @@ import { publicSettingsService } from '../../services/admin/settings.service'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, isValidKenyanPhone, normalizeKenyanPhone, getCartUnitPrice } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
+import { trackBeginCheckout, trackPurchase } from '../../utils/analytics'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
 import Spinner from '../../components/ui/Spinner'
 import toast from 'react-hot-toast'
@@ -127,6 +128,12 @@ export default function CheckoutPage() {
   // After order is placed — used for M-Pesa flow
   const [placedOrder, setPlacedOrder] = useState(null)
   const [showMpesa, setShowMpesa]     = useState(false)
+
+  // Funnel-entry event — fires once per checkout visit, not on every cart edit.
+  useEffect(() => {
+    if (items.length > 0) trackBeginCheckout(items, total)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Distance-based delivery fee
   const [locating, setLocating]               = useState(false)
@@ -512,6 +519,7 @@ export default function CheckoutPage() {
         : await orderService.placeGuestOrder(orderData)
 
       const { orderRef, orderId, total: orderTotal } = res.data.data
+      trackPurchase({ orderRef, total: orderTotal }, items)
       if (isAuthenticated && user?.role === 'customer') {
         markChecklistItem('customer', 'first_order')
         markMilestone('customer:first_order')

@@ -8,6 +8,7 @@ import { OnboardingProvider } from "./context/OnboardingContext";
 import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import RouteTracker from "./components/RouteTracker";
 import OnboardingLayer from "./components/onboarding/OnboardingLayer";
 import Spinner from "./components/ui/Spinner";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -108,6 +109,7 @@ export default function App() {
                 }}
               />
               <ScrollToTop />
+              <RouteTracker />
               <OnboardingLayer />
               <Suspense fallback={
                 <div className="min-h-screen flex items-center justify-center bg-cream">

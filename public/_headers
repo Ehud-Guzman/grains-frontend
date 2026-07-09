@@ -10,9 +10,20 @@
 # even when re-fetching an <img>. Any cross-origin host the SW runtime-caches
 # (Cloudinary product images) must therefore be listed here, or images break
 # on every service-worker-controlled load (i.e. every visit after the first).
+#
+# GA4 (utils/analytics.js): script-src needs googletagmanager.com to load
+# gtag.js; connect-src needs google-analytics.com (+ wildcard for regional
+# collect endpoints) and googletagmanager.com itself for config fetches.
+# Sentry (utils/sentry.js): connect-src needs the ingest host the browser
+# SDK posts events to. Wildcarded to *.ingest.sentry.io / *.ingest.us.sentry.io
+# to cover both legacy and US-region DSNs — if the Sentry project ever uses
+# EU data residency instead, add *.ingest.de.sentry.io too.
+# Both integrations are inert (see their init guards) until their env var is
+# set, but the CSP has to allow the domains regardless of whether that visit
+# actually has a DSN/measurement ID configured.
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(self)
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://grains-backend-b3n0.onrender.com https://res.cloudinary.com; form-action 'self'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://grains-backend-b3n0.onrender.com https://res.cloudinary.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io; form-action 'self'

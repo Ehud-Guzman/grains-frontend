@@ -54,12 +54,14 @@ export default defineConfig({
             // unfixable on phones, where there's no hard refresh.
             handler: 'StaleWhileRevalidate',
             options: {
-              // v3: cache-name bumps also change sw.js bytes, forcing browsers
+              // v4: cache-name bumps also change sw.js bytes, forcing browsers
               // holding an older SW to install this one — needed because a SW
-              // keeps enforcing the CSP headers it was INSTALLED with, so the
-              // connect-src fix in public/_headers only reaches clients via a
-              // new SW version. (v2 abandoned the CacheFirst-poisoned cache.)
-              cacheName: 'image-cache-v3',
+              // keeps enforcing the CSP headers it was INSTALLED with, so a
+              // connect-src change in public/_headers only reaches clients via
+              // a new SW version. (v3 added Cloudinary; v4 added GA4/Sentry.
+              // v2 abandoned the earlier CacheFirst-poisoned cache.) Bump this
+              // again any time _headers' CSP changes.
+              cacheName: 'image-cache-v4',
               // 0 = opaque cross-origin responses — lets no-cors Cloudinary
               // images actually be cached (CacheFirst was silently refusing)
               cacheableResponse: { statuses: [0, 200] },
@@ -115,6 +117,10 @@ export default defineConfig({
 
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-icons';
+          }
+
+          if (id.includes('node_modules/@sentry')) {
+            return 'vendor-sentry';
           }
 
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
