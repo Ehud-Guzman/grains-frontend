@@ -19,9 +19,16 @@ export default defineConfig({
         // public visitor, undoing the modulepreload split above. They still
         // load normally on demand when someone actually visits those routes.
         globIgnores: ['**/admin-*.js', '**/driver-*.js', '**/vendor-charts-*.js', '**/vendor-pdf-*.js'],
+        // SPA shell for app navigations. This MUST be index.html: Workbox
+        // serves navigateFallback for EVERY navigation that isn't itself a
+        // precached URL — online or offline. Pointing it at offline.html
+        // (as before) made refreshing /shop or opening a shared product link
+        // show the offline card until a hard refresh, and installed-PWA
+        // shortcuts (/shop, /track) launch straight into it. With index.html
+        // precached, deep links now also work fully offline.
+        navigateFallback: 'index.html',
         // /admin and /driver are behind auth and change constantly — never
-        // serve them from cache or fall back to the offline page for them.
-        navigateFallback: '/offline.html',
+        // serve their navigations from cache.
         navigateFallbackDenylist: [/^\/api\//, /^\/admin/, /^\/driver/],
         runtimeCaching: [
           {
@@ -39,10 +46,20 @@ export default defineConfig({
           },
           {
             urlPattern: ({ request }) => request.destination === 'image',
-            handler: 'CacheFirst',
+            // StaleWhileRevalidate, NOT CacheFirst: cached copy is served
+            // instantly but re-fetched in the background, so a bad cached
+            // entry self-heals on the next visit. With CacheFirst, Netlify's
+            // SPA rewrite (missing file → index.html, status 200) could get
+            // cached AS the image and stick as a broken image for 30 days —
+            // unfixable on phones, where there's no hard refresh.
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'image-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              // v2: new cache name abandons any already-poisoned image caches
+              cacheName: 'image-cache-v2',
+              // 0 = opaque cross-origin responses — lets no-cors Cloudinary
+              // images actually be cached (CacheFirst was silently refusing)
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30, purgeOnQuotaError: true },
             },
           },
         ],
