@@ -130,29 +130,32 @@ function AllCategoriesMenu({ categories }) {
   )
 }
 
-// ── CategoryMarquee — auto-scrolling ticker, non-interactive ─────────────────
+// ── CategoryMarquee — auto-scrolling ticker of category links; pauses on
+//    hover (see .category-marquee in index.css) so items can be clicked ──────
 function CategoryMarquee({ categories }) {
   if (!categories.length) return null
   const items = [...categories, ...categories]
 
   return (
-    <div className="flex-1 overflow-hidden relative min-w-0 flex items-center">
+    <div className="category-marquee flex-1 overflow-hidden relative min-w-0 flex items-center">
       <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 z-10
         bg-gradient-to-r from-white to-transparent" />
       <div
-        className="flex"
+        className="category-marquee-track flex"
         style={{ width: 'max-content', animation: 'marquee 30s linear infinite' }}
       >
         {items.map((cat, i) => (
-          <span
+          <Link
             key={i}
-            className="inline-flex items-center gap-4 whitespace-nowrap select-none"
+            to={`/shop?category=${encodeURIComponent(cat)}`}
+            className="inline-flex items-center gap-4 whitespace-nowrap select-none group"
           >
-            <span className="text-sm font-body font-medium text-earth-700 tracking-wide">
+            <span className="text-sm font-body font-medium text-earth-700 tracking-wide
+              group-hover:text-brand-600 transition-colors">
               {cat}
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
-          </span>
+          </Link>
         ))}
       </div>
       <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 z-10

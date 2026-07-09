@@ -7,7 +7,8 @@ import ProductSpotlight from '../../components/ui/ProductSpotlight'
 import CTABanner from '../../components/ui/CTABanner'
 import SkeletonCard from '../../components/ui/SkeletonCard'
 import GridToggle from '../../components/ui/GridToggle'
-import { useShopInfo } from '../../context/AppSettingsContext'
+import { useAppSettings } from '../../context/AppSettingsContext'
+import { useBranch } from '../../context/BranchContext'
 import { getOptimizedImageUrl } from '../../utils/image'
 import { promotionService } from '../../services/promotion.service'
 import { formatKES } from '../../utils/helpers'
@@ -325,7 +326,7 @@ function PriceTicker({ products, priceChanges }) {
         <div style={{ perspective: '400px' }}>
           <div className={animCls} style={{ animationDelay: '0ms' }}>
             <div className="flex items-center gap-2">
-              <p className="text-white/50 text-xs font-body font-semibold leading-none">
+              <p className="text-white/90 text-xs font-body font-semibold leading-none">
                 {product.name}
               </p>
               {change && (
@@ -337,7 +338,7 @@ function PriceTicker({ products, priceChanges }) {
           </div>
         </div>
         <Link to="/shop"
-          className="flex-shrink-0 text-[10px] font-body text-white/30 hover:text-white/60 transition-colors flex items-center gap-1">
+          className="flex-shrink-0 text-[10px] font-body text-white/50 hover:text-white/90 transition-colors flex items-center gap-1">
           All prices <ArrowRight size={10} />
         </Link>
       </div>
@@ -348,7 +349,7 @@ function PriceTicker({ products, priceChanges }) {
           <div key={i} style={{ perspective: '400px' }}>
             <div className={animCls} style={{ animationDelay: `${i * COL_STAGGER}ms` }}>
               <Link to={`/shop/${product._id}`} className="group block">
-                <p className="text-white/30 text-[10px] font-body leading-none">{pkg.size}</p>
+                <p className="text-white/60 text-[10px] font-body leading-none">{pkg.size}</p>
                 <span className="text-brand-300 font-display font-bold text-base leading-none group-hover:text-brand-200 transition-colors">
                   {formatKES(pkg.priceKES)}
                 </span>
@@ -376,7 +377,10 @@ function PriceTicker({ products, priceChanges }) {
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const shopInfo   = useShopInfo()
+  const { shopInfo, orderSettings } = useAppSettings()
+  const { branch } = useBranch()
+  // "Nakuru Branch" → "Nakuru" — for copy that references the resolved branch
+  const branchTown = branch?.name?.replace(/\s*branch\s*$/i, '').trim() || null
   const [featured, setFeatured]         = useState([])
   const [moreProducts, setMoreProducts] = useState([])
   const [spotlight, setSpotlight]       = useState([])
@@ -469,7 +473,7 @@ export default function HomePage() {
 
                 return (
                   <div className="mb-12 pb-4 border-b border-white/10">
-                    <p className="text-white/35 text-[10px] font-body uppercase tracking-[0.2em] mb-2">
+                    <p className="text-white/60 text-[10px] font-body uppercase tracking-[0.2em] mb-2">
                       Today's Prices
                     </p>
                     <PriceTicker products={pulseProducts} priceChanges={priceChanges} />
@@ -483,8 +487,9 @@ export default function HomePage() {
                 <span className="text-brand-300 block">Delivered Fresh</span>
               </h1>
               <p className="font-body text-brand-200/90 text-base mb-6 leading-relaxed max-w-xl">
-                {shopInfo.tagline}. Premium maize, beans, rice and more available for pickup
-                or delivery from {shopInfo.location}.
+                Premium maize, beans, rice and more at wholesale &amp; retail prices.
+                Order online{orderSettings.allowMpesa && ', pay with M-Pesa,'} and choose
+                pickup or delivery from {branchTown ? `our ${branchTown} branch` : shopInfo.location}.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -506,7 +511,7 @@ export default function HomePage() {
 
               {/* Stats row */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5">
-                {['50+ products', 'Bulk from 45 kg', 'Nairobi & beyond'].map(s => (
+                {['50+ products', 'Bulk from 45 kg', branchTown ? `${branchTown} & beyond` : 'Nairobi & beyond'].map(s => (
                   <span key={s} className="flex items-center gap-2 text-sm font-body text-brand-200/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
                     {s}
@@ -525,20 +530,22 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-2.5">
                 {[
                   { src: '/beans.webp',                     label: 'Beans',    position: 'center'     },
-                  { src: '/maize%20farm.webp',              label: 'Maize',    position: 'center 30%' },
+                  // boost: lifts the washed-out grey-sky field shot until a real product photo replaces it
+                  { src: '/maize%20farm.webp',              label: 'Maize',    position: 'center 30%', boost: true },
                   { src: '/mixedcereals.webp',              label: 'Cereals',  position: 'center'     },
                   { src: '/wheat-1188x792-1024x683.webp',   label: 'Wheat',    position: 'center top' },
-                ].map(({ src, label, position }, i) => (
-                  <div
+                ].map(({ src, label, position, boost }, i) => (
+                  <Link
                     key={i}
-                    className={`relative overflow-hidden rounded-2xl border border-white/8 group ${i % 2 === 1 ? 'mt-6' : ''}`}
+                    to={`/shop?search=${encodeURIComponent(label.toLowerCase())}`}
+                    className={`relative block overflow-hidden rounded-2xl border border-white/8 group ${i % 2 === 1 ? 'mt-6' : ''}`}
                     style={{ aspectRatio: '1/1' }}
                   >
                     <img
                       src={src}
                       alt={label}
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                      style={{ objectPosition: position }}
+                      style={{ objectPosition: position, ...(boost && { filter: 'saturate(1.35) contrast(1.1)' }) }}
                       loading="eager"
                       decoding="async"
                     />
@@ -554,7 +561,7 @@ export default function HomePage() {
                     </div>
                     {/* Hover: brighten the top edge slightly */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -570,7 +577,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { icon: Package, title: 'Bulk Orders',    desc: 'From 45kg bags'      },
-              { icon: Truck,   title: 'Fast Delivery',  desc: 'Nairobi wide'        },
+              { icon: Truck,   title: 'Fast Delivery',  desc: branchTown ? `Across ${branchTown}` : 'Nairobi wide' },
               { icon: Shield,  title: 'Trusted Quality',desc: 'Verified sources'    },
               { icon: Star,    title: 'Best Prices',    desc: 'Competitive rates'   },
             ].map(({ icon: Icon, title, desc }) => (
