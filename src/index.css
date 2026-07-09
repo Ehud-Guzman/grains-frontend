@@ -33,6 +33,21 @@
   animation-play-state: paused;
 }
 
+/* Respect the user's reduced-motion preference — kill decorative animation.
+   The cube ticker needs animation:none specifically: the near-zero duration
+   below combined with its fill-mode 'both' would freeze it at the ghosted
+   end frame of the out-flip instead of showing the content. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+  .cube-ticker-out, .cube-ticker-in { animation: none !important; }
+  .category-marquee-track { animation: none !important; }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

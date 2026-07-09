@@ -331,6 +331,8 @@ function FarmStorySection() {
                 <img
                   src={src}
                   alt={title}
+                  width={480}
+                  height={360}
                   loading="lazy"
                   decoding="async"
                   className="w-full h-full object-cover transition-transform duration-700 ease-out
@@ -640,9 +642,13 @@ export default function HomePage() {
                     <img
                       src={src}
                       alt={label}
+                      width={480}
+                      height={480}
                       className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       style={{ objectPosition: position, ...(boost && { filter: 'saturate(1.35) contrast(1.1)' }) }}
-                      loading="eager"
+                      // lazy also stops phones downloading these: the mosaic is
+                      // display:none below lg, but eager imgs fetch regardless
+                      loading="lazy"
                       decoding="async"
                     />
                     {/* Depth gradient */}
