@@ -35,6 +35,7 @@
 
 @layer base {
   html {
+    scroll-behavior: smooth;
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

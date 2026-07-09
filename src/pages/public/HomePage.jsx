@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Package, Shield, Truck, Star, Sparkles, X, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
+import { ArrowRight, Package, Sprout, Truck, Star, Sparkles, X, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { productService } from '../../services/product.service'
 import ProductCard from '../../components/products/ProductCard'
 import ProductSpotlight from '../../components/ui/ProductSpotlight'
@@ -274,6 +274,97 @@ function FeaturedPromoCards({ promos, allProducts }) {
   )
 }
 
+// ── FARM STORY — the journey every bag takes, farm → sack ───────────────────
+// The founder farms too — this section is the storefront's provenance story.
+// Photos are placeholders shared with the hero mosaic: swap in the client's
+// real farm/store shots here; authenticity is the whole point.
+const FARM_STORY_STEPS = [
+  { src: '/maize%20farm.webp', num: '01', title: 'Grown',
+    desc: 'It starts on our own farm — planted, tended and watched over by people who farm for a living.',
+    position: 'center 30%', boost: true },
+  { src: '/wheat-1188x792-1024x683.webp', num: '02', title: 'Harvested & Dried',
+    desc: 'Harvested at full maturity, then sun-dried to safe moisture before it ever goes into storage.',
+    position: 'center top' },
+  { src: '/beans.webp', num: '03', title: 'Cleaned & Sorted',
+    desc: 'Winnowed, cleaned and graded — only whole, clean grain makes it into a Vittorios bag.',
+    position: 'center' },
+  { src: '/mixedcereals.webp', num: '04', title: 'Packed & Delivered',
+    desc: 'Weighed and packed at your branch, ready for pickup or delivery to your door.',
+    position: 'center' },
+]
+
+function FarmStorySection() {
+  return (
+    <section
+      id="farm-story"
+      className="relative overflow-hidden bg-gradient-to-br from-earth-900 via-brand-900 to-earth-900
+        py-14 sm:py-20 scroll-mt-32"
+    >
+      {/* Warm glows — echo the hero so the page bookends */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-500/15 rounded-full
+        blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-700/20 rounded-full
+        blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+
+      <div className="container-page relative">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+          <p className="inline-flex items-center gap-2 text-brand-300 text-xs font-body font-semibold
+            uppercase tracking-[0.22em] mb-3">
+            <Sprout size={14} /> Farm to Sack
+          </p>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">
+            From Our Farm to Your Store
+          </h2>
+          <p className="font-body text-brand-200/80 leading-relaxed">
+            Vittorios isn&apos;t just a trader. It was founded by a farmer — so every bag we sell
+            follows a journey we know first-hand.
+          </p>
+        </div>
+
+        {/* Steps */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {FARM_STORY_STEPS.map(({ src, num, title, desc, position, boost }) => (
+            <div key={num} className="group">
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 mb-4"
+                style={{ aspectRatio: '4/3' }}>
+                <img
+                  src={src}
+                  alt={title}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out
+                    group-hover:scale-[1.05]"
+                  style={{ objectPosition: position, ...(boost && { filter: 'saturate(1.35) contrast(1.1)' }) }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                <span className="absolute top-2.5 left-2.5 w-8 h-8 rounded-full bg-white/95 text-earth-900
+                  font-display font-bold text-xs flex items-center justify-center shadow-lg">
+                  {num}
+                </span>
+              </div>
+              <h3 className="font-display font-bold text-white text-base sm:text-lg leading-tight mb-1.5">
+                {title}
+              </h3>
+              <p className="font-body text-brand-200/70 text-xs sm:text-sm leading-relaxed">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* The farmer's word */}
+        <div className="mt-12 sm:mt-14 text-center">
+          <p className="font-display text-xl sm:text-2xl text-white italic">
+            &ldquo;Founded by a farmer. We sell what we grow.&rdquo;
+          </p>
+          <p className="font-body text-brand-300/80 text-xs uppercase tracking-[0.2em] mt-3">
+            Vittorios Grains &amp; Cereals
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── PriceTicker ───────────────────────────────────────────────────────────────
 // Shows all packaging sizes for one product at a time.
 // Cube-flips with a left-to-right cascade when cycling to the next product.
@@ -527,17 +618,22 @@ export default function HomePage() {
               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-brand-900/70 to-transparent z-10 pointer-events-none" />
               <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-brand-900/50 to-transparent z-10 pointer-events-none" />
 
+              {/* Journey teaser — tiles read as the farm-to-sack sequence and
+                  scroll to the full story section below */}
+              <p className="relative z-20 mb-2.5 text-[10px] font-body font-semibold uppercase tracking-[0.2em] text-white/50">
+                From our farm to your sack
+              </p>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { src: '/beans.webp',                     label: 'Beans',    position: 'center'     },
-                  // boost: lifts the washed-out grey-sky field shot until a real product photo replaces it
-                  { src: '/maize%20farm.webp',              label: 'Maize',    position: 'center 30%', boost: true },
-                  { src: '/mixedcereals.webp',              label: 'Cereals',  position: 'center'     },
-                  { src: '/wheat-1188x792-1024x683.webp',   label: 'Wheat',    position: 'center top' },
-                ].map(({ src, label, position, boost }, i) => (
-                  <Link
+                  // boost: lifts the washed-out grey-sky field shot until a real farm photo replaces it
+                  { src: '/maize%20farm.webp',              num: '01', label: 'Grown',          position: 'center 30%', boost: true },
+                  { src: '/wheat-1188x792-1024x683.webp',   num: '02', label: 'Harvested',      position: 'center top' },
+                  { src: '/beans.webp',                     num: '03', label: 'Sorted & Dried', position: 'center'     },
+                  { src: '/mixedcereals.webp',              num: '04', label: 'Packed for You', position: 'center'     },
+                ].map(({ src, num, label, position, boost }, i) => (
+                  <a
                     key={i}
-                    to={`/shop?search=${encodeURIComponent(label.toLowerCase())}`}
+                    href="#farm-story"
                     className={`relative block overflow-hidden rounded-2xl border border-white/8 group ${i % 2 === 1 ? 'mt-6' : ''}`}
                     style={{ aspectRatio: '1/1' }}
                   >
@@ -553,15 +649,16 @@ export default function HomePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
                     {/* Subtle warm tint overlay */}
                     <div className="absolute inset-0 bg-brand-900/15 mix-blend-multiply" />
-                    {/* Label */}
-                    <div className="absolute bottom-3 left-3.5">
-                      <span className="text-[10px] font-body font-bold uppercase tracking-[0.22em] text-white/60">
+                    {/* Step label */}
+                    <div className="absolute bottom-3 left-3.5 flex items-baseline gap-2">
+                      <span className="font-display font-bold text-brand-300 text-xs leading-none">{num}</span>
+                      <span className="text-[10px] font-body font-bold uppercase tracking-[0.22em] text-white/70">
                         {label}
                       </span>
                     </div>
                     {/* Hover: brighten the top edge slightly */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                  </Link>
+                  </a>
                 ))}
               </div>
             </div>
@@ -578,7 +675,7 @@ export default function HomePage() {
             {[
               { icon: Package, title: 'Bulk Orders',    desc: 'From 45kg bags'      },
               { icon: Truck,   title: 'Fast Delivery',  desc: branchTown ? `Across ${branchTown}` : 'Nairobi wide' },
-              { icon: Shield,  title: 'Trusted Quality',desc: 'Verified sources'    },
+              { icon: Sprout,  title: 'Farmer-Owned',   desc: 'We grow what we sell' },
               { icon: Star,    title: 'Best Prices',    desc: 'Competitive rates'   },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex items-start gap-3 p-4 bg-white rounded-2xl
@@ -717,6 +814,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── Farm story — provenance, the client's farmer identity ────── */}
+      <FarmStorySection />
 
       <CTABanner />
 
