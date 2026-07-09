@@ -54,8 +54,12 @@ export default defineConfig({
             // unfixable on phones, where there's no hard refresh.
             handler: 'StaleWhileRevalidate',
             options: {
-              // v2: new cache name abandons any already-poisoned image caches
-              cacheName: 'image-cache-v2',
+              // v3: cache-name bumps also change sw.js bytes, forcing browsers
+              // holding an older SW to install this one — needed because a SW
+              // keeps enforcing the CSP headers it was INSTALLED with, so the
+              // connect-src fix in public/_headers only reaches clients via a
+              // new SW version. (v2 abandoned the CacheFirst-poisoned cache.)
+              cacheName: 'image-cache-v3',
               // 0 = opaque cross-origin responses — lets no-cors Cloudinary
               // images actually be cached (CacheFirst was silently refusing)
               cacheableResponse: { statuses: [0, 200] },
