@@ -34,8 +34,11 @@ export default defineConfig({
           {
             // Public storefront catalog data only — never orders, auth,
             // payments, or anything under /api/admin or /api/driver.
+            // /api/settings/receipt is verifyToken-gated (shop KRA PIN etc.) —
+            // excluded via the negative lookahead so an authenticated response
+            // never lands in a cache readable from a shared/public device.
             urlPattern: ({ url }) =>
-              /^\/api\/(products|settings|branches|promotions)(\/|$)/.test(url.pathname),
+              /^\/api\/(products|branches|promotions)(\/|$)|^\/api\/settings(?!\/receipt)(\/|$)/.test(url.pathname),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-catalog-cache',

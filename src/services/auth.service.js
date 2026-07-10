@@ -1,4 +1,4 @@
-import api from './api'
+import api, { setToken } from './api'
 
 export const authService = {
   register: (data) => api.post('/auth/register', data),
@@ -20,8 +20,16 @@ export const authService = {
   // Callers may pass axios config (e.g. a longer timeout for cold starts).
   refresh: (config) => api.post('/auth/refresh', {}, config),
 
-  changePassword: (currentPassword, newPassword) =>
-    api.post('/auth/change-password', { currentPassword, newPassword }),
+  // Backend invalidates all previously-issued tokens on a password change
+  // (including this request's own) and reissues a fresh pair — update the
+  // in-memory access token here so the caller's session survives transparently.
+  // The refresh cookie is set by the server response itself.
+  changePassword: async (currentPassword, newPassword) => {
+    const res = await api.post('/auth/change-password', { currentPassword, newPassword })
+    const newAccessToken = res.data?.data?.accessToken
+    if (newAccessToken) setToken(newAccessToken)
+    return res
+  },
 
   forgotPassword: (phone) => api.post('/auth/forgot-password', { phone }),
 
