@@ -134,6 +134,17 @@ export const AuthProvider = ({ children }) => {
     const res = await authService.login({ phone, password })
     const data = res.data.data
 
+    if (data.requiresTwoFactor) {
+      // Admin/superadmin — must verify an OTP before branch selection.
+      // No session has been issued yet; clear any stale one before proceeding.
+      clearToken()
+      localStorage.removeItem('user')
+      localStorage.removeItem('currentBranch')
+      setUser(null)
+      setCurrentBranch(null)
+      return { requiresTwoFactor: true, twoFactorToken: data.twoFactorToken }
+    }
+
     if (!data.requiresBranchSelection) {
       // Customer/driver/first-time-superadmin — immediate session; cookie set by server
       persistSession(data.user, data.accessToken, null)
@@ -148,6 +159,27 @@ export const AuthProvider = ({ children }) => {
     setCurrentBranch(null)
 
     // Return branch info to LoginPage for step 2
+    return {
+      requiresBranchSelection: true,
+      preAuthToken: data.preAuthToken,
+      branches: data.branches,
+      user: data.user
+    }
+  }, [])
+
+  // Step 1b: admin/superadmin OTP verification, only reached when login()
+  // returned requiresTwoFactor. Resolves to the same shape login() returns for
+  // admins who skip 2FA: either requiresBranchSelection+branches, or an
+  // immediate session for the first-time-superadmin shortcut.
+  const verifyTwoFactor = useCallback(async (twoFactorToken, otp) => {
+    const res = await authService.verifyTwoFactor(twoFactorToken, otp)
+    const data = res.data.data
+
+    if (!data.requiresBranchSelection) {
+      persistSession(data.user, data.accessToken, null)
+      return { requiresBranchSelection: false, user: data.user, firstTimeSetup: !!data.firstTimeSetup }
+    }
+
     return {
       requiresBranchSelection: true,
       preAuthToken: data.preAuthToken,
@@ -215,7 +247,7 @@ export const AuthProvider = ({ children }) => {
       isAdmin: !!user && ADMIN_ROLES.includes(user.role),
       isCustomer: user?.role === 'customer',
       isSuperAdmin: user?.role === 'superadmin',
-      login, selectBranch, switchBranch, register, logout, updateUser
+      login, verifyTwoFactor, selectBranch, switchBranch, register, logout, updateUser
     }}>
       {children}
     </AuthContext.Provider>

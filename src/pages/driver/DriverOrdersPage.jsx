@@ -111,17 +111,24 @@ export default function DriverOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('')
 
-  const load = async () => {
-    setLoading(true)
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const params = activeTab ? { status: activeTab } : {}
       const res = await driverService.getMyOrders(params)
       setOrders(res.data.data || [])
-    } catch { toast.error('Failed to load orders') }
-    finally { setLoading(false) }
+    } catch { if (!silent) toast.error('Failed to load orders') }
+    finally { if (!silent) setLoading(false) }
   }
 
-  useEffect(() => { load() }, [activeTab])
+  useEffect(() => {
+    load()
+    // Poll for status updates while this tab is open — this page previously had
+    // zero live refresh (load only on mount/tab-change). Silent: doesn't reset
+    // loading (would spin the whole list under a driver's thumb mid-scroll).
+    const interval = setInterval(() => load(true), 60000)
+    return () => clearInterval(interval)
+  }, [activeTab])
 
   const handleComplete = (id) => setOrders(o => o.filter(x => x._id !== id))
 

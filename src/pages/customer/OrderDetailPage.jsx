@@ -36,14 +36,20 @@ export default function CustomerOrderDetailPage() {
   }
 
   useEffect(() => {
-    const load = async () => {
+    const load = async (silent = false) => {
+      if (!silent) setLoading(true)
       try {
         const res = await orderService.getMyOrder(id)
         setOrder(res.data.data || null)
-      } catch { setOrder(null) }
-      finally { setLoading(false) }
+      } catch { if (!silent) setOrder(null) }
+      finally { if (!silent) setLoading(false) }
     }
     load()
+    // Poll for status updates while the page is open — this page previously had
+    // zero live refresh (load-once), unlike the admin orders list which already
+    // polls every 60s. Silent: no spinner flash over a page the customer is reading.
+    const interval = setInterval(() => load(true), 60000)
+    return () => clearInterval(interval)
   }, [id])
 
   const handleCancel = async () => {

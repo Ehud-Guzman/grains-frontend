@@ -5,6 +5,11 @@ export const authService = {
 
   login: (data) => api.post('/auth/login', data),
 
+  // Admin/superadmin OTP step, reached when login() returns requiresTwoFactor.
+  // Resolves to the same shape login() returns for non-2FA admins.
+  verifyTwoFactor: (twoFactorToken, otp) =>
+    api.post('/auth/verify-2fa', { twoFactorToken, otp }),
+
   // Step 2 of admin login: exchange preAuthToken + chosen branchId for full tokens
   selectBranch: (preAuthToken, branchId) =>
     api.post('/auth/select-branch', { preAuthToken, branchId }),

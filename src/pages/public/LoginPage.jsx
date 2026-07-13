@@ -11,6 +11,84 @@ import { trackLogin } from '../../utils/analytics'
 
 const ADMIN_ROLES = ['admin', 'superadmin', 'supervisor', 'staff']
 
+// ── TWO-FACTOR VERIFICATION ───────────────────────────────────────────────────
+function TwoFactorForm({ twoFactorToken, onVerify, onBack }) {
+  const [otp, setOtp]         = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (otp.length !== 6) return setError('Enter the 6-digit code')
+    setError('')
+    setLoading(true)
+    try {
+      await onVerify(twoFactorToken, otp)
+    } catch (err) {
+      setLoading(false)
+      setError(err.response?.data?.message || 'Invalid or expired code. Please try again.')
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden"
+      style={{ boxShadow: '0 25px 60px rgba(15,10,5,0.45)' }}>
+      <div className="h-1.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400" />
+      <div className="p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-9 h-9 bg-brand-50 border border-brand-200 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Shield size={16} className="text-brand-600" />
+          </div>
+          <div>
+            <p className="font-body font-semibold text-earth-900 text-sm">Verification required</p>
+            <p className="text-earth-500 text-xs font-body">Enter the code sent to your phone/email</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={otp}
+            onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+            placeholder="000000"
+            autoComplete="one-time-code"
+            className="w-full border border-earth-200 rounded-xl px-4 py-2.5 text-center text-lg
+              tracking-[0.3em] font-body text-earth-900 placeholder-earth-300 focus:outline-none
+              focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-white/70 transition-all"
+            required
+            autoFocus
+          />
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-sm text-red-700 font-body">
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={loading || otp.length !== 6}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 text-white
+              rounded-xl text-sm font-body font-semibold hover:bg-brand-700 transition-all
+              active:scale-[0.98] disabled:opacity-60">
+            {loading
+              ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Verifying…</>
+              : <><Shield size={17} /> Verify</>
+            }
+          </button>
+        </form>
+
+        <button type="button" onClick={onBack}
+          className="w-full mt-2 flex items-center justify-center gap-1.5 text-sm
+            text-earth-500 hover:text-earth-800 font-body transition-colors py-1.5">
+          <ArrowLeft size={14} />
+          Back to login
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── BRANCH SELECTOR ───────────────────────────────────────────────────────────
 function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack }) {
   const [selected, setSelected] = useState(branches.length === 1 ? branches[0]._id : '')
@@ -92,18 +170,35 @@ function BranchSelector({ branches, preAuthToken, pendingUser, onSelect, onBack 
 // ── LOGIN PAGE ────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const shopInfo = useShopInfo()
-  const { login, selectBranch } = useAuth()
+  const { login, verifyTwoFactor, selectBranch } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const from = location.state?.from?.pathname || '/dashboard'
   const signedOutForInactivity = searchParams.get('reason') === 'inactivity'
 
-  const [form, setForm]             = useState({ phone: '', password: '' })
-  const [showPass, setShowPass]     = useState(false)
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
-  const [branchStep, setBranchStep] = useState(null)
+  const [form, setForm]                 = useState({ phone: '', password: '' })
+  const [showPass, setShowPass]         = useState(false)
+  const [loading, setLoading]           = useState(false)
+  const [error, setError]               = useState('')
+  const [branchStep, setBranchStep]     = useState(null)
+  const [twoFactorStep, setTwoFactorStep] = useState(null)
+
+  // Honour the page the user was heading to, as long as it belongs to their
+  // portal — otherwise land them on their own dashboard.
+  const navigateAfterLogin = (user) => {
+    trackLogin()
+    const { role } = user
+    if (ADMIN_ROLES.includes(role)) {
+      navigate(from.startsWith('/admin') ? from : '/admin/dashboard', { replace: true })
+    } else if (role === 'driver') {
+      navigate(from.startsWith('/driver') ? from : '/driver/dashboard', { replace: true })
+    } else {
+      const target = ['/login', '/register', '/'].includes(from) || from.startsWith('/admin') || from.startsWith('/driver')
+        ? '/dashboard' : from
+      navigate(target, { replace: true })
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -111,30 +206,33 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const result = await login(normalizeKenyanPhone(form.phone), form.password)
+      if (result.requiresTwoFactor) {
+        setLoading(false)
+        setTwoFactorStep({ twoFactorToken: result.twoFactorToken })
+        return
+      }
       if (result.requiresBranchSelection) {
         setLoading(false)
         setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
         return
       }
-      trackLogin()
-      // Honour the page the user was heading to, as long as it belongs to
-      // their portal — otherwise land them on their own dashboard.
-      const { role } = result.user
-      if (ADMIN_ROLES.includes(role)) {
-        navigate(from.startsWith('/admin') ? from : '/admin/dashboard', { replace: true })
-      } else if (role === 'driver') {
-        navigate(from.startsWith('/driver') ? from : '/driver/dashboard', { replace: true })
-      } else {
-        const target = ['/login', '/register', '/'].includes(from) || from.startsWith('/admin') || from.startsWith('/driver')
-          ? '/dashboard' : from
-        navigate(target, { replace: true })
-      }
+      navigateAfterLogin(result.user)
     } catch (err) {
       setLoading(false)
       if (err.response?.status === 423)      setError('Your account is locked. Please contact support.')
       else if (err.response?.status === 401) setError('Invalid phone number or password.')
       else                                   setError(err.response?.data?.message || 'Login failed. Please try again.')
     }
+  }
+
+  const handleVerifyTwoFactor = async (twoFactorToken, otp) => {
+    const result = await verifyTwoFactor(twoFactorToken, otp)
+    if (result.requiresBranchSelection) {
+      setTwoFactorStep(null)
+      setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
+      return
+    }
+    navigateAfterLogin(result.user)
   }
 
   const handleBranchSelect = async (preAuthToken, branchId) => {
@@ -197,8 +295,17 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Two-factor verification */}
+            {twoFactorStep && (
+              <TwoFactorForm
+                twoFactorToken={twoFactorStep.twoFactorToken}
+                onVerify={handleVerifyTwoFactor}
+                onBack={() => setTwoFactorStep(null)}
+              />
+            )}
+
             {/* Branch selection */}
-            {branchStep && (
+            {!twoFactorStep && branchStep && (
               <BranchSelector
                 branches={branchStep.branches}
                 preAuthToken={branchStep.preAuthToken}
@@ -209,7 +316,7 @@ export default function LoginPage() {
             )}
 
             {/* Login card — self-contained */}
-            {!branchStep && (
+            {!branchStep && !twoFactorStep && (
               <div
                 className="rounded-2xl overflow-hidden border border-white/25"
                 style={{

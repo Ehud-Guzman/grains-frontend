@@ -493,6 +493,69 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
           )}
         </div>
       </div>
+
+      {/* Reconciliation — raw arrival vs. what was actually packed into stock */}
+      {intake.reconciliation && (
+        <div className="mt-4">
+          <p className="text-xs font-admin font-semibold text-admin-500 uppercase
+            tracking-wide mb-2">
+            Reconciliation
+          </p>
+          <div className={`rounded-xl border px-4 py-3 ${
+            intake.reconciliation.highVariance
+              ? 'bg-red-50 border-red-200'
+              : 'bg-white border-admin-100'
+          }`}>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div>
+                <p className="text-xs font-admin text-admin-400">Raw received</p>
+                <p className="text-sm font-admin font-bold text-admin-800">{intake.reconciliation.rawTotal}</p>
+              </div>
+              <div>
+                <p className="text-xs font-admin text-admin-400">Packed into stock</p>
+                <p className="text-sm font-admin font-bold text-admin-800">{intake.reconciliation.packedTotal}</p>
+              </div>
+              {intake.reconciliation.variancePct !== null && (
+                <div>
+                  <p className="text-xs font-admin text-admin-400">Variance</p>
+                  <p className={`text-sm font-admin font-bold ${
+                    intake.reconciliation.highVariance ? 'text-red-600' : 'text-admin-800'
+                  }`}>
+                    {intake.reconciliation.variancePct}%
+                  </p>
+                </div>
+              )}
+              {intake.reconciliation.highVariance && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-admin
+                  font-semibold text-red-600">
+                  <AlertTriangle size={13} /> High variance
+                </span>
+              )}
+            </div>
+            {!intake.reconciliation.unitsConsistent && (
+              <p className="text-xs font-admin text-admin-400 mt-2">
+                Raw items use mixed units — totals above may not be directly comparable.
+              </p>
+            )}
+          </div>
+
+          {intake.linkedDeliveries?.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {intake.linkedDeliveries.map((d, i) => (
+                <div key={i} className="flex items-center justify-between gap-4 bg-white
+                  rounded-xl px-3 py-2 border border-admin-100">
+                  <span className="text-xs font-admin text-admin-700">
+                    {d.varietyName} · {d.packagingSize}
+                  </span>
+                  <span className="text-xs font-admin font-semibold text-admin-800">
+                    +{d.quantity} · {formatDate(d.appliedAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

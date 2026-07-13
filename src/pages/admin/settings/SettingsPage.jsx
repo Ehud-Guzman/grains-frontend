@@ -931,6 +931,10 @@ export default function SettingsPage() {
                 desc="Alert admin when any product falls below its threshold"
                 checked={form.notifyAdminLowStock}
                 onChange={e => set('notifyAdminLowStock', e.target.checked)} />
+              <Toggle label="Daily Sales Report"
+                desc="Email a summary of the prior day's sales and best sellers every day"
+                checked={form.notifyAdminDailySalesReport}
+                onChange={e => set('notifyAdminDailySalesReport', e.target.checked)} />
             </div>
 
             <Divider />
