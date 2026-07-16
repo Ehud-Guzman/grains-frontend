@@ -8,6 +8,7 @@ import Spinner from '../../components/ui/Spinner'
 import SearchAutocomplete from '../../components/ui/SearchAutocomplete'
 import SkeletonCard from '../../components/ui/SkeletonCard'
 import GridToggle from '../../components/ui/GridToggle'
+import MinimumOrderNotice from '../../components/ui/MinimumOrderNotice'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 // ── FILTER CHIP ───────────────────────────────────────────────────────────────
@@ -204,6 +205,9 @@ export default function CataloguePage() {
         <StoryRail products={products} pagination={pagination} />
 
         <div className="container-page py-6">
+
+          {/* ── Bulk-only branch notice ────────────────────────────── */}
+          <MinimumOrderNotice className="mb-4" />
 
           {/* ── Search + controls ──────────────────────────────────── */}
           <div className="flex gap-2 mb-4">

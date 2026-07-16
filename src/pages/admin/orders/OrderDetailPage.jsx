@@ -4,7 +4,7 @@ import Receipt from '../../../components/orders/Receipt'
 import {
   ArrowLeft, Check, X, Printer, Phone, MapPin,
   CreditCard, Truck, Store, Package, ChevronRight,
-  AlertTriangle, Clock, BadgeCheck, Ban, FileCheck, RefreshCw
+  AlertTriangle, Clock, BadgeCheck, Ban, FileCheck, RefreshCw, CalendarClock
 } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { adminOrderService } from '../../../services/admin/order.service'
@@ -313,6 +313,22 @@ export default function AdminOrderDetailPage() {
           <div className="lg:col-span-2 space-y-5">
 
             {/* Alerts */}
+            {order.preferredDeliveryDate && (
+              <div className="flex gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4">
+                <CalendarClock size={16} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-admin font-bold text-blue-700 uppercase tracking-wider mb-1">
+                    Requested {order.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery'} Date
+                  </p>
+                  <p className="text-blue-900 text-sm font-admin">
+                    {new Date(order.preferredDeliveryDate).toLocaleDateString('en-KE', {
+                      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {order.specialInstructions && (
               <div className="flex gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
                 <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />

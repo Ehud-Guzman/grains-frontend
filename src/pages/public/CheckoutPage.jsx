@@ -154,7 +154,8 @@ export default function CheckoutPage() {
     paymentMethod:       'pickup',
     mpesaPhone:          user?.phone || '',
     specialInstructions: '',
-    preferredDriverId:   ''
+    preferredDriverId:   '',
+    preferredDeliveryDate: ''
   })
 
   const [riders, setRiders] = useState([])
@@ -175,7 +176,17 @@ export default function CheckoutPage() {
   const vatBase        = vatEnabled ? Math.max(0, taxableSubtotal - couponDiscount * discountShare) : 0
   const vatAmount      = vatEnabled ? Math.round(vatBase * vatRate / 100) : 0
   const orderTotal     = Math.max(0, total + deliveryFee + vatAmount - couponDiscount)
-  const belowMinimum = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
+  const totalBags = items.reduce((sum, i) => sum + i.quantity, 0)
+  const belowMinimumValue = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
+  const belowMinimumQty   = orderSettings.minimumOrderQuantity > 0 && totalBags < orderSettings.minimumOrderQuantity
+  const belowMinimum = belowMinimumValue || belowMinimumQty
+  const minimumMessage = belowMinimumQty
+    ? `This branch takes bulk orders only — minimum ${orderSettings.minimumOrderQuantity} bags per order`
+    : `Minimum order value is ${formatKES(orderSettings.minimumOrderValue)}`
+  // Preferred delivery date bounds (local YYYY-MM-DD) — mirrors the backend's
+  // today-to-60-days validation window
+  const dateToday = new Date().toLocaleDateString('en-CA')
+  const dateMax = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA')
   const availablePaymentOptions = [
     orderSettings.allowMpesa && {
       value: 'mpesa',
@@ -456,7 +467,7 @@ export default function CheckoutPage() {
   const next = () => {
     if (!validate()) return
     if (step === 3 && belowMinimum) {
-      toast.error(`Minimum order value is ${formatKES(orderSettings.minimumOrderValue)}`)
+      toast.error(minimumMessage)
       return
     }
     if (step === 2 && availablePaymentOptions.length === 0) {
@@ -487,7 +498,7 @@ export default function CheckoutPage() {
   const submit = async () => {
     if (loading) return
     if (belowMinimum) {
-      toast.error(`Minimum order value is ${formatKES(orderSettings.minimumOrderValue)}`)
+      toast.error(minimumMessage)
       return
     }
 
@@ -503,6 +514,7 @@ export default function CheckoutPage() {
         deliveryAddress:     form.deliveryAddress || null,
         paymentMethod:       form.paymentMethod,
         specialInstructions: form.specialInstructions || null,
+        preferredDeliveryDate: form.preferredDeliveryDate || undefined,
         preferredDriverId:   (form.deliveryMethod === 'delivery' && form.preferredDriverId) || undefined,
         couponCode: couponData?.code || undefined,
         deliveryCoordinates: deliveryCoordinates ?? undefined,
@@ -856,6 +868,20 @@ export default function CheckoutPage() {
                     </>
                   )}
 
+                  {/* Preferred delivery/pickup date — a planning hint for logistics, not a commitment */}
+                  <Field label={form.deliveryMethod === 'delivery' ? 'Preferred Delivery Date' : 'Preferred Pickup Date'}
+                    hint="Optional — when would you like your order? We'll do our best to match it">
+                    <input type="date"
+                      min={dateToday}
+                      max={dateMax}
+                      value={form.preferredDeliveryDate}
+                      onChange={e => set('preferredDeliveryDate', e.target.value)}
+                      className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm
+                        font-body text-earth-800 focus:outline-none focus:ring-2
+                        focus:ring-brand-400 focus:border-transparent transition-all bg-earth-50"
+                    />
+                  </Field>
+
                   <Field label="Special Instructions">
                     <textarea rows={2}
                       placeholder="Any notes for your order… (optional)"
@@ -1089,7 +1115,7 @@ export default function CheckoutPage() {
                   {belowMinimum && (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-3">
                       <p className="text-xs text-red-700 font-body text-center">
-                        Minimum order value is <strong>{formatKES(orderSettings.minimumOrderValue)}</strong>.
+                        {minimumMessage}.
                       </p>
                     </div>
                   )}

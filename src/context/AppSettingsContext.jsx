@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
   shopWhatsapp: DEFAULT_SHOP_INFO.whatsapp,
   deliveryFee: 0,
   minimumOrderValue: 0,
+  minimumOrderQuantity: 0,
   allowGuestOrders: true,
   allowCashOnDelivery: true,
   allowPayOnPickup: true,
@@ -49,6 +50,7 @@ const normalizeSettings = (settings = {}) => {
     orderSettings: {
       deliveryFee: Number(merged.deliveryFee) || 0,
       minimumOrderValue: Number(merged.minimumOrderValue) || 0,
+      minimumOrderQuantity: Number(merged.minimumOrderQuantity) || 0,
       allowGuestOrders: merged.allowGuestOrders !== false,
       allowCashOnDelivery: merged.allowCashOnDelivery !== false,
       allowPayOnPickup: merged.allowPayOnPickup !== false,

@@ -251,6 +251,8 @@ export default function SettingsPage() {
         loyaltySilverThreshold: 25000,
         loyaltyGoldThreshold: 75000,
         priceAlertThresholdPct: 5,
+        minimumOrderQuantity: 0,
+        largeOrderThresholdKES: 0,
         ...res.data.data,
       }))
       .catch(() => toast.error('Failed to load settings'))
@@ -550,6 +552,11 @@ export default function SettingsPage() {
               <Field label="Minimum Order Value (KES)" hint="Set to 0 for no minimum">
                 <Input type="number" min="0" value={form.minimumOrderValue}
                   onChange={e => set('minimumOrderValue', Number(e.target.value))} />
+              </Field>
+              <Field label="Minimum Order Quantity (bags)"
+                hint="Bulk-only branches: total bags required per order. 0 = no minimum">
+                <Input type="number" min="0" value={form.minimumOrderQuantity}
+                  onChange={e => set('minimumOrderQuantity', Number(e.target.value))} />
               </Field>
               <Field label="Low Stock Alert Threshold" hint="Alert when stock falls below this number">
                 <Input type="number" min="1" value={form.defaultLowStockThreshold}
@@ -935,6 +942,11 @@ export default function SettingsPage() {
                 desc="Email a summary of the prior day's sales and best sellers every day"
                 checked={form.notifyAdminDailySalesReport}
                 onChange={e => set('notifyAdminDailySalesReport', e.target.checked)} />
+              <Field label="Large Order Alert Threshold (KES)"
+                hint="Instantly alert admin when an order totals at least this amount — fires even if 'New Order Received' is off. 0 = disabled">
+                <Input type="number" min="0" value={form.largeOrderThresholdKES}
+                  onChange={e => set('largeOrderThresholdKES', Number(e.target.value))} />
+              </Field>
             </div>
 
             <Divider />

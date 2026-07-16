@@ -3,6 +3,7 @@ import { X, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
+import MinimumOrderNotice from '../ui/MinimumOrderNotice'
 
 export default function CartDrawer() {
   const { items, subtotal, isOpen, closeCart, removeItem, updateQuantity } = useCart()
@@ -86,6 +87,8 @@ export default function CartDrawer() {
               <span className="font-display font-semibold text-earth-900 text-lg">{formatKES(subtotal)}</span>
             </div>
             <p className="text-xs text-earth-400">Delivery fee calculated at checkout</p>
+            <MinimumOrderNotice subtotal={subtotal}
+              quantity={items.reduce((s, i) => s + i.quantity, 0)} compact />
             <Link to="/checkout" onClick={closeCart} className="btn-primary w-full justify-center">
               Proceed to Checkout
             </Link>

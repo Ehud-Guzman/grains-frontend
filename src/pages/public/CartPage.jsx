@@ -8,6 +8,7 @@ import { useAppSettings } from '../../context/AppSettingsContext'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import AddToListModal from '../../components/lists/AddToListModal'
+import MinimumOrderNotice from '../../components/ui/MinimumOrderNotice'
 import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
@@ -185,6 +186,9 @@ export default function CartPage() {
               <p className="text-xs text-earth-600 font-body mb-5">
                 Delivery fee calculated at checkout
               </p>
+
+              <MinimumOrderNotice subtotal={total}
+                quantity={items.reduce((s, i) => s + i.quantity, 0)} className="mb-4" />
 
               <Link to="/checkout"
                 className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
