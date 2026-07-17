@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useBranch } from './BranchContext'
 import { getCartUnitPrice } from '../utils/helpers'
 import { trackAddToCart } from '../utils/analytics'
+import { productService } from '../services/product.service'
 
 const CartContext = createContext(null)
 const CART_KEY = 'vittorios_cart'
@@ -138,6 +139,65 @@ export const CartProvider = ({ children }) => {
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
 
+  // ── LIVE PRICE/STOCK REFRESH ───────────────────────────────────────────────
+  // The cart lives in localStorage and reorder items carry an old order's price
+  // snapshot, but the backend always charges the CURRENT price (buildOrderItems
+  // re-derives from the DB at order creation). Without this refresh a customer
+  // could see one total in the cart and be charged another. Called by the cart
+  // and checkout pages on mount: re-fetches each product, updates price/stock/
+  // tiers in place, drops items that no longer exist, and tells the customer
+  // what changed. Network failures leave the cart untouched (checkout still
+  // validates server-side).
+  const refreshing = useRef(false)
+  const refreshPrices = useCallback(async () => {
+    if (refreshing.current) return
+    const current = JSON.parse(localStorage.getItem(CART_KEY) || '[]')
+    if (current.length === 0) return
+    refreshing.current = true
+    try {
+      const ids = [...new Set(current.map(i => i.productId))]
+      const results = await Promise.allSettled(ids.map(id => productService.getById(id)))
+      const liveMap = new Map()   // productId → product
+      const goneSet = new Set()   // productId → 404 (deactivated/removed)
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') liveMap.set(ids[i], r.value.data.data)
+        else if (r.reason?.response?.status === 404) goneSet.add(ids[i])
+        // other rejections (network) → leave those items untouched
+      })
+      if (liveMap.size === 0 && goneSet.size === 0) return
+
+      let priceChanged = false
+      let removed = 0
+      let stockClamped = false
+
+      setItems(prev => prev.flatMap(item => {
+        if (goneSet.has(item.productId)) { removed++; return [] }
+        const product = liveMap.get(item.productId)
+        if (!product) return [item]
+        const variety = product.varieties?.find(v => v.varietyName === item.variety)
+        const packaging = variety?.packaging?.find(p => p.size === item.packaging)
+        if (!packaging || packaging.quoteOnly || !packaging.priceKES) { removed++; return [] }
+        if (packaging.stock <= 0) { removed++; return [] }
+
+        const next = { ...item }
+        if (packaging.priceKES !== item.priceKES) { priceChanged = true; next.priceKES = packaging.priceKES }
+        next.pricingTiers = packaging.pricingTiers || []
+        next.taxable = product.taxable !== false
+        next.stock = packaging.stock
+        if (item.quantity > packaging.stock) { stockClamped = true; next.quantity = packaging.stock }
+        return [next]
+      }))
+
+      if (removed > 0) toast(`${removed} item${removed !== 1 ? 's' : ''} no longer available — removed from your cart`, { icon: '🧺' })
+      if (priceChanged) toast('Some prices changed since you added items — your cart now shows current prices', { icon: '💰' })
+      if (stockClamped) toast('Quantities adjusted to available stock', { icon: '📦' })
+    } catch {
+      // best-effort — checkout re-validates server-side regardless
+    } finally {
+      refreshing.current = false
+    }
+  }, [])
+
   // Tier-aware subtotal — matches the server-side price derivation
   const subtotal = items.reduce((sum, i) => sum + (getCartUnitPrice(i) * i.quantity), 0)
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0)
@@ -145,7 +205,7 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={{
       items, subtotal, itemCount, isOpen,
-      addItem, removeItem, updateQuantity, clearCart, reorderItems,
+      addItem, removeItem, updateQuantity, clearCart, reorderItems, refreshPrices,
       openCart, closeCart
     }}>
       {children}

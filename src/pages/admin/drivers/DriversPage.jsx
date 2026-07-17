@@ -381,7 +381,14 @@ export default function DriversPage() {
 
   const handleLock = async (id) => {
     try {
-      await adminDriverService.lock(id)
+      const res = await adminDriverService.lock(id)
+      const stranded = res.data?.data?.activeDeliveries
+      if (stranded?.length) {
+        // Locked drivers can't log in to complete these — they must be reassigned
+        toast(`Driver has ${stranded.length} active deliver${stranded.length === 1 ? 'y' : 'ies'} (${stranded.join(', ')}) — reassign from the order page`, {
+          icon: '⚠️', duration: 8000
+        })
+      }
       toast.success('Account locked')
       fetch()
     } catch { toast.error('Failed to lock account') }

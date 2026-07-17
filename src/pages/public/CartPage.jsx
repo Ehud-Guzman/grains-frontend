@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, List } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -13,7 +13,11 @@ import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartPage() {
-  const { items, subtotal: total, removeItem, updateQuantity } = useCart()
+  const { items, subtotal: total, removeItem, updateQuantity, refreshPrices } = useCart()
+
+  // Sync prices/stock with the live catalog — cart items can be hours or days
+  // old (localStorage / reorder snapshots) and the backend charges current prices.
+  useEffect(() => { refreshPrices() }, [refreshPrices])
   const { user } = useAuth()
   const { orderSettings } = useAppSettings()
   const { dismissedTips, dismissTip } = useOnboarding()

@@ -108,7 +108,11 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disable
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
-  const { items, subtotal: total, clearCart } = useCart()
+  const { items, subtotal: total, clearCart, refreshPrices } = useCart()
+
+  // Last-chance price/stock sync before the customer commits — the backend
+  // charges current prices, so the review screen must show them too.
+  useEffect(() => { refreshPrices() }, [refreshPrices])
   const { user, isAuthenticated } = useAuth()
   const { branchId } = useBranch()
   const { orderSettings, shopInfo, isLoading: settingsLoading, hasLoaded, loadFailed, refreshSettings } = useAppSettings()

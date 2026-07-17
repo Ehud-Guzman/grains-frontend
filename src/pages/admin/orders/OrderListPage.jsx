@@ -10,7 +10,7 @@ import { adminOrderService } from '../../../services/admin/order.service'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
 import { ContextualTip } from '../../../components/onboarding/OnboardingEnhancements'
 import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
-import { formatKES, timeAgo } from '../../../utils/helpers'
+import { formatKES, timeAgo, getStatusLabel } from '../../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../../utils/constants'
 import toast from 'react-hot-toast'
 
@@ -25,14 +25,24 @@ const STATUS_FILTERS = [
   { value: 'cancelled',       label: 'Cancelled'   },
 ]
 
+// Payment reconciliation queues: Unpaid on completed orders = COD cash not yet
+// remitted; Refunded = money owed back to the customer.
+const PAYMENT_FILTERS = [
+  { value: '',         label: 'Any payment' },
+  { value: 'paid',     label: 'Paid'        },
+  { value: 'unpaid',   label: 'Unpaid'      },
+  { value: 'pending',  label: 'Processing'  },
+  { value: 'refunded', label: 'Refunded'    },
+]
+
 // ── SUB-COMPONENTS ────────────────────────────────────────────────────────────
-function StatusBadge({ status }) {
+function StatusBadge({ status, deliveryMethod }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
       px-2.5 py-1 rounded-full border whitespace-nowrap ${cfg.badge} ${cfg.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
-      {cfg.label}
+      {getStatusLabel(status, deliveryMethod)}
     </span>
   )
 }
@@ -48,6 +58,22 @@ function PaymentBadge({ status }) {
     <span className="inline-flex items-center gap-1 text-xs font-admin font-semibold
       px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
       Failed
+    </span>
+  )
+  // Refund recorded (order rejected/cancelled after payment) — money is owed
+  // back to the customer until the M-Pesa reversal is actually done.
+  if (status === 'refunded') return (
+    <span className="inline-flex items-center gap-1 text-xs font-admin font-semibold
+      px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+      Refunded
+    </span>
+  )
+  // Cash not yet confirmed — on a completed COD order this means the driver
+  // hasn't remitted (or the supervisor hasn't recorded) the cash yet.
+  if (status === 'unpaid') return (
+    <span className="inline-flex items-center gap-1 text-xs font-admin font-semibold
+      px-2 py-0.5 rounded-full bg-admin-50 text-admin-500 border border-admin-200">
+      Unpaid
     </span>
   )
   return (
@@ -128,9 +154,10 @@ export default function OrderListPage() {
   const [pendingTotal, setPendingTotal] = useState(0)
   const searchDebounce = useRef(null)
 
-  const statusFilter = searchParams.get('status') || ''
-  const searchQuery  = searchParams.get('search') || ''
-  const page         = Number(searchParams.get('page')) || 1
+  const statusFilter  = searchParams.get('status') || ''
+  const paymentFilter = searchParams.get('payment') || ''
+  const searchQuery   = searchParams.get('search') || ''
+  const page          = Number(searchParams.get('page')) || 1
 
   // ── FETCH ─────────────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (silent = false) => {
@@ -138,8 +165,9 @@ export default function OrderListPage() {
     else setRefreshing(true)
     try {
       const params = { page, limit: 20 }
-      if (statusFilter) params.status = statusFilter
-      if (searchQuery)  params.search = searchQuery
+      if (statusFilter)  params.status = statusFilter
+      if (paymentFilter) params.paymentStatus = paymentFilter
+      if (searchQuery)   params.search = searchQuery
       const res = await adminOrderService.getAll(params)
       const data = res.data.data || []
       setOrders(data)
@@ -151,7 +179,7 @@ export default function OrderListPage() {
       if (!silent) toast.error('Failed to load orders')
     }
     finally { setLoading(false); setRefreshing(false) }
-  }, [page, statusFilter, searchQuery])
+  }, [page, statusFilter, paymentFilter, searchQuery])
 
   // Fetch pending total separately for accurate badge
   const fetchPendingTotal = useCallback(async () => {
@@ -228,7 +256,7 @@ export default function OrderListPage() {
     } finally { setBulkLoading(false) }
   }
 
-  const hasFilters = statusFilter || searchQuery
+  const hasFilters = statusFilter || paymentFilter || searchQuery
   const showOrdersTip = !dismissedTips['admin-orders-tip']
 
   return (
@@ -330,6 +358,21 @@ export default function OrderListPage() {
             <X size={11} /> Clear
           </button>
         )}
+      </div>
+
+      {/* ── Payment pills ───────────────────────────────────────────── */}
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-4 scrollbar-hide">
+        {PAYMENT_FILTERS.map(f => (
+          <button key={f.value} onClick={() => setParam('payment', f.value)}
+            className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-admin
+              font-semibold transition-all border ${
+                paymentFilter === f.value
+                  ? 'bg-admin-900 text-orange-500 border-admin-900 shadow-sm'
+                  : 'bg-white text-admin-500 border-admin-200 hover:border-admin-400 hover:text-admin-700'
+              }`}>
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* ── Bulk action bar ─────────────────────────────────────────── */}
