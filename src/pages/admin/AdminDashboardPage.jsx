@@ -19,13 +19,13 @@ import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, deliveryMethod }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
       px-2.5 py-1 rounded-full border ${cfg.badge} ${cfg.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
-      {getStatusLabel(status)}
+      {getStatusLabel(status, deliveryMethod)}
     </span>
   )
 }
@@ -372,7 +372,7 @@ function BusinessDashboardPage() {
                       <span className="font-admin font-bold text-admin-800 text-sm tracking-wide">
                         {order.orderRef}
                       </span>
-                      <StatusBadge status={order.status} />
+                      <StatusBadge status={order.status} deliveryMethod={order.deliveryMethod} />
                     </div>
                     <p className="text-admin-400 text-xs font-admin">
                       {order.userId?.name || order.guestId?.name || 'Guest'}

@@ -342,7 +342,7 @@ export default function CustomerProfilePage() {
                       <p className="text-admin-400 text-xs mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={getStatusBadgeClass(order.status)}>{getStatusLabel(order.status)}</span>
+                      <span className={getStatusBadgeClass(order.status)}>{getStatusLabel(order.status, order.deliveryMethod)}</span>
                       <span className="font-admin font-semibold text-admin-800 text-sm">{formatKES(order.total)}</span>
                     </div>
                   </Link>

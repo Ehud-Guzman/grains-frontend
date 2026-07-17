@@ -46,11 +46,19 @@ export const timeAgo = (date) => {
   return formatDate(date)
 }
 
-// Get status label
-export const getStatusLabel = (status) => STATUS_LABELS[status] || status
+// Get status label. Pass the order's deliveryMethod where available — pickup
+// orders travel through the same out_for_delivery status as delivery orders,
+// but showing "Out for Delivery" for goods the customer must collect is wrong.
+export const getStatusLabel = (status, deliveryMethod) =>
+  status === 'out_for_delivery' && deliveryMethod === 'pickup'
+    ? 'Ready for Pickup'
+    : STATUS_LABELS[status] || status
 
 // Get status description
-export const getStatusDescription = (status) => STATUS_DESCRIPTIONS[status] || ''
+export const getStatusDescription = (status, deliveryMethod) =>
+  status === 'out_for_delivery' && deliveryMethod === 'pickup'
+    ? 'Your order is packed and ready — come and collect it from the shop.'
+    : STATUS_DESCRIPTIONS[status] || ''
 
 // Get status badge class
 export const getStatusBadgeClass = (status) => {

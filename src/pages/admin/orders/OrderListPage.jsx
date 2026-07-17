@@ -420,7 +420,7 @@ export default function OrderListPage() {
                         {order.orderRef}
                       </span>
                     </div>
-                    <StatusBadge status={order.status} />
+                    <StatusBadge status={order.status} deliveryMethod={order.deliveryMethod} />
                   </div>
                   <p className="text-admin-700 font-admin font-medium text-sm">
                     {customerName}
@@ -559,7 +559,7 @@ export default function OrderListPage() {
                       </td>
 
                       <td className="px-4 py-3.5">
-                        <StatusBadge status={order.status} />
+                        <StatusBadge status={order.status} deliveryMethod={order.deliveryMethod} />
                       </td>
 
                       <td className="px-4 py-3.5 text-right">

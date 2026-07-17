@@ -1,7 +1,7 @@
 import { formatDateTime, getStatusLabel } from '../../utils/helpers'
 import { Check, Clock } from 'lucide-react'
 
-export function OrderStatusTimeline({ history = [], currentStatus }) {
+export function OrderStatusTimeline({ history = [], currentStatus, deliveryMethod }) {
   return (
     <div className="space-y-3">
       {[...history].reverse().map((entry, i) => (
@@ -20,7 +20,7 @@ export function OrderStatusTimeline({ history = [], currentStatus }) {
           </div>
           <div className="pb-3">
             <p className={`text-sm font-medium ${i === 0 ? 'text-brand-700' : 'text-earth-700'}`}>
-              {getStatusLabel(entry.status)}
+              {getStatusLabel(entry.status, deliveryMethod)}
             </p>
             {entry.note && <p className="text-xs text-earth-500 mt-0.5">{entry.note}</p>}
             <p className="text-xs text-earth-400 mt-0.5">{formatDateTime(entry.changedAt)}</p>

@@ -151,7 +151,7 @@ export default function AdminOrderDetailPage() {
     setActionLoading(true)
     try {
       await adminOrderService.updateStatus(id, status)
-      toast.success(`Order marked as ${getStatusLabel(status)}`)
+      toast.success(`Order marked as ${getStatusLabel(status, order?.deliveryMethod)}`)
       fetchOrder()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed')
@@ -223,7 +223,15 @@ export default function AdminOrderDetailPage() {
   )
 
   const customer    = order.userId || order.guestId
-  const nextActions = NEXT_STATUSES[order.status] || []
+  // Pickup orders travel through the same out_for_delivery status, but the
+  // action an admin takes is "it's ready to be collected", not "dispatch it".
+  const nextActions = (NEXT_STATUSES[order.status] || []).map(action =>
+    action.value === 'out_for_delivery' && order.deliveryMethod === 'pickup'
+      ? { ...action, label: 'Mark Ready for Pickup', icon: Package }
+      : action.value === 'completed' && order.deliveryMethod === 'pickup'
+        ? { ...action, label: 'Mark as Collected' }
+        : action
+  )
   const cfg         = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
   const StatusIcon  = cfg.icon
 
@@ -253,7 +261,7 @@ export default function AdminOrderDetailPage() {
                   px-3 py-1.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.text}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                   <StatusIcon size={11} />
-                  {getStatusLabel(order.status)}
+                  {getStatusLabel(order.status, order.deliveryMethod)}
                 </span>
               </div>
               <p className="text-admin-400 text-sm mt-1.5 font-admin">
@@ -453,6 +461,7 @@ export default function AdminOrderDetailPage() {
                   <OrderStatusTimeline
                     history={order.statusHistory}
                     currentStatus={order.status}
+                    deliveryMethod={order.deliveryMethod}
                   />
                 </div>
               </Card>

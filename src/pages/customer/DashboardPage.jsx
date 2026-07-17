@@ -16,13 +16,13 @@ import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../utils/help
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 
-function StatusPill({ status }) {
+function StatusPill({ status, deliveryMethod }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-body font-semibold
       px-2 py-0.5 rounded-full border ${cfg.badge} ${cfg.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
-      {getStatusLabel(status)}
+      {getStatusLabel(status, deliveryMethod)}
     </span>
   )
 }
@@ -416,7 +416,7 @@ export default function CustomerDashboardPage() {
                                 {formatDate(order.createdAt)} · {timeAgo(order.createdAt)}
                               </p>
                             </div>
-                            <StatusPill status={order.status} />
+                            <StatusPill status={order.status} deliveryMethod={order.deliveryMethod} />
                           </div>
 
                           {/* Items summary */}
@@ -499,7 +499,7 @@ export default function CustomerDashboardPage() {
                             <span className="font-body font-semibold text-earth-700 text-sm">
                               {order.orderRef}
                             </span>
-                            <StatusPill status={order.status} />
+                            <StatusPill status={order.status} deliveryMethod={order.deliveryMethod} />
                           </div>
                           <p className="text-earth-400 text-xs font-body">{formatDate(order.createdAt)}</p>
                         </div>

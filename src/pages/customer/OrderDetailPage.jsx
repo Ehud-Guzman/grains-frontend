@@ -17,6 +17,9 @@ const STEP_LABELS = {
   pending: 'Received', approved: 'Confirmed', preparing: 'Preparing',
   out_for_delivery: 'On the Way', completed: 'Delivered'
 }
+const PICKUP_STEP_LABELS = {
+  ...STEP_LABELS, out_for_delivery: 'Ready for Pickup', completed: 'Collected'
+}
 
 export default function CustomerOrderDetailPage() {
   const shopInfo = useShopInfo()
@@ -117,7 +120,7 @@ export default function CustomerOrderDetailPage() {
         <div className="bg-white rounded-2xl shadow-warm-lg border border-earth-100 overflow-hidden">
           <div className={`px-5 py-4 flex items-center gap-3 ${cfg.bg} border-b ${cfg.border}`}>
             <span className={`w-3 h-3 rounded-full flex-shrink-0 ${cfg.dot}`} />
-            <p className={`font-display font-bold ${cfg.text}`}>{getStatusLabel(order.status)}</p>
+            <p className={`font-display font-bold ${cfg.text}`}>{getStatusLabel(order.status, order.deliveryMethod)}</p>
           </div>
 
           {/* Progress bar */}
@@ -147,7 +150,7 @@ export default function CustomerOrderDetailPage() {
                           active ? 'text-brand-600 font-semibold' :
                           done   ? 'text-earth-500' : 'text-earth-300'
                         }`}>
-                          {STEP_LABELS[s]}
+                          {(order.deliveryMethod === 'pickup' ? PICKUP_STEP_LABELS : STEP_LABELS)[s]}
                         </span>
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
@@ -263,7 +266,8 @@ export default function CustomerOrderDetailPage() {
               tracking-wide mb-4">
               Status Timeline
             </p>
-            <OrderStatusTimeline history={order.statusHistory} currentStatus={order.status} />
+            <OrderStatusTimeline history={order.statusHistory} currentStatus={order.status}
+              deliveryMethod={order.deliveryMethod} />
           </div>
         )}
 

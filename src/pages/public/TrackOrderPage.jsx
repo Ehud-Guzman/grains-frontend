@@ -22,11 +22,11 @@ const STEPS = [
   { key: 'pending',          label: 'Received' },
   { key: 'approved',         label: 'Confirmed' },
   { key: 'preparing',        label: 'Preparing' },
-  { key: 'out_for_delivery', label: 'On the way' },
-  { key: 'completed',        label: 'Delivered' },
+  { key: 'out_for_delivery', label: 'On the way', pickupLabel: 'Ready for pickup' },
+  { key: 'completed',        label: 'Delivered',  pickupLabel: 'Collected' },
 ]
 
-function OrderProgress({ status }) {
+function OrderProgress({ status, deliveryMethod }) {
   if (['rejected', 'cancelled'].includes(status)) return null
   const currentIdx = STEPS.findIndex(s => s.key === status)
 
@@ -57,7 +57,7 @@ function OrderProgress({ status }) {
                   active ? 'text-brand-600 font-semibold' :
                   done   ? 'text-earth-600' : 'text-earth-300'
                 }`}>
-                  {step.label}
+                  {deliveryMethod === 'pickup' && step.pickupLabel ? step.pickupLabel : step.label}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
@@ -199,21 +199,21 @@ export default function TrackOrderPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`font-display font-bold text-base ${statusCfg.text}`}>
-                  {getStatusLabel(order.status)}
+                  {getStatusLabel(order.status, order.deliveryMethod)}
                 </p>
                 <p className="text-earth-500 text-xs font-body mt-0.5">
                   {order.orderRef} · {formatDate(order.createdAt)}
                 </p>
               </div>
               <span className={`text-xs font-body font-semibold px-3 py-1.5 rounded-full border ${statusCfg.bg} ${statusCfg.border} ${statusCfg.text}`}>
-                {getStatusLabel(order.status)}
+                {getStatusLabel(order.status, order.deliveryMethod)}
               </span>
             </div>
 
             <div className="p-6 space-y-6">
 
               {/* Progress bar */}
-              <OrderProgress status={order.status} />
+              <OrderProgress status={order.status} deliveryMethod={order.deliveryMethod} />
 
               {/* Rejection reason */}
               {order.status === 'rejected' && order.rejectionReason && (
@@ -263,6 +263,7 @@ export default function TrackOrderPage() {
                   <OrderStatusTimeline
                     history={order.statusHistory}
                     currentStatus={order.status}
+                    deliveryMethod={order.deliveryMethod}
                   />
                 </div>
               )}
