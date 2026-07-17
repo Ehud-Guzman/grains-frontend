@@ -113,7 +113,7 @@ export function OnboardingChecklistCard({
         {/* Progress bar — note: `border` class is required for border-* utilities to render */}
         <div className={`h-2 rounded-full overflow-hidden border mb-5 ${styles.track}`}>
           <div
-            className="h-full rounded-full bg-gradient-to-r from-brand-500 via-brand-400 to-amber-300 transition-all duration-500"
+            className="h-full rounded-full bg-gradient-to-r from-brand-500 via-brand-400 to-brand-300 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>

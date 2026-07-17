@@ -78,7 +78,7 @@ function AllCategoriesMenu({ categories }) {
           transition-all ${
             open
               ? 'bg-brand-700 text-white'
-              : 'bg-gradient-to-b from-brand-500 to-brand-600 text-white hover:from-brand-600 hover:to-brand-700'
+              : 'bg-brand-600 text-white hover:bg-brand-700'
           }`}
       >
         <LayoutGrid size={15} />
@@ -507,8 +507,8 @@ export default function Navbar() {
                   onClick={() => openCart?.()}
                   aria-label="Open cart"
                   className={`relative flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-xl
-                    bg-gradient-to-br from-brand-500 to-brand-600 text-white transition-all
-                    active:scale-[0.97] group shadow-md hover:from-brand-400 hover:to-brand-500
+                    bg-brand-600 text-white transition-all
+                    active:scale-[0.97] group shadow-md hover:bg-brand-700
                     ${itemCount > 0 ? 'ring-2 ring-brand-300 ring-offset-1' : ''}`}
                 >
                   <div className="relative">

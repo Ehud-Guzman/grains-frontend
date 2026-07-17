@@ -127,7 +127,7 @@ function HelpCenter() {
                     {/* Progress bar */}
                     <div className="h-1.5 rounded-full bg-brand-100 mt-4 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-brand-500 to-amber-400 transition-all duration-500"
+                        className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-300 transition-all duration-500"
                         style={{ width: `${progress}%` }}
                       />
                     </div>

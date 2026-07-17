@@ -167,7 +167,7 @@ function PromoBannerCarousel({ banners }) {
             </div>
           </>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-800 via-brand-700 to-earth-800" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-800 via-brand-700 to-brand-900" />
         )}
 
         {/* Left gradient for text legibility */}
@@ -297,7 +297,7 @@ function FarmStorySection() {
   return (
     <section
       id="farm-story"
-      className="relative overflow-hidden bg-gradient-to-br from-earth-900 via-brand-900 to-earth-900
+      className="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-900
         py-14 sm:py-20 scroll-mt-32"
     >
       {/* Warm glows — echo the hero so the page bookends */}
@@ -530,7 +530,9 @@ export default function HomePage() {
       <AnnouncementBar tips={tips} />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-earth-900 via-brand-900 to-brand-800">
+      {/* Single-family gradient — terracotta→gray mixes pass through a muddy
+          desaturated brown, so dark sections stay inside the brand scale */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-900 to-brand-800">
 
         {/* Subtle dot texture */}
         <div className="absolute inset-0 opacity-[0.05]"
@@ -539,7 +541,7 @@ export default function HomePage() {
         {/* Warm glow — top-right */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-500/20 rounded-full
           blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        {/* Warm glow — top-left, softens the dark earth-900 corner */}
+        {/* Warm glow — top-left, softens the dark corner */}
         <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-brand-700/25 rounded-full
           blur-3xl -translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 

@@ -117,7 +117,8 @@ function BannerPreview({ form }) {
   const hasMedia = form.mediaType === 'video' ? form.videoUrl : form.imageUrl
 
   return (
-    <div className="relative rounded-xl overflow-hidden shadow-md h-40 bg-gradient-to-br from-brand-800 via-brand-700 to-earth-800">
+    // Fallback gradient must match the public PromoBannerCarousel's exactly
+    <div className="relative rounded-xl overflow-hidden shadow-md h-40 bg-gradient-to-br from-brand-800 via-brand-700 to-brand-900">
       {hasMedia && form.mediaType === 'image' && (
         <>
           <img src={form.imageUrl} alt="" aria-hidden="true"

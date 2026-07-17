@@ -7,7 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Admin panel neutral palette (maps to Tailwind gray scale)
+        // Admin panel neutral palette (maps to Tailwind gray scale).
+        // NOTE: `earth` below is NOT the same scale — it's white-based and
+        // sits one step lighter (earth-100 = admin-50, and it has no
+        // equivalent of admin-300 #D1D5DB). Don't try to merge them.
         admin: {
           50:  '#F9FAFB',
           100: '#F3F4F6',
@@ -33,7 +36,7 @@ export default {
           800: '#622D12',
           900: '#42200D',
         },
-        // Clean neutral scale — no earthy warmth
+        // Storefront neutral scale — white-based, one step lighter than `admin`
         earth: {
           50:  '#FFFFFF',
           100: '#F9FAFB',
@@ -46,8 +49,9 @@ export default {
           800: '#1F2937',
           900: '#111827',
         },
+        // Alias for white kept for the 30+ existing bg-cream usages
         cream: '#FFFFFF',
-        grain: '#C4622D',
+        // (`grain` removed 2026-07-17 — defined but never used anywhere)
       },
       fontFamily: {
         display: ['Playfair Display', 'Georgia', 'serif'],

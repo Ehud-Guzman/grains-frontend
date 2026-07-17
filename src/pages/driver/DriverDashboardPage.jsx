@@ -301,8 +301,8 @@ export default function DriverDashboardPage() {
                   toggling || loading ? 'opacity-50 cursor-not-allowed' : ''
                 } ${
                   profile?.isAvailableForDelivery
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100'
-                    : 'bg-gradient-to-r from-admin-50 to-slate-50 border-admin-200 text-admin-600 hover:from-admin-100 hover:to-slate-100'
+                    ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
+                    : 'bg-admin-50 border-admin-200 text-admin-600 hover:bg-admin-100'
                 }`}
             >
               {profile?.isAvailableForDelivery ? (
