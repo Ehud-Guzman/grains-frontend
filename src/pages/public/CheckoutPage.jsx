@@ -178,7 +178,9 @@ export default function CheckoutPage() {
   )
   const discountShare  = total > 0 ? taxableSubtotal / total : 0
   const vatBase        = vatEnabled ? Math.max(0, taxableSubtotal - couponDiscount * discountShare) : 0
-  const vatAmount      = vatEnabled ? Math.round(vatBase * vatRate / 100) : 0
+  // Cent precision (round2), same as order.service.js — rounding to whole KES
+  // here made the preview drift up to KES 0.50 from the charged total.
+  const vatAmount      = vatEnabled ? Math.round(vatBase * vatRate / 100 * 100) / 100 : 0
   const orderTotal     = Math.max(0, total + deliveryFee + vatAmount - couponDiscount)
   const totalBags = items.reduce((sum, i) => sum + i.quantity, 0)
   const belowMinimumValue = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
@@ -276,7 +278,7 @@ export default function CheckoutPage() {
       if (loading) return
       setShowMpesa(false)
       setLoading(true)
-      paymentService.initiate(placedOrder.orderId, normalizeKenyanPhone(form.mpesaPhone))
+      paymentService.initiate(placedOrder.orderId, normalizeKenyanPhone(form.mpesaPhone), normalizeKenyanPhone(form.phone))
         .then(() => { setLoading(false); setShowMpesa(true) })
         .catch(err => {
           setLoading(false)
@@ -545,7 +547,7 @@ export default function CheckoutPage() {
       if (form.paymentMethod === 'mpesa') {
         setPlacedOrder({ orderId, orderRef, total: orderTotal })
         try {
-          await paymentService.initiate(orderId, normalizeKenyanPhone(form.mpesaPhone))
+          await paymentService.initiate(orderId, normalizeKenyanPhone(form.mpesaPhone), normalizeKenyanPhone(form.phone))
           setShowMpesa(true)
         } catch (err) {
           const msg = err.response?.data?.message || 'M-Pesa request failed'
@@ -600,6 +602,7 @@ export default function CheckoutPage() {
             orderId={placedOrder.orderId}
             orderRef={placedOrder.orderRef}
             phone={form.mpesaPhone}
+            pollPhone={normalizeKenyanPhone(form.phone)}
             amount={placedOrder.total}
             onSuccess={handleMpesaSuccess}
             onFailure={handleMpesaFailure}

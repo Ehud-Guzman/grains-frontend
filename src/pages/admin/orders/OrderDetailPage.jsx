@@ -88,6 +88,8 @@ export default function AdminOrderDetailPage() {
   const [showCashAmountInput, setShowCashAmountInput] = useState(false)
   const [cashReceivedAmount, setCashReceivedAmount] = useState('')
   const [etimsResubmitting, setEtimsResubmitting] = useState(false)
+  const [showCancelForm, setShowCancelForm] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   const fetchOrder = async () => {
     try {
@@ -155,6 +157,23 @@ export default function AdminOrderDetailPage() {
       fetchOrder()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed')
+    } finally { setActionLoading(false) }
+  }
+
+  // Cancel from any active stage (approved / preparing / out for delivery) —
+  // releases reserved stock and coupon usage, and flags a paid order as
+  // refund-owed, all handled server-side by the status transition.
+  const handleCancel = async () => {
+    if (!cancelReason.trim()) return toast.error('A reason is required to cancel')
+    setActionLoading(true)
+    try {
+      await adminOrderService.updateStatus(id, 'cancelled', cancelReason.trim())
+      toast.success('Order cancelled — stock released')
+      setShowCancelForm(false)
+      setCancelReason('')
+      fetchOrder()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to cancel order')
     } finally { setActionLoading(false) }
   }
 
@@ -553,6 +572,58 @@ export default function AdminOrderDetailPage() {
               </Card>
             )}
 
+            {/* Cancel order — active (post-approval) stages only; pending uses Reject */}
+            {!isSuperAdmin && ['approved', 'preparing', 'out_for_delivery'].includes(order.status) && (
+              <Card title="Cancel Order">
+                <div className="p-4">
+                  {!showCancelForm ? (
+                    <button
+                      onClick={() => setShowCancelForm(true)}
+                      className="flex items-center justify-center gap-2 w-full py-3 border-2
+                        border-red-200 text-red-600 rounded-xl text-sm font-admin font-semibold
+                        hover:bg-red-50 transition-colors">
+                      <Ban size={15} /> Cancel This Order
+                    </button>
+                  ) : (
+                    <div className="border border-red-200 rounded-xl p-4 bg-red-50 space-y-3">
+                      <p className="text-xs font-admin font-semibold text-red-700 uppercase tracking-wide">
+                        Cancellation Reason <span className="text-red-400 normal-case font-normal">*required</span>
+                      </p>
+                      <p className="text-xs font-admin text-red-600 leading-relaxed">
+                        Reserved stock will be returned to inventory
+                        {order.paymentStatus === 'paid' && ', and the payment will be flagged for refund'}.
+                      </p>
+                      <textarea
+                        value={cancelReason}
+                        onChange={e => setCancelReason(e.target.value)}
+                        placeholder="e.g. Customer requested cancellation…"
+                        rows={3}
+                        autoFocus
+                        className="w-full border border-red-200 rounded-lg px-3 py-2.5 text-sm
+                          font-admin text-admin-800 focus:outline-none focus:ring-2
+                          focus:ring-red-300 resize-none bg-white placeholder:text-admin-300"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCancel}
+                          disabled={actionLoading || !cancelReason.trim()}
+                          className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm
+                            font-admin font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors">
+                          Confirm Cancellation
+                        </button>
+                        <button
+                          onClick={() => { setShowCancelForm(false); setCancelReason('') }}
+                          className="flex-1 py-2.5 border border-admin-200 text-admin-600 rounded-lg
+                            text-sm font-admin font-medium hover:bg-white transition-colors">
+                          Keep Order
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
+
             {/* Customer */}
             <Card title="Customer">
               <div className="px-5 py-4 space-y-1">
@@ -667,14 +738,18 @@ export default function AdminOrderDetailPage() {
                         ? 'bg-green-50 text-green-700 border-green-200'
                         : order.paymentStatus === 'failed'
                           ? 'bg-red-50 text-red-700 border-red-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                          : order.paymentStatus === 'refunded'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      order.paymentStatus === 'paid'   ? 'bg-green-400' :
-                      order.paymentStatus === 'failed' ? 'bg-red-400'   : 'bg-amber-400'
+                      order.paymentStatus === 'paid'     ? 'bg-green-400' :
+                      order.paymentStatus === 'failed'   ? 'bg-red-400'   :
+                      order.paymentStatus === 'refunded' ? 'bg-blue-400'  : 'bg-amber-400'
                     }`} />
-                    {order.paymentStatus === 'paid'   ? 'Paid'    :
-                     order.paymentStatus === 'failed' ? 'Failed'  : 'Pending'}
+                    {order.paymentStatus === 'paid'     ? 'Paid'     :
+                     order.paymentStatus === 'failed'   ? 'Failed'   :
+                     order.paymentStatus === 'refunded' ? 'Refunded' : 'Pending'}
                   </span>
                 </div>
 

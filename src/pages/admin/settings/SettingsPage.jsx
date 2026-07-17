@@ -227,7 +227,6 @@ export default function SettingsPage() {
 
     fetch
       .then(res => setForm({
-        requireOrderApproval: false,
         enableOrderHours: false,
         orderAcceptanceStart: '07:00',
         orderAcceptanceEnd: '20:00',
@@ -237,10 +236,7 @@ export default function SettingsPage() {
         maxDeliveryKm: null,
         deliveryZones: [],
         autoHideOutOfStock: false,
-        allowProductReviews: false,
         blockNewRegistrations: false,
-        requirePhoneVerification: false,
-        requireEmailVerification: false,
         receiptFooterNote: '',
         shopPhones: [],
         kraPin: '',
@@ -595,11 +591,10 @@ export default function SettingsPage() {
 
             <Divider />
             <SubHeading>Order Workflow</SubHeading>
+            {/* "Require Manual Approval" was removed: every order already goes
+                through pending → admin approval by design, so the toggle never
+                did anything and only implied an auto-approve mode that doesn't exist. */}
             <div className="space-y-4">
-              <Toggle label="Require Manual Approval"
-                desc="New orders stay in 'Pending' until an admin manually confirms them"
-                checked={form.requireOrderApproval}
-                onChange={e => set('requireOrderApproval', e.target.checked)} />
               <Toggle label="Restrict Order Hours"
                 desc="Only accept orders within a set time window"
                 checked={form.enableOrderHours}
@@ -846,15 +841,14 @@ export default function SettingsPage() {
           {/* ── CATALOG ─────────────────────────────────────────────────── */}
           <Section id="catalog" icon={Tag} title="Catalog"
             desc="Control how products appear and what customers can do">
+            {/* "Allow Customer Reviews" was removed: no reviews system exists yet
+                (deliberately deferred — needs a moderation policy first), so the
+                toggle silently did nothing. */}
             <div className="space-y-4">
               <Toggle label="Auto-hide Out-of-Stock Products"
-                desc="Products with zero stock are automatically hidden from the storefront"
+                desc="Products with zero stock in every size are hidden from shop browsing (direct links still work)"
                 checked={form.autoHideOutOfStock}
                 onChange={e => set('autoHideOutOfStock', e.target.checked)} />
-              <Toggle label="Allow Customer Reviews"
-                desc="Customers can leave star ratings and comments on products they've purchased"
-                checked={form.allowProductReviews}
-                onChange={e => set('allowProductReviews', e.target.checked)} />
             </div>
           </Section>
 
@@ -875,18 +869,9 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
-            <Divider />
-            <SubHeading>Verification</SubHeading>
-            <div className="space-y-4">
-              <Toggle label="Require Phone Verification"
-                desc="New accounts must verify their phone number before placing orders"
-                checked={form.requirePhoneVerification}
-                onChange={e => set('requirePhoneVerification', e.target.checked)} />
-              <Toggle label="Require Email Verification"
-                desc="New accounts must confirm their email address before logging in"
-                checked={form.requireEmailVerification}
-                onChange={e => set('requireEmailVerification', e.target.checked)} />
-            </div>
+            {/* Phone/email verification toggles were removed: no OTP-verification
+                flow exists for registration, so both switches silently did nothing.
+                Re-add them together with the actual verification feature. */}
           </Section>
 
           {/* ── LOYALTY PROGRAMME ───────────────────────────────────────── */}

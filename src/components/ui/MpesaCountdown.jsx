@@ -7,7 +7,10 @@ import { MPESA_POLL_TIMEOUT_SECONDS, MPESA_SUCCESS_REDIRECT_DELAY_MS } from '../
 const POLL_INTERVAL = 5000 // poll every 5 seconds
 const TIMEOUT_MS    = MPESA_POLL_TIMEOUT_SECONDS * 1000
 
-export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuccess, onFailure }) {
+// `phone` is the STK-push target shown to the customer; `pollPhone` is the
+// order's contact number — the status endpoint verifies guest ownership against
+// the CONTACT phone, so polling with a different M-Pesa number would 404 forever.
+export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, amount, onSuccess, onFailure }) {
   const [secondsLeft, setSecondsLeft] = useState(MPESA_POLL_TIMEOUT_SECONDS)
   const [status, setStatus]           = useState('pending') // pending | paid | failed | timeout
   const [message, setMessage]         = useState('')
@@ -34,7 +37,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, amount, onSuc
   useEffect(() => {
     const poll = async () => {
       try {
-        const res = await paymentService.getStatus(orderId, phone)
+        const res = await paymentService.getStatus(orderId, pollPhone || phone)
         setConsecutiveErrors(0)
         const paymentStatus = res.data.data.paymentStatus
 
