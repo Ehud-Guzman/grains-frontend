@@ -1,11 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Favicon ONLY - terracotta tile + cream wheat ear, legible at 16px where
-       the real navy logo turns into a dark smudge. The actual Vittorios logo
-       (/Vittorios-logo.jpeg) is used everywhere else: UI chrome, receipts,
-       PWA/home-screen icons, og/schema. -->
-  <rect width="512" height="512" rx="112" fill="#C4622D"/>
-  <rect x="38" y="38" width="436" height="436" rx="88" fill="none" stroke="#FDF6F0" stroke-opacity="0.28" stroke-width="10"/>
-  <g fill="#FDF6F0">
+  <!-- Safari pinned-tab mask icon (favicon family): single black silhouette on
+       transparency - Safari recolors it via the mask-icon `color` attribute.
+       Same wheat ear as favicon.svg, without the tile. -->
+  <g fill="#000000">
     <rect x="248" y="150" width="16" height="248" rx="8"/>
     <ellipse cx="256" cy="140" rx="19" ry="40"/>
     <ellipse cx="215" cy="330" rx="37" ry="19" transform="rotate(-38 215 330)"/>
