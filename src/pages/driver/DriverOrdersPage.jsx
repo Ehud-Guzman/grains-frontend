@@ -3,6 +3,7 @@ import { Truck, MapPin, Phone, Package, CheckCircle, Clock, Filter } from 'lucid
 import { driverService } from '../../services/driver.service'
 import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
+import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
 import toast from 'react-hot-toast'
 
 const STATUS_TABS = [
@@ -20,21 +21,10 @@ const STATUS_CONFIG = {
 }
 
 function OrderRow({ order, onComplete }) {
-  const [completing, setCompleting] = useState(false)
+  const [showCompleteModal, setShowCompleteModal] = useState(false)
   const customer = order.userId || order.guestId
   const isActive = order.status === 'out_for_delivery'
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.cancelled
-
-  const handleComplete = async () => {
-    setCompleting(true)
-    try {
-      await driverService.completeDelivery(order._id)
-      toast.success('Delivery completed')
-      onComplete(order._id)
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to complete')
-    } finally { setCompleting(false) }
-  }
 
   return (
     <div className="bg-white rounded-2xl border border-admin-100 shadow-sm p-4 space-y-3">
@@ -95,12 +85,20 @@ function OrderRow({ order, onComplete }) {
 
       {/* Complete button */}
       {isActive && (
-        <button onClick={handleComplete} disabled={completing}
+        <button onClick={() => setShowCompleteModal(true)}
           className="w-full py-2.5 bg-green-500 text-white rounded-xl text-sm font-admin font-semibold
-            hover:bg-green-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
           <CheckCircle size={15} />
-          {completing ? 'Marking…' : 'Mark as Delivered'}
+          Mark as Delivered
         </button>
+      )}
+
+      {showCompleteModal && (
+        <CompleteDeliveryModal
+          order={order}
+          onClose={() => setShowCompleteModal(false)}
+          onCompleted={onComplete}
+        />
       )}
     </div>
   )

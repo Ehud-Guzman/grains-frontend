@@ -420,6 +420,32 @@ export default function AdminOrderDetailPage() {
               </div>
             </Card>
 
+            {/* Proof of delivery — captured by the driver on completion */}
+            {(order.deliveryProof?.photoURL || order.deliveryProof?.recipientName || order.deliveryProof?.note) && (
+              <Card title="Proof of Delivery">
+                <div className="p-5 space-y-3">
+                  {order.deliveryProof.photoURL && (
+                    <a href={order.deliveryProof.photoURL} target="_blank" rel="noopener noreferrer">
+                      <img src={order.deliveryProof.photoURL} alt="Proof of delivery"
+                        className="w-full max-w-sm rounded-xl border border-admin-200 hover:opacity-90 transition-opacity" />
+                    </a>
+                  )}
+                  <div className="text-sm font-admin text-admin-700 space-y-1">
+                    {order.deliveryProof.recipientName && (
+                      <p><span className="text-admin-400">Received by:</span>{' '}
+                        <span className="font-semibold">{order.deliveryProof.recipientName}</span></p>
+                    )}
+                    {order.deliveryProof.note && (
+                      <p><span className="text-admin-400">Driver note:</span> {order.deliveryProof.note}</p>
+                    )}
+                    {order.deliveryProof.capturedAt && (
+                      <p className="text-xs text-admin-400">Captured {formatDate(order.deliveryProof.capturedAt)}</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Status Timeline */}
             {order.statusHistory?.length > 0 && (
               <Card title="Status History">

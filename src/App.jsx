@@ -31,6 +31,8 @@ const TrackOrderPage = lazy(() => import("./pages/public/TrackOrderPage"));
 const LoginPage = lazy(() => import("./pages/public/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/public/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/public/ForgotPasswordPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/public/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("./pages/public/TermsPage"));
 
 // Customer pages
 const CustomerDashboardPage = lazy(() => import("./pages/customer/DashboardPage"));
@@ -127,6 +129,8 @@ export default function App() {
               <Route path="/checkout"        element={<CheckoutPage />} />
               <Route path="/order-confirmed" element={<OrderConfirmPage />} />
               <Route path="/track"           element={<TrackOrderPage />} />
+              <Route path="/privacy"         element={<PrivacyPolicyPage />} />
+              <Route path="/terms"           element={<TermsPage />} />
 
               <Route path="/dashboard" element={
                 <ProtectedRoute requireRole={["customer"]}>

@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const shopInfo = useShopInfo()
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' })
+  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '', marketingConsent: false })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -191,6 +191,19 @@ export default function RegisterPage() {
                   {errors.password && <p className="text-red-500 text-xs mt-1 font-body">{errors.password}</p>}
                 </div>
 
+                {/* Kenya DPA 2019: marketing SMS needs express opt-in — unchecked by default */}
+                <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                  <input type="checkbox"
+                    checked={form.marketingConsent}
+                    onChange={e => setForm(p => ({ ...p, marketingConsent: e.target.checked }))}
+                    className="mt-0.5 w-4 h-4 rounded border-earth-300 text-brand-600
+                      focus:ring-brand-400 flex-shrink-0" />
+                  <span className="text-xs text-earth-600 font-body leading-relaxed">
+                    Send me offers and announcements by SMS. Optional — order updates are
+                    always sent, and you can change this anytime in your profile.
+                  </span>
+                </label>
+
                 <button type="submit" disabled={loading}
                   className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
                     text-white rounded-xl font-body font-semibold text-sm hover:bg-brand-800
@@ -224,6 +237,11 @@ export default function RegisterPage() {
           <p className="text-center text-xs text-earth-500 font-body mt-3 flex items-center justify-center gap-1.5">
             <Shield size={11} className="text-brand-500" />
             Your data is safe and encrypted
+          </p>
+          <p className="text-center text-xs text-earth-500 font-body mt-2">
+            By creating an account you agree to our{' '}
+            <Link to="/terms" className="text-brand-600 hover:text-brand-700">Terms</Link> and{' '}
+            <Link to="/privacy" className="text-brand-600 hover:text-brand-700">Privacy Policy</Link>
           </p>
         </div>
       </div>

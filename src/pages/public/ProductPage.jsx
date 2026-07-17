@@ -126,6 +126,45 @@ export default function ProductPage() {
       .finally(() => setLoading(false))
   }, [id])
 
+  // Product JSON-LD for search engines (Google rich results: price, availability).
+  // Injected imperatively because the app has no head-management library; one
+  // tag is kept per mount and cleaned up on unmount/product change.
+  useEffect(() => {
+    if (!product) return
+    const priced = product.varieties
+      ?.flatMap(v => v.packaging?.filter(p => !p.quoteOnly && p.priceKES) || []) || []
+    const prices = priced.map(p => p.priceKES)
+    const inStock = priced.some(p => p.stock > 0)
+    const image = product.varieties?.[0]?.imageURLs?.[0] || product.imageURLs?.[0]
+
+    const data = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.description || product.varieties?.[0]?.description || undefined,
+      image: image || undefined,
+      category: product.category || undefined,
+      brand: { '@type': 'Brand', name: shopInfo.name || 'Vittorios Grains & Cereals' },
+      ...(prices.length > 0 && {
+        offers: {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'KES',
+          lowPrice: Math.min(...prices),
+          highPrice: Math.max(...prices),
+          offerCount: prices.length,
+          availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          url: window.location.href
+        }
+      })
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.text = JSON.stringify(data)
+    document.head.appendChild(script)
+    return () => { document.head.removeChild(script) }
+  }, [product, shopInfo.name])
+
   // Fetch price history + best-time badge whenever variety/packaging selection changes
   useEffect(() => {
     if (!product) return

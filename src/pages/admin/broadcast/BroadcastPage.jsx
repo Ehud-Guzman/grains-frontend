@@ -52,7 +52,7 @@ export default function BroadcastPage() {
         <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm font-admin text-amber-800 leading-relaxed">
           This sends a real SMS to every matching customer via Africa's Talking and cannot be undone or recalled.
-          Use sparingly — frequent broadcasts feel like spam and customers have no per-broadcast opt-out.
+          Only customers who opted in to promotional SMS receive broadcasts. Use sparingly — frequent broadcasts feel like spam.
         </p>
       </div>
 

@@ -7,6 +7,8 @@ const quickLinks = [
   { to: '/track',    label: 'Track Your Order'  },
   { to: '/login',    label: 'Sign In'           },
   { to: '/register', label: 'Create Account'    },
+  { to: '/privacy',  label: 'Privacy Policy'    },
+  { to: '/terms',    label: 'Terms of Service'  },
 ]
 
 export default function Footer() {

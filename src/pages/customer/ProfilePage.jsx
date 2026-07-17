@@ -319,14 +319,14 @@ export default function CustomerProfilePage() {
     } catch { toast.error('Failed to update') }
   }
 
-  const toggleSmsOptOut = async () => {
-    const next = !profile?.smsOptOut
-    setProfile(p => ({ ...p, smsOptOut: next }))
+  const toggleMarketingConsent = async () => {
+    const next = !profile?.marketingConsent
+    setProfile(p => ({ ...p, marketingConsent: next }))
     try {
-      await authService.updateProfile({ smsOptOut: next })
-      toast.success(next ? 'Promotional SMS turned off' : 'Promotional SMS turned on')
+      await authService.updateProfile({ marketingConsent: next })
+      toast.success(next ? 'Promotional SMS turned on' : 'Promotional SMS turned off')
     } catch {
-      setProfile(p => ({ ...p, smsOptOut: !next }))
+      setProfile(p => ({ ...p, marketingConsent: !next }))
       toast.error('Failed to update')
     }
   }
@@ -680,19 +680,19 @@ export default function CustomerProfilePage() {
             <div className="p-5">
               <label className="flex items-start gap-3 cursor-pointer select-none">
                 <div className="relative mt-0.5 flex-shrink-0">
-                  <input type="checkbox" checked={!profile?.smsOptOut}
-                    onChange={toggleSmsOptOut} className="sr-only" />
+                  <input type="checkbox" checked={!!profile?.marketingConsent}
+                    onChange={toggleMarketingConsent} className="sr-only" />
                   <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${
-                    !profile?.smsOptOut ? 'bg-brand-600' : 'bg-earth-200'
+                    profile?.marketingConsent ? 'bg-brand-600' : 'bg-earth-200'
                   }`}>
                     <div className={`w-5 h-5 bg-white rounded-full shadow absolute top-0.5 transition-transform duration-200
-                      ${!profile?.smsOptOut ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      ${profile?.marketingConsent ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </div>
                 </div>
                 <div>
                   <p className="text-sm font-body font-semibold text-earth-800">Promotional SMS</p>
                   <p className="text-earth-400 text-xs font-body mt-0.5 leading-relaxed">
-                    Offers and announcements. Order updates are always sent regardless of this setting.
+                    Offers and announcements — sent only with your consent. Order updates are always sent regardless of this setting.
                   </p>
                 </div>
               </label>

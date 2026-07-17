@@ -6,6 +6,7 @@ import { authService } from '../../services/auth.service'
 import { useAuth } from '../../context/AuthContext'
 import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
+import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
 import toast from 'react-hot-toast'
 
 // ─── AVATAR UPLOADER (PREMIUM POLISH) ──────────────────────────────────────────
@@ -102,23 +103,10 @@ function StatCard({ icon: Icon, value, label, color, loading }) {
 
 // ─── ORDER CARD (COMPACT & POLISHED) ───────────────────────────────────────────
 function OrderCard({ order, onComplete }) {
-  const [completing, setCompleting] = useState(false)
+  const [showCompleteModal, setShowCompleteModal] = useState(false)
 
   const customer = order.userId || order.guestId
   const isActive = order.status === 'out_for_delivery'
-
-  const handleComplete = async () => {
-    setCompleting(true)
-    try {
-      await driverService.completeDelivery(order._id)
-      toast.success('Delivery marked as completed')
-      onComplete(order._id)
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to complete delivery')
-    } finally {
-      setCompleting(false)
-    }
-  }
 
   return (
     <div className="group bg-white rounded-2xl border border-admin-100 shadow-sm hover:shadow-md transition-all duration-200 p-5 space-y-4">
@@ -172,24 +160,22 @@ function OrderCard({ order, onComplete }) {
       {/* Complete button */}
       {isActive && (
         <button
-          onClick={handleComplete}
-          disabled={completing}
+          onClick={() => setShowCompleteModal(true)}
           className="w-full py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl text-sm font-admin
-            font-semibold hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all
+            font-semibold hover:from-green-600 hover:to-green-700 transition-all
             duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow"
         >
-          {completing ? (
-            <>
-              <Spinner size="sm" className="!w-4 !h-4" />
-              <span>Marking…</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle size={16} />
-              <span>Mark as Delivered</span>
-            </>
-          )}
+          <CheckCircle size={16} />
+          <span>Mark as Delivered</span>
         </button>
+      )}
+
+      {showCompleteModal && (
+        <CompleteDeliveryModal
+          order={order}
+          onClose={() => setShowCompleteModal(false)}
+          onCompleted={onComplete}
+        />
       )}
     </div>
   )
