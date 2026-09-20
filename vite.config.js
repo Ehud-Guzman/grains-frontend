@@ -1,9 +1,101 @@
-import { defineConfig } from 'vite'
+import fs from 'node:fs'
+import path from 'node:path'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// ── Site files (robots.txt + sitemap.xml) ─────────────────────────────────────
+// These used to be static files in public/ with the production origin hardcoded:
+// `https://grains-fronten.netlify.app` appeared in robots.txt's Sitemap pointer
+// and in all 8 sitemap <loc> entries. Moving to a custom domain would have
+// silently broken every absolute URL at once.
+//
+// Generated at build time instead, from VITE_SITE_URL (falling back to the
+// current production origin so existing deploys don't change behaviour).
+// index.html's og:*/JSON-LD origins come from the same variable via Vite's
+// built-in `%VITE_SITE_URL%` HTML substitution.
+//
+// Product pages (/shop/:id) are still intentionally excluded: the list changes
+// with stock, and listing them accurately needs a backend-generated sitemap
+// (see the FRONTEND-AUDIT note). They stay crawlable via internal links.
+const SITEMAP_ROUTES = [
+  { path: '/', changefreq: 'daily', priority: '1.0' },
+  { path: '/shop', changefreq: 'daily', priority: '0.9' },
+  { path: '/compare-prices', changefreq: 'weekly', priority: '0.5' },
+  { path: '/track', changefreq: 'monthly', priority: '0.3' },
+  { path: '/register', changefreq: 'monthly', priority: '0.4' },
+  { path: '/login', changefreq: 'monthly', priority: '0.2' },
+  { path: '/privacy', changefreq: 'yearly', priority: '0.2' },
+  { path: '/terms', changefreq: 'yearly', priority: '0.2' },
+]
+
+// Mirrors the previous static robots.txt. Authenticated/transactional routes are
+// excluded so they don't compete with catalogue pages in search results.
+const ROBOTS_DISALLOW = ['/admin', '/driver', '/dashboard', '/checkout', '/cart']
+
+function siteFilesPlugin() {
+  let siteUrl = 'https://grains-fronten.netlify.app'
+  let outDir = 'dist'
+
+  return {
+    name: 'vittorios-site-files',
+    apply: 'build',
+    config(_config, { mode }) {
+      const env = loadEnv(mode, process.cwd(), '')
+      siteUrl = (env.VITE_SITE_URL || siteUrl).replace(/\/+$/, '')
+    },
+    configResolved(config) {
+      outDir = config.build.outDir
+    },
+    closeBundle() {
+      const lastmod = new Date().toISOString().slice(0, 10)
+      const urls = SITEMAP_ROUTES.map(
+        (r) => `  <url>
+    <loc>${siteUrl}${r.path}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${r.changefreq}</changefreq>
+    <priority>${r.priority}</priority>
+  </url>`,
+      ).join('\n')
+
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>
+`
+
+      const robots = `User-agent: *
+Allow: /
+${ROBOTS_DISALLOW.map((p) => `Disallow: ${p}`).join('\n')}
+
+Sitemap: ${siteUrl}/sitemap.xml
+`
+
+      fs.mkdirSync(outDir, { recursive: true })
+      fs.writeFileSync(path.join(outDir, 'sitemap.xml'), sitemap)
+      fs.writeFileSync(path.join(outDir, 'robots.txt'), robots)
+      this.warn?.(`site files generated for ${siteUrl}`)
+    },
+  }
+}
+
 export default defineConfig({
+
+  // ── TEST (vitest) ───────────────────────────────────────────────────────────
+  // Read by `vitest` when it loads this same config file. Kept here rather than
+  // a second config so tests and the app resolve modules identically.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+    include: ['src/**/*.test.{js,jsx}'],
+    restoreMocks: true,
+    // The PWA plugin rewrites the HTML entry; irrelevant and slow in tests.
+    // (vitest ignores it for non-HTML transforms, so no extra config needed.)
+  },
+
   plugins: [
+    siteFilesPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

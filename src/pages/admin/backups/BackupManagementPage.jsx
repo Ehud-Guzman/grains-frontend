@@ -436,19 +436,19 @@ export default function BackupManagementPage() {
             <table className="min-w-full">
               <thead className="bg-admin-50">
                 <tr className="text-left">
-                  <th className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
+                  <th scope="col" className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
                     Backup
                   </th>
-                  <th className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
+                  <th scope="col" className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
                     Created
                   </th>
-                  <th className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
+                  <th scope="col" className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
                     Size
                   </th>
-                  <th className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
+                  <th scope="col" className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
                     Records
                   </th>
-                  <th className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide text-right">
+                  <th scope="col" className="px-5 py-3 text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide text-right">
                     Actions
                   </th>
                 </tr>

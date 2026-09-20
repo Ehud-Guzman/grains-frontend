@@ -49,6 +49,17 @@
 }
 
 @layer base {
+  :root {
+    /* Single source of truth for the primary brand colour. The Tailwind
+       `brand-500` swatch (tailwind.config.js) mirrors this value, and both
+       index.html's <meta name="theme-color"> and the M-Pesa countdown SVG read
+       it — so browser chrome, progress UI and utilities can't drift apart.
+       NOTE: index.html is static, so its meta value is duplicated there by
+       necessity; update both if this ever changes. */
+    --brand-500: #C4622D;
+    --brand-500-raw: 196 98 45;
+  }
+
   html {
     scroll-behavior: smooth;
     font-family: 'DM Sans', system-ui, sans-serif;
@@ -157,6 +168,87 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Hide a scrollbar while keeping the element scrollable (horizontal rails).
+     Used by the catalogue story-rail — previously referenced but undefined. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* ── ENTER/EXIT ANIMATION UTILITIES ────────────────────────────────────────
+     Faithful minimal implementation of the three `tailwindcss-animate` classes
+     this codebase actually uses (`animate-in fade-in slide-in-from-top-1`).
+     Kept local instead of adding the plugin dependency: only three classes are
+     referenced, and the plugin's full surface (~40 utilities) would be dead
+     weight. If more enter/exit variants are ever needed, install
+     `tailwindcss-animate` and delete this block. */
+  .animate-in {
+    animation-name: enter;
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+  }
+  .fade-in {
+    --tw-enter-opacity: 0;
+  }
+  .slide-in-from-top-1 {
+    --tw-enter-translate-y: -0.25rem;
+  }
+  .slide-in-from-top-2 {
+    --tw-enter-translate-y: -0.5rem;
+  }
+  .zoom-in-95 {
+    --tw-enter-scale: 0.95;
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translate3d(
+        var(--tw-enter-translate-x, 0),
+        var(--tw-enter-translate-y, 0),
+        0
+      )
+      scale(var(--tw-enter-scale, 1));
+  }
+}
+
+/* ── FOCUS VISIBILITY ─────────────────────────────────────────────────────────
+   The codebase leans on Tailwind's `focus:` variants, which apply on mouse
+   clicks too. Add a keyboard-only ring as a global floor so any control that
+   forgot an explicit focus style is still operable from the keyboard (WCAG
+   2.4.7). Deliberately `:focus-visible` only — no ring appears on click. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Zero-height, focusable skip target immediately after <body>. Visually hidden
+   until focused, then pinned to the top-left. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 0.5rem;
+  z-index: 100;
+  transform: translateY(-150%);
+  transition: transform 150ms ease-out;
+  background: #FFFFFF;
+  color: #42200D;
+  font-weight: 600;
+  padding: 0.625rem 1rem;
+  border-radius: 0 0 0.75rem 0.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 /* Page transition */

@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react'
+import Seo from '../../components/ui/Seo'
+import { useApiQuery } from '../../hooks/useApiQuery'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight,
@@ -10,7 +12,8 @@ import { customerAlertService } from '../../services/customerAlert.service'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
-import { formatKES } from '../../utils/helpers'
+import { formatKES, getPriceRange, truncate } from '../../utils/helpers'
+import { SITE_URL } from '../../utils/site'
 import { STOCK_CONFIG, CART_FEEDBACK_DELAY_MS } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import AddToListModal from '../../components/lists/AddToListModal'
@@ -92,9 +95,7 @@ export default function ProductPage() {
   const [quantity, setQuantity]         = useState(1)
   const [activeImage, setActiveImage]   = useState(0)
   const [added, setAdded]               = useState(false)
-  const [priceHistory, setPriceHistory] = useState([])
   const [priceRange, setPriceRange]     = useState('3m')
-  const [bestTime, setBestTime]         = useState(null)
   const [myAlerts, setMyAlerts]         = useState([])
   const [alertLoading, setAlertLoading] = useState(false)
   const [showAddToList, setShowAddToList] = useState(false)
@@ -106,9 +107,7 @@ export default function ProductPage() {
     setQuantity(1)
     setActiveImage(0)
     setAdded(false)
-    setPriceHistory([])
     setPriceRange('3m')
-    setBestTime(null)
 
     productService.getById(id)
       .then(res => {
@@ -126,18 +125,19 @@ export default function ProductPage() {
       .finally(() => setLoading(false))
   }, [id])
 
-  // Product JSON-LD for search engines (Google rich results: price, availability).
-  // Injected imperatively because the app has no head-management library; one
-  // tag is kept per mount and cleaned up on unmount/product change.
-  useEffect(() => {
-    if (!product) return
+  // Product JSON-LD (schema.org Product + AggregateOffer) for Google rich
+  // results. Computed here and handed to <Seo>, which owns the managed <script>
+  // tag and its cleanup — previously this was an imperative DOM effect
+  // duplicating what <Seo> now does.
+  const jsonLd = useMemo(() => {
+    if (!product) return null
     const priced = product.varieties
       ?.flatMap(v => v.packaging?.filter(p => !p.quoteOnly && p.priceKES) || []) || []
     const prices = priced.map(p => p.priceKES)
     const inStock = priced.some(p => p.stock > 0)
     const image = product.varieties?.[0]?.imageURLs?.[0] || product.imageURLs?.[0]
 
-    const data = {
+    return {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: product.name,
@@ -153,38 +153,49 @@ export default function ProductPage() {
           highPrice: Math.max(...prices),
           offerCount: prices.length,
           availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-          url: window.location.href
+          url: `${SITE_URL}/shop/${product._id}`
         }
       })
     }
-
-    const script = document.createElement('script')
-    script.type = 'application/ld+json'
-    script.text = JSON.stringify(data)
-    document.head.appendChild(script)
-    return () => { document.head.removeChild(script) }
   }, [product, shopInfo.name])
 
-  // Fetch price history + best-time badge whenever variety/packaging selection changes
-  useEffect(() => {
-    if (!product) return
-    const v = product.varieties?.[selectedVariety]
-    const pkg = v?.packaging?.[selectedPkg]
-    if (!v || !pkg) return
+  // Price history + best-time badge for the selected variety/packaging.
+  //
+  // These used to be two hand-rolled effects with no cancellation and no
+  // sequence guard, which was a real bug: switching packaging quickly let a slow
+  // earlier response resolve AFTER a newer one, so the chart (and the "best time
+  // to buy" badge) could show a different tier's data. `useApiQuery` aborts the
+  // in-flight request on every dependency change and discards any response whose
+  // sequence number is stale, so the visible data always matches the selection.
+  const selectedVariantKey = `${selectedVariety}:${selectedPkg}`
 
-    productService.getPriceHistory(id, v.varietyName, pkg.size)
-      .then(res => {
-        const logs = res.data?.data || []
-        setPriceHistory([...logs].reverse()) // oldest → newest, keep all 200
-      })
-      .catch(() => {})
+  const { data: priceHistoryData } = useApiQuery(
+    ({ signal }) => {
+      const v = product?.varieties?.[selectedVariety]
+      const pkg = v?.packaging?.[selectedPkg]
+      if (!v || !pkg) return Promise.resolve(null)
+      return productService.getPriceHistory(id, v.varietyName, pkg.size, { signal })
+    },
+    [id, selectedVariantKey, product],
+    {
+      enabled: Boolean(product),
+      initialData: [],
+      // The API returns newest-first; the chart wants oldest → newest.
+      select: (res) => [...(res?.data?.data || [])].reverse(),
+    },
+  )
+  const priceHistory = priceHistoryData || []
 
-    if (pkg.priceKES) {
-      productService.getBestTimeBadge(id, v.varietyName, pkg.size, pkg.priceKES)
-        .then(res => setBestTime(res.data?.data || null))
-        .catch(() => {})
-    }
-  }, [id, product, selectedVariety, selectedPkg])
+  const { data: bestTime } = useApiQuery(
+    ({ signal }) => {
+      const v = product?.varieties?.[selectedVariety]
+      const pkg = v?.packaging?.[selectedPkg]
+      if (!v || !pkg?.priceKES) return Promise.resolve(null)
+      return productService.getBestTimeBadge(id, v.varietyName, pkg.size, pkg.priceKES, { signal })
+    },
+    [id, selectedVariantKey, product],
+    { enabled: Boolean(product) },
+  )
 
   // Fetch the customer's own alerts for this product (only if logged in as customer)
   useEffect(() => {
@@ -297,6 +308,18 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title={product.name}
+        description={truncate(
+          product.description
+            || `${product.name} — ${getPriceRange(product)}. Order online for pickup or delivery in Nairobi.`,
+          155,
+        )}
+        path={`/shop/${id}`}
+        image={product.varieties?.[0]?.imageURLs?.[0] || product.imageURLs?.[0]}
+        type="product"
+        jsonLd={jsonLd}
+      />
 
       {/* ── Breadcrumb ────────────────────────────────────────────── */}
       <div className="border-b border-earth-100 bg-white">
@@ -324,7 +347,7 @@ export default function ProductPage() {
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-700
                     group-hover:scale-105"
-                  fetchpriority="high"
+                  fetchPriority="high"
                   decoding="async" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

@@ -820,7 +820,7 @@ export default function StockIntakePage() {
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">
                 {['Intake Ref', 'Supplier', 'Items', 'Status', ''].map(h => (
-                  <th key={h}
+                  <th scope="col" key={h}
                     className={`px-5 py-3.5 text-xs text-admin-500 font-semibold uppercase
                       tracking-wide text-left`}>
                     {h}

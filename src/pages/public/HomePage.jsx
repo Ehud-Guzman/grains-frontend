@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Seo from '../../components/ui/Seo'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Package, Sprout, Truck, Star, Sparkles, X, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { productService } from '../../services/product.service'
@@ -525,6 +526,11 @@ export default function HomePage() {
 
   return (
     <div>
+      <Seo
+        title="Vittorios Grains & Cereals — Order Online"
+        description="Order quality grains and cereals online — maize, beans, rice, flour and more. Browse our catalogue, place orders, and choose pickup or delivery in Nairobi."
+        path="/"
+      />
 
       {/* ── Announcement bar ──────────────────────────────────────────── */}
       <AnnouncementBar tips={tips} />

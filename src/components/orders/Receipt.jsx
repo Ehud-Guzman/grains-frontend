@@ -299,7 +299,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
           <thead>
             <tr>
               {['Item', 'Qty', 'Unit Price', 'Total'].map((h, i) => (
-                <th key={h} style={{
+                <th scope="col" key={h} style={{
                   fontSize: '9px', fontWeight: 700, color: '#833D19',
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   padding: '9px 0', background: '#FBF8F3',

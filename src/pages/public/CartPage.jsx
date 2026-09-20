@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Seo from '../../components/ui/Seo'
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, List } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -53,6 +54,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo title="Your Cart" description="Review the items in your cart before checkout." noindex />
 
       {/* ── Header ───────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-earth-200 py-6 px-4">

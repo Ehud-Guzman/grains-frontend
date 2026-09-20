@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useBranch } from './BranchContext'
 import { getCartUnitPrice } from '../utils/helpers'
@@ -198,16 +198,37 @@ export const CartProvider = ({ children }) => {
     }
   }, [])
 
-  // Tier-aware subtotal — matches the server-side price derivation
-  const subtotal = items.reduce((sum, i) => sum + (getCartUnitPrice(i) * i.quantity), 0)
-  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0)
+  // Tier-aware subtotal — matches the server-side price derivation.
+  // Memoised: every ProductCard in the catalogue calls useCart(), so an
+  // unmemoised recalculation here re-ran this reduce over the whole cart on
+  // every keystroke in the search box.
+  const subtotal = useMemo(
+    () => items.reduce((sum, i) => sum + getCartUnitPrice(i) * i.quantity, 0),
+    [items],
+  )
+  const itemCount = useMemo(
+    () => items.reduce((sum, i) => sum + i.quantity, 0),
+    [items],
+  )
+
+  // The context value MUST be memoised. It was previously a fresh object literal
+  // on every render, which meant every consumer of useCart() re-rendered on any
+  // unrelated provider render — adding one item re-rendered every card in the
+  // catalogue grid, the Navbar and the drawer. All the functions below are
+  // already stable (useCallback), so this object now only changes when cart
+  // contents or drawer state actually change.
+  const value = useMemo(() => ({
+    items, subtotal, itemCount, isOpen,
+    addItem, removeItem, updateQuantity, clearCart, reorderItems, refreshPrices,
+    openCart, closeCart
+  }), [
+    items, subtotal, itemCount, isOpen,
+    addItem, removeItem, updateQuantity, clearCart, reorderItems, refreshPrices,
+    openCart, closeCart
+  ])
 
   return (
-    <CartContext.Provider value={{
-      items, subtotal, itemCount, isOpen,
-      addItem, removeItem, updateQuantity, clearCart, reorderItems, refreshPrices,
-      openCart, closeCart
-    }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   )

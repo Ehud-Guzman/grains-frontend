@@ -62,12 +62,12 @@ export default function CustomerListPage() {
             <table className="w-full text-sm font-admin">
               <thead>
                 <tr className="border-b border-admin-100 bg-admin-50">
-                  <th className="px-5 py-3 text-left text-admin-500 font-medium">Customer</th>
-                  <th className="px-5 py-3 text-left text-admin-500 font-medium hidden sm:table-cell">Phone</th>
-                  <th className="px-5 py-3 text-right text-admin-500 font-medium hidden md:table-cell">Orders</th>
-                  <th className="px-5 py-3 text-right text-admin-500 font-medium hidden md:table-cell">Total Spend</th>
-                  <th className="px-5 py-3 text-left text-admin-500 font-medium hidden lg:table-cell">Badges</th>
-                  <th className="w-10 px-5 py-3" />
+                  <th scope="col" className="px-5 py-3 text-left text-admin-500 font-medium">Customer</th>
+                  <th scope="col" className="px-5 py-3 text-left text-admin-500 font-medium hidden sm:table-cell">Phone</th>
+                  <th scope="col" className="px-5 py-3 text-right text-admin-500 font-medium hidden md:table-cell">Orders</th>
+                  <th scope="col" className="px-5 py-3 text-right text-admin-500 font-medium hidden md:table-cell">Total Spend</th>
+                  <th scope="col" className="px-5 py-3 text-left text-admin-500 font-medium hidden lg:table-cell">Badges</th>
+                  <th scope="col" className="w-10 px-5 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-admin-50">

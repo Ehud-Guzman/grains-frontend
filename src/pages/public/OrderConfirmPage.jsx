@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Seo from '../../components/ui/Seo'
 import { useSearchParams, useLocation, Link } from 'react-router-dom'
 import { CheckCircle, AlertTriangle, Package, Phone, Copy, Check, ArrowRight, MapPin, CreditCard, Truck, MessageSquare } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
@@ -38,6 +39,7 @@ export function OrderConfirmPage() {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
+      <Seo title="Order Confirmed" noindex />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 pt-12 pb-24 text-center px-4 relative overflow-hidden">

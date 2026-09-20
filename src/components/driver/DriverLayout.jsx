@@ -22,6 +22,7 @@ export default function DriverLayout() {
 
   return (
     <div className="min-h-screen bg-admin-50 flex flex-col">
+      <a href="#main" className="skip-link">Skip to content</a>
 
       {/* Top bar */}
       <header className="bg-brand-800 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-md">
@@ -83,7 +84,7 @@ export default function DriverLayout() {
       )}
 
       {/* Content */}
-      <main className="flex-1 p-4 sm:p-6 max-w-4xl w-full mx-auto">
+      <main id="main" className="flex-1 p-4 sm:p-6 max-w-4xl w-full mx-auto">
         <Outlet />
       </main>
     </div>

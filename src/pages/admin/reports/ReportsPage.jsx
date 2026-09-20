@@ -271,7 +271,7 @@ const DataTable = ({ title, headers, rows, renderRow, emptyMessage = 'No data fo
         <thead>
           <tr className="bg-admin-50/60 border-b border-admin-100">
             {headers.map(h => (
-              <th key={h.label}
+              <th scope="col" key={h.label}
                 className={`px-5 py-3.5 text-xs text-admin-500 font-semibold uppercase tracking-wide
                   ${h.right ? 'text-right' : 'text-left'}`}>
                 {h.label}

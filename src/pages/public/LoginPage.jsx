@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Seo from '../../components/ui/Seo'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Eye, EyeOff, LogIn, ArrowLeft, Clock,
@@ -45,7 +46,7 @@ function TwoFactorForm({ twoFactorToken, onVerify, onBack }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3"> 
           <input
             type="text"
             inputMode="numeric"
@@ -242,6 +243,11 @@ export default function LoginPage() {
 
   return (
     <>
+      <Seo
+        title="Sign In"
+        description="Sign in to your Vittorios Grains & Cereals account to order, track deliveries and manage saved lists."
+        path="/login"
+      />
       {/* Full-screen container — h-dvh (not min-h-screen) so the whole page is
           exactly one viewport tall on every device, including mobile browsers
           where the address bar changes the visible height. The page itself

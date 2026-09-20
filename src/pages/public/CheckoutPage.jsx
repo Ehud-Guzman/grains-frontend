@@ -21,6 +21,8 @@ import { PAYMENT_LABELS } from '../../utils/constants'
 import { trackBeginCheckout, trackPurchase } from '../../utils/analytics'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
 import Spinner from '../../components/ui/Spinner'
+import Seo from '../../components/ui/Seo'
+import { Field, Input, Select, Textarea } from '../../components/ui/Field'
 import toast from 'react-hot-toast'
 import { getOptimizedImageUrl } from '../../utils/image'
 
@@ -33,33 +35,13 @@ const STEPS = [
 ]
 
 // ── UI ATOMS ──────────────────────────────────────────────────────────────────
-const Field = ({ label, error, required, hint, children }) => (
-  <div>
-    <label className="block text-xs font-body font-semibold text-earth-700 uppercase
-      tracking-wide mb-1.5">
-      {label}{required && <span className="text-red-400 normal-case font-normal ml-0.5">*</span>}
-    </label>
-    {children}
-    {hint && !error && <p className="text-earth-400 text-xs mt-1.5 font-body">{hint}</p>}
-    {error && (
-      <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 font-body">
-        <span className="w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />{error}
-      </p>
-    )}
-  </div>
-)
-
-const Input = ({ error, ...props }) => (
-  <input {...props}
-    className={`w-full border rounded-xl px-4 py-3 text-sm font-body text-earth-800
-      placeholder-earth-400 focus:outline-none focus:ring-2 focus:border-transparent
-      transition-all bg-earth-50 min-h-[44px] ${
-        error
-          ? 'border-red-300 focus:ring-red-300'
-          : 'border-earth-200 focus:ring-brand-400'
-      } ${props.className || ''}`}
-  />
-)
+// `Field`, `Input`, `Select` and `Textarea` now come from components/ui/Field.
+// Previously these were local components that rendered a <label> as a plain
+// sibling of the control — no htmlFor, no aria-describedby, no aria-invalid and
+// no role="alert" on the error text, so a screen reader announced every field in
+// the checkout flow as "edit text, blank" and never announced a validation
+// error. The shared versions generate the id, bind the label, and link hint and
+// error text to the control automatically.
 
 const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disabled, disabledReason }) => (
   <label className={`flex items-start gap-3 sm:gap-4 p-3.5 sm:p-4 border-2 rounded-xl transition-all ${
@@ -614,6 +596,11 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Checkout"
+        description="Complete your Vittorios Grains & Cereals order."
+        noindex
+      />
 
       {/* ── Header + Stepper ─────────────────────────────────────────── */}
       <div className="bg-brand-800 text-white py-5 sm:py-6">
@@ -702,22 +689,25 @@ export default function CheckoutPage() {
                   </div>
                   <Field label="Full Name" required error={errors.name}>
                     <Input placeholder="John Kamau" value={form.name}
+                      autoComplete="name"
                       onChange={e => set('name', e.target.value)}
-                      error={errors.name} autoFocus />
+                      autoFocus />
                   </Field>
                   <Field label="Phone Number" required error={errors.phone}>
-                    <Input type="tel" placeholder="0712 345 678" value={form.phone}
-                      onChange={e => set('phone', e.target.value)} error={errors.phone} />
+                    <Input type="tel" inputMode="tel" autoComplete="tel"
+                      placeholder="0712 345 678" value={form.phone}
+                      onChange={e => set('phone', e.target.value)} />
                   </Field>
                   <Field label="Email Address" error={errors.email}>
-                    <Input type="email" placeholder="john@example.com (optional)"
-                      value={form.email} onChange={e => set('email', e.target.value)}
-                      error={errors.email} />
+                    <Input type="email" inputMode="email" autoComplete="email"
+                      placeholder="john@example.com (optional)"
+                      value={form.email} onChange={e => set('email', e.target.value)} />
                   </Field>
-                  <Field label="KRA PIN (optional — for B2B tax receipt)" error={errors.buyerKraPin}>
+                  <Field label="KRA PIN (optional — for B2B tax receipt)" error={errors.buyerKraPin}
+                    hint="Format: one letter, nine digits, one letter">
                     <Input placeholder="A012345678B" value={form.buyerKraPin}
+                      autoComplete="off" spellCheck={false}
                       onChange={e => set('buyerKraPin', e.target.value.toUpperCase())}
-                      error={errors.buyerKraPin}
                       className="font-mono" />
                   </Field>
                 </div>
@@ -841,35 +831,26 @@ export default function CheckoutPage() {
 
                       {/* Delivery address */}
                       <Field label="Delivery Address" required error={errors.deliveryAddress}>
-                        <textarea rows={3}
+                        <Textarea rows={3}
                           placeholder="Building name, street, area, town…"
                           value={form.deliveryAddress}
                           onChange={e => set('deliveryAddress', e.target.value)}
-                          className={`w-full border rounded-xl px-4 py-3 text-sm font-body
-                            text-earth-800 placeholder-earth-400 focus:outline-none focus:ring-2
-                            focus:border-transparent transition-all bg-earth-50 resize-none ${
-                              errors.deliveryAddress
-                                ? 'border-red-300 focus:ring-red-300'
-                                : 'border-earth-200 focus:ring-brand-400'
-                            }`}
+                          className="resize-none"
                         />
                       </Field>
 
                       {/* Preferred rider — optional, admin still confirms the actual assignment */}
                       {riders.length > 0 && (
                         <Field label="Preferred Rider" hint="Optional — we'll try to assign them, but availability isn't guaranteed">
-                          <select value={form.preferredDriverId}
-                            onChange={e => set('preferredDriverId', e.target.value)}
-                            className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm font-body
-                              text-earth-800 focus:outline-none focus:ring-2 focus:ring-brand-400
-                              focus:border-transparent transition-all bg-earth-50">
+                          <Select value={form.preferredDriverId}
+                            onChange={e => set('preferredDriverId', e.target.value)}>
                             <option value="">No preference</option>
                             {riders.map(r => (
                               <option key={r._id} value={r._id}>
                                 {r.name}{r.vehicleInfo?.type ? ` — ${r.vehicleInfo.type}` : ''}
                               </option>
                             ))}
-                          </select>
+                          </Select>
                         </Field>
                       )}
                     </>
@@ -878,26 +859,20 @@ export default function CheckoutPage() {
                   {/* Preferred delivery/pickup date — a planning hint for logistics, not a commitment */}
                   <Field label={form.deliveryMethod === 'delivery' ? 'Preferred Delivery Date' : 'Preferred Pickup Date'}
                     hint="Optional — when would you like your order? We'll do our best to match it">
-                    <input type="date"
+                    <Input type="date"
                       min={dateToday}
                       max={dateMax}
                       value={form.preferredDeliveryDate}
                       onChange={e => set('preferredDeliveryDate', e.target.value)}
-                      className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm
-                        font-body text-earth-800 focus:outline-none focus:ring-2
-                        focus:ring-brand-400 focus:border-transparent transition-all bg-earth-50"
                     />
                   </Field>
 
                   <Field label="Special Instructions">
-                    <textarea rows={2}
+                    <Textarea rows={2}
                       placeholder="Any notes for your order… (optional)"
                       value={form.specialInstructions}
                       onChange={e => set('specialInstructions', e.target.value)}
-                      className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm
-                        font-body text-earth-800 placeholder-earth-400 focus:outline-none
-                        focus:ring-2 focus:ring-brand-400 focus:border-transparent
-                        transition-all bg-earth-50 resize-none"
+                      className="resize-none"
                     />
                   </Field>
                 </div>
@@ -949,10 +924,11 @@ export default function CheckoutPage() {
                       <Field label="Phone to receive STK push" error={errors.mpesaPhone}>
                         <Input
                           type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
                           placeholder="0712 345 678"
                           value={form.mpesaPhone}
                           onChange={e => set('mpesaPhone', e.target.value)}
-                          error={errors.mpesaPhone}
                         />
                       </Field>
                       <p className="text-xs text-brand-600 font-body leading-relaxed">

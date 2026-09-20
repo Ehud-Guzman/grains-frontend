@@ -472,12 +472,12 @@ function PriceHistorySection({ productId }) {
               <table className="w-full text-xs font-admin">
                 <thead>
                   <tr className="text-admin-400 border-b border-admin-100">
-                    <th className="text-left py-2 pr-3 font-medium">Date</th>
-                    <th className="text-left py-2 pr-3 font-medium">Variety / Size</th>
-                    <th className="text-right py-2 pr-3 font-medium">Old Price</th>
-                    <th className="text-right py-2 pr-3 font-medium">New Price</th>
-                    <th className="text-left py-2 pr-3 font-medium">Changed By</th>
-                    <th className="text-left py-2 font-medium">Season</th>
+                    <th scope="col" className="text-left py-2 pr-3 font-medium">Date</th>
+                    <th scope="col" className="text-left py-2 pr-3 font-medium">Variety / Size</th>
+                    <th scope="col" className="text-right py-2 pr-3 font-medium">Old Price</th>
+                    <th scope="col" className="text-right py-2 pr-3 font-medium">New Price</th>
+                    <th scope="col" className="text-left py-2 pr-3 font-medium">Changed By</th>
+                    <th scope="col" className="text-left py-2 font-medium">Season</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Seo from '../../components/ui/Seo'
 import { Shield } from 'lucide-react'
 import { useShopInfo } from '../../context/AppSettingsContext'
 
@@ -19,6 +20,7 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo title="Privacy Policy" path="/privacy" />
       <div className="max-w-3xl mx-auto px-4 py-10">
 
         <div className="mb-8">

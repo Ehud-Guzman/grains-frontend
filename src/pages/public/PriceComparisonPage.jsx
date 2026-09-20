@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import Seo from '../../components/ui/Seo'
 import { useSearchParams, Link } from 'react-router-dom'
 import { ArrowLeft, Search, X, Scale } from 'lucide-react'
 import {
@@ -106,6 +107,11 @@ export default function PriceComparisonPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Compare Grain Prices"
+        description="Compare prices across our grain and cereal varieties side by side."
+        path="/compare-prices"
+      />
       <div className="bg-white border-b border-earth-100 sticky top-0 z-10">
         <div className="container-page max-w-3xl h-14 flex items-center gap-3">
           <Link to="/shop" className="p-1.5 rounded-lg text-earth-500 hover:text-earth-800 hover:bg-earth-100 transition-colors">

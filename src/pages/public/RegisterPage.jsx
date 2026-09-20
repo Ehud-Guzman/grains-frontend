@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Seo from '../../components/ui/Seo'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, UserPlus, ArrowLeft, Shield } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -73,6 +74,11 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-brand-50 flex flex-col">
+      <Seo
+        title="Create an Account"
+        description="Create a Vittorios Grains & Cereals account to save lists, track orders and reorder faster."
+        path="/register"
+      />
 
       {/* ── Top nav strip ─────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-earth-200 py-3 px-4">

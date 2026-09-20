@@ -138,7 +138,7 @@ export default function CustomerProfilePage() {
           <div>Total VAT<strong>KES ${(summary.totalVat || 0).toLocaleString()}</strong></div>
           <div>Total Discounts<strong>KES ${(summary.totalDiscounts || 0).toLocaleString()}</strong></div>
         </div>
-        <table><thead><tr><th>Date</th><th>Reference</th><th>Status</th><th>Items</th><th>Total</th></tr></thead>
+        <table><thead><tr><th scope="col">Date</th><th scope="col">Reference</th><th scope="col">Status</th><th scope="col">Items</th><th scope="col">Total</th></tr></thead>
         <tbody>${orders.map(o => `<tr><td>${formatDate(o.createdAt)}</td><td>${escapeHtml(o.orderRef)}</td><td>${escapeHtml(o.status)}</td><td>${o.items?.length || 0}</td><td>KES ${(o.total || 0).toLocaleString()}</td></tr>`).join('')}</tbody>
         </table>
         </body></html>

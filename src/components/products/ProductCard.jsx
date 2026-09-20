@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Eye, Tag, Check, List } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -249,7 +249,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
 }
 
 // ── MAIN EXPORT ───────────────────────────────────────────────────────────────
-export default function ProductCard({ product, compact = false, priceChange }) {
+function ProductCardInner({ product, compact = false, priceChange }) {
   const { addItem } = useCart()
   const { user } = useAuth()
   const [adding, setAdding] = useState(false)
@@ -311,3 +311,22 @@ export default function ProductCard({ product, compact = false, priceChange }) {
     </>
   )
 }
+
+// Memoised. The catalogue grid renders one card per product and several parent
+// state values change on interaction (search input, grid-density toggle, price
+// refresh), so without this every one of those re-rendered every card — each of
+// which mounts two useState hooks and part of an AddToListModal.
+//
+// A custom comparator keyed on `_id` is used rather than a shallow compare
+// because `product` objects are re-created by the price-refresh path: React's
+// default shallow equality would see a new object identity and still re-render.
+// `priceChange` is compared by reference, which is correct — it is derived
+// fresh from the parent's priceChanges map.
+const ProductCard = memo(ProductCardInner, (prev, next) =>
+  prev.product?._id === next.product?._id &&
+  prev.compact === next.compact &&
+  prev.priceChange === next.priceChange &&
+  prev.product === next.product,
+)
+
+export default ProductCard

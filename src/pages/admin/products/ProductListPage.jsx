@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Plus, Search, Edit, Copy, Trash2, ToggleLeft, ToggleRight,
+  Plus, Edit, Copy, Trash2, ToggleLeft, ToggleRight,
   Download, Upload, FileSpreadsheet, X, CheckCircle, AlertCircle,
   ChevronDown, ChevronUp, Package
 } from 'lucide-react'
@@ -505,19 +505,19 @@ export default function ProductListPage() {
           <table className="w-full text-sm font-admin">
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">
-                <th className="px-5 py-3.5 text-left text-xs text-admin-500 font-semibold uppercase tracking-wide">
+                <th scope="col" className="px-5 py-3.5 text-left text-xs text-admin-500 font-semibold uppercase tracking-wide">
                   Product
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs text-admin-500 font-semibold uppercase tracking-wide hidden sm:table-cell">
+                <th scope="col" className="px-5 py-3.5 text-left text-xs text-admin-500 font-semibold uppercase tracking-wide hidden sm:table-cell">
                   Category
                 </th>
-                <th className="px-5 py-3.5 text-center text-xs text-admin-500 font-semibold uppercase tracking-wide hidden md:table-cell">
+                <th scope="col" className="px-5 py-3.5 text-center text-xs text-admin-500 font-semibold uppercase tracking-wide hidden md:table-cell">
                   Varieties
                 </th>
-                <th className="px-5 py-3.5 text-center text-xs text-admin-500 font-semibold uppercase tracking-wide">
+                <th scope="col" className="px-5 py-3.5 text-center text-xs text-admin-500 font-semibold uppercase tracking-wide">
                   Status
                 </th>
-                <th className="px-5 py-3.5 text-xs text-admin-500 font-semibold uppercase tracking-wide">
+                <th scope="col" className="px-5 py-3.5 text-xs text-admin-500 font-semibold uppercase tracking-wide">
                   Actions
                 </th>
               </tr>

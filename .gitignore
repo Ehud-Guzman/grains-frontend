@@ -4,6 +4,9 @@ dist/
 # Environment files — never commit secrets
 .env
 .env.*
+# …but DO commit the template, so the variables a deployment needs are
+# discoverable (matches backend/.gitignore, which tracks .env.example).
+!.env.example
 
 # Claude Code settings
 .claude/

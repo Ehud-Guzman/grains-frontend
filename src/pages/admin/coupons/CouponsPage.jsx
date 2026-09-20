@@ -68,7 +68,7 @@ function RedemptionsModal({ coupon, onClose }) {
               <thead>
                 <tr className="border-b border-admin-100 bg-admin-25 sticky top-0">
                   {['Date', 'Customer', 'Order', 'Status', 'Discount', 'Total'].map(h => (
-                    <th key={h} className="px-4 py-2.5 text-left text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">{h}</th>
+                    <th scope="col" key={h} className="px-4 py-2.5 text-left text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -330,7 +330,7 @@ export default function CouponsPage() {
             <thead>
               <tr className="border-b border-admin-100 bg-admin-25">
                 {['Code', 'Discount', 'Min Order', 'Usage', 'Redemptions', 'Discount Given', 'Revenue', 'Expires', 'Status', ''].map(h => (
-                  <th key={h} className="px-5 py-3.5 text-left text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">{h}</th>
+                  <th scope="col" key={h} className="px-5 py-3.5 text-left text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>

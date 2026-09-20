@@ -159,7 +159,7 @@ export default function StockPage() {
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">
                 {['Product', 'Variety', 'Size', 'Stock', 'Alert at', 'Status', 'Actions'].map(h => (
-                  <th key={h}
+                  <th scope="col" key={h}
                     className={`px-5 py-3.5 text-xs text-admin-500 font-semibold uppercase tracking-wide
                       ${['Stock', 'Alert at'].includes(h) ? 'text-right' : 'text-left'}`}>
                     {h}

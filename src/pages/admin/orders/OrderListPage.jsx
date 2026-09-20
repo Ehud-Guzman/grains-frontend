@@ -519,26 +519,26 @@ export default function OrderListPage() {
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">
                 {!isSuperAdmin && (
-                  <th className="w-10 px-4 py-3.5">
+                  <th scope="col" className="w-10 px-4 py-3.5">
                     <input type="checkbox" checked={allSelected}
                       onChange={() => setSelected(allSelected ? [] : orders.map(o => o._id))}
                       className="rounded border-admin-300 text-brand-500
                         focus:ring-brand-400 cursor-pointer" />
                   </th>
                 )}
-                <th className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
+                <th scope="col" className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
                   uppercase tracking-wide">Order</th>
-                <th className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
+                <th scope="col" className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
                   uppercase tracking-wide">Customer</th>
-                <th className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
+                <th scope="col" className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
                   uppercase tracking-wide hidden lg:table-cell">Payment</th>
-                <th className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
+                <th scope="col" className="px-4 py-3.5 text-left text-xs text-admin-500 font-semibold
                   uppercase tracking-wide">Status</th>
-                <th className="px-4 py-3.5 text-right text-xs text-admin-500 font-semibold
+                <th scope="col" className="px-4 py-3.5 text-right text-xs text-admin-500 font-semibold
                   uppercase tracking-wide">Total</th>
-                <th className="px-4 py-3.5 text-xs text-admin-500 font-semibold
+                <th scope="col" className="px-4 py-3.5 text-xs text-admin-500 font-semibold
                   uppercase tracking-wide hidden xl:table-cell">Time</th>
-                <th className="w-10 px-4 py-3.5" />
+                <th scope="col" className="w-10 px-4 py-3.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-admin-50">

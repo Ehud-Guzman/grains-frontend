@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { Search, Phone, Package, CheckCircle, Clock, XCircle, Truck, ChevronRight } from 'lucide-react'
+import Seo from '../../components/ui/Seo'
+import { useLocation, useSearchParams } from 'react-router-dom'
+import { Search, Phone, Package, CheckCircle, Clock, XCircle, Truck } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -34,9 +35,8 @@ function OrderProgress({ status, deliveryMethod }) {
     <div className="mb-6">
       <div className="flex items-center">
         {STEPS.map((step, i) => {
-          const done    = i < currentIdx
-          const active  = i === currentIdx
-          const pending = i > currentIdx
+          const done   = i < currentIdx
+          const active = i === currentIdx
 
           return (
             <div key={step.key} className="flex items-center flex-1 last:flex-none">
@@ -106,6 +106,11 @@ export default function TrackOrderPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Track Your Order"
+        description="Track the status of your Vittorios Grains & Cereals order."
+        path="/track"
+      />
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-earth-200 pt-10 pb-16">

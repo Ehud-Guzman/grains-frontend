@@ -273,6 +273,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-admin-50 font-admin overflow-hidden">
+      <a href="#main" className="skip-link">Skip to content</a>
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 border-r border-white/5"
@@ -284,8 +285,9 @@ export default function AdminLayout() {
       {sidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
+            role="presentation"
             onClick={() => setSidebarOpen(false)} />
-          <aside className="fixed left-0 top-0 h-full w-64 z-50 lg:hidden flex flex-col
+          <aside id="admin-sidebar" className="fixed left-0 top-0 h-full w-64 z-50 lg:hidden flex flex-col
             border-r border-white/10 shadow-2xl"
             style={{ backgroundColor: '#0F172A', animation: 'slideInLeft 0.22s ease-out' }}>
             <SidebarContent />
@@ -306,8 +308,11 @@ export default function AdminLayout() {
             {/* Row 1 — hamburger + greeting + bell */}
             <div className="flex items-center gap-3 h-14">
               <button onClick={() => setSidebarOpen(s => !s)}
-                className="p-2 rounded-xl hover:bg-admin-100 text-admin-600
-                  transition-colors flex-shrink-0">
+                aria-expanded={sidebarOpen}
+                aria-controls="admin-sidebar"
+                aria-label={sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center
+                  rounded-xl hover:bg-admin-100 text-admin-600 transition-colors flex-shrink-0">
                 {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
 
@@ -325,7 +330,10 @@ export default function AdminLayout() {
               {['staff','supervisor','admin'].includes(user?.role) && (
                 <div className="relative flex-shrink-0">
                   <button onClick={() => setNotifOpen(o => !o)}
-                    className="relative p-2 rounded-xl hover:bg-admin-100 text-admin-500
+                    aria-expanded={notifOpen}
+                    aria-label={totalAlerts > 0 ? `Alerts, ${totalAlerts} new` : 'Alerts, none new'}
+                    className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center
+                      rounded-xl hover:bg-admin-100 text-admin-500
                       hover:text-admin-800 transition-colors">
                     <Bell size={20} />
                     {totalAlerts > 0 && (
@@ -449,7 +457,10 @@ export default function AdminLayout() {
               {['staff','supervisor','admin'].includes(user?.role) && (
                 <div className="relative">
                   <button onClick={() => setNotifOpen(o => !o)}
-                    className="relative p-2 rounded-xl hover:bg-admin-100 text-admin-400
+                    aria-expanded={notifOpen}
+                    aria-label={totalAlerts > 0 ? `Alerts, ${totalAlerts} new` : 'Alerts, none new'}
+                    className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center
+                      rounded-xl hover:bg-admin-100 text-admin-400
                       hover:text-admin-700 transition-colors">
                     <Bell size={18} />
                     {totalAlerts > 0 && (
@@ -463,7 +474,7 @@ export default function AdminLayout() {
 
                   {notifOpen && (
                     <>
-                      <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+                      <div className="fixed inset-0 z-30" role="presentation" onClick={() => setNotifOpen(false)} />
                       <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl
                         shadow-xl border border-admin-100 z-40 overflow-hidden">
                         <div className="px-4 py-3 border-b border-admin-100 bg-admin-50">
@@ -550,7 +561,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-brand-50">
+        <main id="main" className="flex-1 overflow-y-auto bg-brand-50">
           <Outlet />
         </main>
       </div>

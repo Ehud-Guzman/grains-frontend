@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /driver
-Disallow: /dashboard
-Disallow: /checkout
-Disallow: /cart
-
-Sitemap: https://grains-fronten.netlify.app/sitemap.xml

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Seo from '../../components/ui/Seo'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, KeyRound, ArrowLeft, Shield, Phone, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -205,6 +206,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="h-dvh relative flex flex-col overflow-hidden">
+      <Seo title="Reset Password" noindex />
       <img
         src="/wheat-1188x792-1024x683.webp"
         alt=""

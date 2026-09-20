@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Eye, EyeOff, Lock, X, CheckCircle } from 'lucide-react'
+import { Field, Input } from '../ui/Field'
+import Modal from '../ui/Modal'
 import { authService } from '../../services/auth.service'
 
 // ── PASSWORD STRENGTH ─────────────────────────────────────────────────────────
@@ -28,11 +30,7 @@ export default function ChangePasswordModal({ onClose }) {
   const strength = getStrength(form.next)
   const toggle   = (field) => setShow(s => ({ ...s, [field]: !s[field] }))
 
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  // Escape handling now lives in <Modal> (document-level listener + focus trap).
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -57,24 +55,25 @@ export default function ChangePasswordModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      role="dialog" aria-modal="true" aria-label="Change password"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-earth-200">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-earth-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Lock size={15} className="text-brand-600" />
-            </div>
-            <h3 className="font-display font-semibold text-earth-900">Change Password</h3>
+    <Modal
+      onClose={onClose}
+      labelledBy="change-password-title"
+      panelClassName="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-earth-200"
+    >
+      <div className="flex items-center justify-between px-5 py-4 border-b border-earth-100 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+            <Lock size={15} className="text-brand-600" aria-hidden="true" />
           </div>
-          <button onClick={onClose} aria-label="Close"
-            className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-800 transition-colors">
-            <X size={16} />
-          </button>
+          <h3 id="change-password-title" className="font-display font-semibold text-earth-900">Change Password</h3>
         </div>
+        <button type="button" onClick={onClose} aria-label="Close"
+          className="p-2 -m-1 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-800 transition-colors">
+          <X size={16} aria-hidden="true" />
+        </button>
+      </div>
 
-        <div className="p-5">
+      <div className="p-5 overflow-y-auto">
           {done ? (
             <div className="text-center py-6">
               <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -90,12 +89,18 @@ export default function ChangePasswordModal({ onClose }) {
                 { key: 'next',    label: 'New Password',         placeholder: '8+ chars, 1 uppercase, 1 number' },
                 { key: 'confirm', label: 'Confirm New Password', placeholder: 'Repeat new password'    },
               ].map(({ key, label, placeholder, autoFocus }) => (
-                <div key={key}>
-                  <label className="block text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-1.5">
-                    {label}
-                  </label>
+                <Field
+                  key={key}
+                  label={label}
+                  required
+                  error={
+                    key === 'confirm' && form.confirm && form.next !== form.confirm
+                      ? 'Passwords do not match'
+                      : undefined
+                  }
+                >
                   <div className="relative">
-                    <input
+                    <Input
                       type={show[key] ? 'text' : 'password'}
                       value={form[key]}
                       onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
@@ -103,19 +108,18 @@ export default function ChangePasswordModal({ onClose }) {
                       required
                       autoFocus={autoFocus}
                       autoComplete={key === 'current' ? 'current-password' : 'new-password'}
-                      className={`w-full border rounded-xl px-4 py-2.5 pr-10 text-sm font-body
-                        text-earth-900 placeholder-earth-400 focus:outline-none focus:ring-2
-                        focus:border-transparent bg-white transition-colors ${
-                          key === 'confirm' && form.confirm
-                            ? form.next !== form.confirm ? 'border-red-300 focus:ring-red-300'
-                            : 'border-green-300 focus:ring-green-300'
-                            : 'border-earth-200 focus:ring-brand-400'
-                        }`}
+                      className={`pr-12 ${
+                        key === 'confirm' && form.confirm && form.next === form.confirm
+                          ? 'border-green-300 focus:ring-green-300'
+                          : ''
+                      }`}
                     />
                     <button type="button" onClick={() => toggle(key)}
                       aria-label={show[key] ? 'Hide password' : 'Show password'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400 hover:text-earth-700 p-0.5">
-                      {show[key] ? <EyeOff size={16} /> : <Eye size={16} />}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-2 min-w-[40px] min-h-[40px]
+                        flex items-center justify-center rounded-lg text-earth-400 hover:text-earth-700
+                        transition-colors">
+                      {show[key] ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
                     </button>
                   </div>
                   {key === 'next' && form.next && (
@@ -130,19 +134,15 @@ export default function ChangePasswordModal({ onClose }) {
                       <p className={`text-xs font-body ${
                         strength.score <= 1 ? 'text-red-500' :
                         strength.score <= 3 ? 'text-amber-500' : 'text-green-600'
-                      }`}>{strength.label}</p>
+                      }`}>Password strength: {strength.label}</p>
                     </div>
                   )}
-                  {key === 'confirm' && form.confirm && (
-                    form.next !== form.confirm
-                      ? <p className="text-red-500 text-xs mt-1 font-body">Passwords do not match</p>
-                      : form.next.length >= 8
-                        ? <p className="text-green-600 text-xs mt-1 font-body flex items-center gap-1">
-                            <CheckCircle size={11} /> Passwords match
-                          </p>
-                        : null
+                  {key === 'confirm' && form.confirm && form.next === form.confirm && form.next.length >= 8 && (
+                    <p className="text-green-600 text-xs mt-1 font-body flex items-center gap-1">
+                      <CheckCircle size={11} aria-hidden="true" /> Passwords match
+                    </p>
                   )}
-                </div>
+                </Field>
               ))}
 
               {error && (
@@ -157,13 +157,12 @@ export default function ChangePasswordModal({ onClose }) {
                   disabled:opacity-60 active:scale-[0.98]">
                 {loading
                   ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Updating…</>
-                  : <><Lock size={15} /> Update Password</>
+                  : <><Lock size={15} aria-hidden="true" /> Update Password</>
                 }
               </button>
             </form>
           )}
-        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

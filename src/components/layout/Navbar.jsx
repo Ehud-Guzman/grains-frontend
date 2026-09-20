@@ -74,6 +74,8 @@ function AllCategoriesMenu({ categories }) {
     <div className="relative h-full flex items-center" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-haspopup="true"
         className={`flex items-center gap-2 px-4 h-full text-sm font-body font-semibold
           transition-all ${
             open
@@ -224,6 +226,9 @@ function BranchSwitcher({ inline = false }) {
       <div>
         <button
           onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          aria-haspopup="true"
+          aria-label="Change shop branch"
           className="flex items-center gap-2 w-full text-left text-sm font-body font-medium text-earth-700"
         >
           <MapPin size={15} className="text-brand-500 flex-shrink-0" />
@@ -239,6 +244,9 @@ function BranchSwitcher({ inline = false }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label="Change shop branch"
         className="flex items-center gap-1.5 hover:text-white transition-colors"
       >
         <MapPin size={10} className="text-brand-400" />
@@ -407,10 +415,12 @@ export default function Navbar() {
                 {/* Mobile search */}
                 <button
                   onClick={() => setSearchOpen(o => !o)}
-                  className={`md:hidden p-2.5 rounded-lg transition-all ${
+                  aria-expanded={searchOpen}
+                  aria-controls="mobile-search-panel"
+                  aria-label={searchOpen ? 'Close search' : 'Open search'}
+                  className={`md:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all ${
                     searchOpen ? 'bg-earth-100 text-earth-900' : 'text-earth-500 hover:text-earth-900 hover:bg-earth-100'
                   }`}
-                  aria-label="Search"
                 >
                   {searchOpen ? <X size={20} /> : <Search size={20} />}
                 </button>
@@ -436,6 +446,9 @@ export default function Navbar() {
                   <div className="relative hidden sm:block" ref={menuRef}>
                     <button
                       onClick={() => setUserMenuOpen(o => !o)}
+                      aria-expanded={userMenuOpen}
+                      aria-haspopup="menu"
+                      aria-label="Account menu"
                       className={`flex flex-col items-center px-3 py-1.5 rounded-lg transition-all ${
                         userMenuOpen ? 'bg-earth-100 text-earth-900' : 'text-earth-600 hover:text-earth-900 hover:bg-earth-100'
                       }`}
@@ -534,10 +547,12 @@ export default function Navbar() {
                 {/* Hamburger (mobile) */}
                 <button
                   onClick={() => setMenuOpen(o => !o)}
-                  className={`md:hidden p-2.5 rounded-lg transition-all ${
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-nav-drawer"
+                  aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                  className={`md:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all ${
                     menuOpen ? 'bg-earth-100 text-earth-900' : 'text-earth-500 hover:text-earth-900 hover:bg-earth-100'
                   }`}
-                  aria-label="Menu"
                 >
                   {menuOpen ? <X size={22} /> : <Menu size={22} />}
                 </button>
@@ -549,7 +564,7 @@ export default function Navbar() {
 
         {/* ── Mobile search panel ─────────────────────────────── */}
         {searchOpen && (
-          <div className="md:hidden bg-white border-t border-earth-200 px-3 py-2.5">
+          <div id="mobile-search-panel" className="md:hidden bg-white border-t border-earth-200 px-3 py-2.5">
             <NavSearchBar autoFocus onClose={() => setSearchOpen(false)} />
           </div>
         )}
@@ -628,10 +643,11 @@ export default function Navbar() {
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/40 z-50 md:hidden"
+            role="presentation"
             onClick={() => setMenuOpen(false)}
           />
           {/* Drawer */}
-          <div className="fixed top-0 left-0 h-full w-[82vw] max-w-xs bg-white z-50
+          <div id="mobile-nav-drawer" className="fixed top-0 left-0 h-full w-[82vw] max-w-xs bg-white z-50
             md:hidden flex flex-col shadow-2xl overflow-y-auto"
             style={{ animation: 'slideInLeft 0.22s ease-out' }}
           >
@@ -646,9 +662,9 @@ export default function Navbar() {
                   <p className="text-brand-200 text-[10px] font-body">{shopInfo.tagline}</p>
                 </div>
               </Link>
-              <button onClick={() => setMenuOpen(false)}
-                className="p-2 rounded-lg text-brand-200 hover:text-white hover:bg-brand-700 transition-all">
-                <X size={20} />
+              <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-brand-200 hover:text-white hover:bg-brand-700 transition-all">
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
 

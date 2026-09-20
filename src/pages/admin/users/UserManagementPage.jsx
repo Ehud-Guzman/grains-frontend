@@ -377,7 +377,7 @@ export default function UserManagementPage() {
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">
                 {['Name', 'Phone', 'Role', 'Status', 'Last Login', 'Actions'].map(h => (
-                  <th key={h} className={`px-5 py-3.5 text-left text-xs text-admin-500 font-semibold
+                  <th scope="col" key={h} className={`px-5 py-3.5 text-left text-xs text-admin-500 font-semibold
                     uppercase tracking-wide ${['Phone', 'Last Login'].includes(h) ? 'hidden sm:table-cell' : ''}`}>
                     {h}
                   </th>

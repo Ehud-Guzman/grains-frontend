@@ -43,12 +43,13 @@ export default function PublicLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      <a href="#main" className="skip-link">Skip to content</a>
       <Navbar />
       {/* NOTE: branch-triggered remounting is scoped per-route via
           <BranchKeyed> in App.jsx (catalog pages only) — not here. Keying the
           whole Outlet would also remount /checkout and /cart on a branch
           switch, wiping the checkout form and any in-progress cart edits. */}
-      <main className="flex-1 page-enter">
+      <main id="main" className="flex-1 page-enter">
         <Outlet />
       </main>
       <Footer />

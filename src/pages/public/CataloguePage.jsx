@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import Seo from '../../components/ui/Seo'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Search, X, SlidersHorizontal } from 'lucide-react'
 import { productService } from '../../services/product.service'
@@ -200,6 +201,11 @@ export default function CataloguePage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <Seo
+        title="Shop Grains & Cereals"
+        description="Browse maize, beans, rice, flour and more. Wholesale and retail — pickup or delivery in Nairobi."
+        path="/shop"
+      />
 
       <div data-tour="public-shop-search">
         <StoryRail products={products} pagination={pagination} />
