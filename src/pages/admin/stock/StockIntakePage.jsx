@@ -494,7 +494,12 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
         </div>
       </div>
 
-      {/* Reconciliation — raw arrival vs. what was actually packed into stock */}
+      {/* Reconciliation — raw arrival vs. what was actually packed into stock.
+          `highVariance` stays the red signal (the backend now only sets it when
+          deliveries are actually linked, so an unlinked intake no longer renders
+          red for every new arrival). `state` adds the reason: a freshly-logged
+          truck has nothing packed out yet, which is a normal in-progress state
+          rather than a discrepancy. */}
       {intake.reconciliation && (
         <div className="mt-4">
           <p className="text-xs font-admin font-semibold text-admin-500 uppercase
@@ -532,6 +537,12 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
                 </span>
               )}
             </div>
+            {intake.reconciliation.state === 'unlinked' && (
+              <p className="text-xs font-admin text-admin-400 mt-2">
+                Nothing has been packed into stock against this intake yet, so there is
+                no variance to compare.
+              </p>
+            )}
             {!intake.reconciliation.unitsConsistent && (
               <p className="text-xs font-admin text-admin-400 mt-2">
                 Raw items use mixed units — totals above may not be directly comparable.
