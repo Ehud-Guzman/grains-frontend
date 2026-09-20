@@ -80,6 +80,21 @@
     box-sizing: border-box;
   }
 
+  /* ── MINIMUM TOUCH TARGET FOR FORM CONTROLS ────────────────────────────────
+     The shared <Input>/<Select>/<Textarea> primitives carry min-h-[44px], but
+     ~143 controls across the app are still hand-rolled <input>/<select> markup
+     with no such floor — many are py-1.5/py-2, i.e. roughly 34px tall, under the
+     44px minimum for a reliable thumb tap (WCAG 2.5.5, Apple HIG). Setting the
+     floor once here fixes all of them including any added later, rather than
+     relying on 143 call sites to remember.
+     Checkbox/radio/file/range are excluded: their hit area is defined
+     differently and forcing 44px on them distorts custom-styled controls. */
+  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;

@@ -375,11 +375,13 @@ export default function SettingsPage() {
                   placeholder="Quality grains, delivered fresh" />
               </Field>
               <Field label="Phone Number">
-                <Input value={form.shopPhone} onChange={e => set('shopPhone', e.target.value)}
+                <Input type="tel" autoComplete="tel"
+                  value={form.shopPhone} onChange={e => set('shopPhone', e.target.value)}
                   placeholder="+254 799 031 449" />
               </Field>
               <Field label="WhatsApp Number" hint="Optional — leave blank to hide WhatsApp link">
-                <Input value={form.shopWhatsapp} onChange={e => set('shopWhatsapp', e.target.value)}
+                <Input type="tel"
+                  value={form.shopWhatsapp} onChange={e => set('shopWhatsapp', e.target.value)}
                   placeholder="+254 799 031 449" />
               </Field>
               <Field label="Email Address">
@@ -401,7 +403,14 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 {(form.shopPhones || []).map((phone, idx) => (
                   <div key={idx} className="flex gap-2">
-                    <Input value={phone} 
+                    {/* Explicit id + aria-label per row: without an id of its own
+                        every row inherited the enclosing <Field>'s generated id, so
+                        N inputs shared a single DOM id — invalid HTML, and the label
+                        only ever pointed at the first row. */}
+                    <Input value={phone}
+                      type="tel"
+                      id={`shop-phone-${idx}`}
+                      aria-label={`Additional phone number ${idx + 1}`} 
                       onChange={e => {
                         const phones = [...(form.shopPhones || [])];
                         phones[idx] = e.target.value;

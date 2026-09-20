@@ -4,6 +4,7 @@ import { driverService } from '../../services/driver.service'
 import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
+import { flushCompletions, pendingOrderIds } from '../../utils/offlineQueue'
 import toast from 'react-hot-toast'
 
 const STATUS_TABS = [
@@ -20,7 +21,7 @@ const STATUS_CONFIG = {
   cancelled:        { bg: 'bg-admin-50',   text: 'text-admin-500',   border: 'border-admin-200'   },
 }
 
-function OrderRow({ order, onComplete }) {
+function OrderRow({ order, onComplete, onQueued, isPending }) {
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const customer = order.userId || order.guestId
   const isActive = order.status === 'out_for_delivery'
@@ -29,15 +30,25 @@ function OrderRow({ order, onComplete }) {
   return (
     <div className="bg-white rounded-2xl border border-admin-100 shadow-sm p-4 space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-admin font-bold text-admin-900 text-sm">{order.orderRef}</p>
           <p className="text-xs font-admin text-admin-400">{formatDate(order.createdAt)}</p>
         </div>
-        <span className={`text-xs font-admin font-semibold px-2.5 py-1 rounded-full border capitalize
-          ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-          {order.status.replace(/_/g, ' ')}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`text-xs font-admin font-semibold px-2.5 py-1 rounded-full border capitalize
+            ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+            {order.status.replace(/_/g, ' ')}
+          </span>
+          {/* Queued offline: the server has not been told yet, so the driver needs
+              to know this one is not actually closed out. */}
+          {isPending && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-admin font-semibold
+              text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+              <Clock size={11} /> Pending sync
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Customer contact */}
@@ -98,6 +109,7 @@ function OrderRow({ order, onComplete }) {
           order={order}
           onClose={() => setShowCompleteModal(false)}
           onCompleted={onComplete}
+          onQueued={onQueued}
         />
       )}
     </div>
@@ -108,6 +120,7 @@ export default function DriverOrdersPage() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('')
+  const [pendingIds, setPendingIds] = useState([])
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true)
@@ -119,16 +132,41 @@ export default function DriverOrdersPage() {
     finally { if (!silent) setLoading(false) }
   }
 
+  // ── OFFLINE COMPLETIONS ──────────────────────────────────────────────────
+  // Deliveries completed with no connection are queued locally (utils/offlineQueue).
+  // Replay them on entry and whenever the browser reports it is back online.
+  const syncPending = async () => {
+    setPendingIds(await pendingOrderIds())
+    const { synced } = await flushCompletions(driverService.completeDelivery)
+    if (synced > 0) {
+      toast.success(`${synced} offline deliver${synced === 1 ? 'y' : 'ies'} synced`)
+      await load(true)
+    }
+    setPendingIds(await pendingOrderIds())
+  }
+
   useEffect(() => {
     load()
+    syncPending()
     // Poll for status updates while this tab is open — this page previously had
     // zero live refresh (load only on mount/tab-change). Silent: doesn't reset
     // loading (would spin the whole list under a driver's thumb mid-scroll).
     const interval = setInterval(() => load(true), 60000)
-    return () => clearInterval(interval)
+    window.addEventListener('online', syncPending)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('online', syncPending)
+    }
   }, [activeTab])
 
-  const handleComplete = (id) => setOrders(o => o.filter(x => x._id !== id))
+  const handleComplete = (id) => {
+    setOrders(o => o.filter(x => x._id !== id))
+    setPendingIds(ids => ids.filter(x => x !== id))
+  }
+
+  // Queued rather than completed: the order stays in the list because the server
+  // has not been told yet, and is labelled so the driver knows it is in flight.
+  const handleQueued = (id) => setPendingIds(ids => (ids.includes(id) ? ids : [...ids, id]))
 
   return (
     <div className="space-y-5">
@@ -167,7 +205,8 @@ export default function DriverOrdersPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {orders.map(o => (
-            <OrderRow key={o._id} order={o} onComplete={handleComplete} />
+            <OrderRow key={o._id} order={o} onComplete={handleComplete}
+              onQueued={handleQueued} isPending={pendingIds.includes(o._id)} />
           ))}
         </div>
       )}

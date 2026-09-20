@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { X, Camera, CheckCircle } from 'lucide-react'
 import { driverService } from '../../services/driver.service'
+import { enqueueCompletion, isSupported } from '../../utils/offlineQueue'
 import toast from 'react-hot-toast'
 
 // Proof-of-delivery capture at handover. Everything is optional — a driver
 // with no camera/data can still complete in two taps — but photo + recipient
 // name are what settles "we never received it" disputes, so the UI nudges
 // without blocking.
-export default function CompleteDeliveryModal({ order, onClose, onCompleted }) {
+export default function CompleteDeliveryModal({ order, onClose, onCompleted, onQueued }) {
   const [photo, setPhoto] = useState(null)
   const [preview, setPreview] = useState(null)
   const [recipientName, setRecipientName] = useState('')
@@ -37,6 +38,28 @@ export default function CompleteDeliveryModal({ order, onClose, onCompleted }) {
       onCompleted(order._id)
       onClose()
     } catch (err) {
+      // No `response` means the request never reached the server. In the field
+      // that is the normal case, not the exception — so persist the completion
+      // locally (photo included) and let the list show it as pending, rather than
+      // making the driver retake the photo at the customer's gate.
+      if (!err.response && isSupported()) {
+        try {
+          await enqueueCompletion({
+            orderId: order._id,
+            orderRef: order.orderRef,
+            photo,
+            recipientName: recipientName.trim(),
+            note: note.trim(),
+          })
+          toast.success('Saved offline — it will sync when you are back online')
+          onQueued?.(order._id)
+          onClose()
+          return
+        } catch {
+          // Storage refused (private browsing, quota) — fall through to the error
+          // so the driver is not told it saved when it did not.
+        }
+      }
       toast.error(err.response?.data?.message || 'Failed to complete delivery')
     } finally { setSubmitting(false) }
   }
