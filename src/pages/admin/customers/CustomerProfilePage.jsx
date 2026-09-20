@@ -117,6 +117,13 @@ export default function CustomerProfilePage() {
       const res = await adminReportService.getCustomerStatement(id, { from: stmtFrom, to: stmtTo })
       const { orders = [], summary = {} } = res.data.data || {}
       const win = window.open('', '_blank')
+      // A popup blocker returns null here, and the very next line dereferenced it
+      // — so on a phone or with a blocker the button just appeared broken with no
+      // explanation. Say what happened instead.
+      if (!win) {
+        toast.error('Allow popups to print the statement')
+        return
+      }
       win.document.write(`
         <html><head><title>Statement — ${customer.name}</title>
         <style>
@@ -125,6 +132,11 @@ export default function CustomerProfilePage() {
           table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
           th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb}
           th{background:#f9fafb}
+          /* A statement for a busy customer runs past one page. Repeating the
+             header row and keeping rows whole makes the printed/filed copy
+             readable, which the previous version was not. */
+          thead{display:table-header-group}
+          tr{page-break-inside:avoid}
           .summary{display:flex;gap:24px;margin-top:16px;font-size:13px}
           .summary div{min-width:120px}
           .summary strong{display:block;font-size:15px;margin-top:2px}

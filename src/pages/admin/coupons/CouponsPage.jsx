@@ -64,6 +64,9 @@ function RedemptionsModal({ coupon, onClose }) {
               <p className="text-admin-500 font-admin text-sm">No orders have used this code yet</p>
             </div>
           ) : (
+            /* 6 columns — without a scroll container the later ones are
+               unreachable on a phone. */
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-admin-100 bg-admin-25 sticky top-0">
@@ -100,6 +103,7 @@ function RedemptionsModal({ coupon, onClose }) {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 
@@ -325,8 +329,10 @@ export default function CouponsPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-admin-200 overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-2xl border border-admin-200 overflow-x-auto">
+          {/* 10 columns — genuinely cannot fit a phone. min-w keeps the columns
+              readable and lets the card scroll instead of crushing them. */}
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr className="border-b border-admin-100 bg-admin-25">
                 {['Code', 'Discount', 'Min Order', 'Usage', 'Redemptions', 'Discount Given', 'Revenue', 'Expires', 'Status', ''].map(h => (

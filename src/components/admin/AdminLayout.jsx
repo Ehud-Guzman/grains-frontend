@@ -288,7 +288,7 @@ export default function AdminLayout() {
             role="presentation"
             onClick={() => setSidebarOpen(false)} />
           <aside id="admin-sidebar" className="fixed left-0 top-0 h-full w-64 z-50 lg:hidden flex flex-col
-            border-r border-white/10 shadow-2xl"
+            border-r border-white/10 shadow-2xl pt-safe pb-safe pl-safe"
             style={{ backgroundColor: '#0F172A', animation: 'slideInLeft 0.22s ease-out' }}>
             <SidebarContent />
           </aside>

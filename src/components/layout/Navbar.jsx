@@ -648,7 +648,7 @@ export default function Navbar() {
           />
           {/* Drawer */}
           <div id="mobile-nav-drawer" className="fixed top-0 left-0 h-full w-[82vw] max-w-xs bg-white z-50
-            md:hidden flex flex-col shadow-2xl overflow-y-auto"
+            md:hidden flex flex-col shadow-2xl overflow-y-auto pt-safe pb-safe pl-safe"
             style={{ animation: 'slideInLeft 0.22s ease-out' }}
           >
             {/* Drawer header */}

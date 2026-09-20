@@ -372,7 +372,7 @@ export default function UserManagementPage() {
       {loading ? (
         <div className="flex justify-center py-16"><Spinner size="lg" /></div>
       ) : (
-        <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
+        <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-x-auto">
           <table className="w-full text-sm font-admin">
             <thead>
               <tr className="border-b border-admin-100 bg-admin-50/60">

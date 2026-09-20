@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Download, TrendingUp, TrendingDown, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
-  Percent, Bike, Receipt, RefreshCw, History, AlertCircle
+  Percent, Bike, Receipt, RefreshCw, History, AlertCircle, FileDown
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -307,6 +307,8 @@ export default function ReportsPage() {
   const [loading,   setLoading]   = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [pdfBusy,   setPdfBusy]   = useState(false)
+  const reportRef = useRef(null)
 
   const fetchData = async () => {
     setLoading(true)
@@ -359,6 +361,89 @@ export default function ReportsPage() {
 
   const handlePrint = () => window.print()
 
+  // ── PDF EXPORT ──────────────────────────────────────────────────────────────
+  // Same html2canvas + jsPDF stack the receipt uses, so a downloaded report
+  // matches the printed one rather than being a second rendering path. Unlike the
+  // receipt this paginates onto standard A4: reports run to many pages, and one
+  // very tall custom-size page is useless to anyone printing or filing it.
+  const handlePdf = async () => {
+    const el = reportRef.current
+    if (!el || pdfBusy) return
+    setPdfBusy(true)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden' // keep sticky admin chrome from shifting the capture
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF }   = await import('jspdf')
+
+      const canvas = await html2canvas(el, {
+        scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+        // The letterhead and footer are .print-only, i.e. display:none on screen.
+        // Force them on inside the clone so the PDF carries the same header and
+        // footer as the printed copy.
+        onclone: (doc) => {
+          doc.querySelectorAll('.print-only').forEach(n => { n.style.display = 'block' })
+        },
+      })
+
+      const PAGE_W = 210, PAGE_H = 297, MARGIN = 10
+      const contentW = PAGE_W - MARGIN * 2
+      const contentH = PAGE_H - MARGIN * 2
+      const pxPerMm  = canvas.width / contentW
+      const maxSlice = Math.floor(contentH * pxPerMm)
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+
+      // Prefer to break on a fully white row, so a page break lands between table
+      // rows instead of bisecting one (or a totals block). Best-effort: if the
+      // pixels can't be read this way the ideal cut still yields a valid page.
+      let ctx = null
+      try { ctx = canvas.getContext('2d', { willReadFrequently: true }) } catch { ctx = null }
+      const isBlankRow = (y) => {
+        if (!ctx) return false
+        try {
+          const row = ctx.getImageData(0, y, canvas.width, 1).data
+          for (let i = 0; i < row.length; i += 4) {
+            if (row[i] < 248 || row[i + 1] < 248 || row[i + 2] < 248) return false
+          }
+          return true
+        } catch { return false }
+      }
+
+      const slice    = document.createElement('canvas')
+      const sliceCtx = slice.getContext('2d')
+      let y = 0
+      let page = 0
+      while (y < canvas.height) {
+        let h = Math.min(maxSlice, canvas.height - y)
+        if (h < 1) break
+        if (y + h < canvas.height) {
+          const floor = Math.floor(h * 0.85)
+          for (let probe = h; probe > floor; probe--) {
+            if (isBlankRow(y + probe)) { h = probe; break }
+          }
+        }
+        slice.width  = canvas.width
+        slice.height = h
+        sliceCtx.fillStyle = '#ffffff'
+        sliceCtx.fillRect(0, 0, slice.width, slice.height)
+        sliceCtx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h)
+        if (page > 0) pdf.addPage()
+        pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', MARGIN, MARGIN, contentW, h / pxPerMm)
+        page++
+        y += h
+      }
+
+      pdf.save(`vittorios-${tab}-${period}.pdf`)
+      toast.success('PDF downloaded')
+    } catch {
+      toast.error('PDF export failed — use Print instead')
+    } finally {
+      document.body.style.overflow = prevOverflow
+      setPdfBusy(false)
+    }
+  }
+
   return (
     <>
       <style>{PRINT_STYLES}</style>
@@ -366,7 +451,7 @@ export default function ReportsPage() {
       <div className="p-6 max-w-7xl mx-auto">
 
         {/* ── Page header ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-6" data-no-print>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6" data-no-print>
           <div>
             <div className="mb-3">
               <OnboardingReturnLink />
@@ -374,7 +459,16 @@ export default function ReportsPage() {
             <h1 className="text-2xl font-admin font-bold text-admin-900">Reports</h1>
             <p className="text-admin-400 text-xs font-admin mt-0.5">Analytics and data exports</p>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Wraps on narrow phones — the title plus three actions do not fit on
+              a single row at 360px. */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={handlePdf} disabled={pdfBusy || loading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-admin-200
+                text-admin-700 rounded-xl text-sm font-admin font-semibold
+                hover:bg-admin-50 disabled:opacity-50 transition-colors shadow-admin">
+              <FileDown size={15} />
+              {pdfBusy ? 'Generating…' : 'PDF'}
+            </button>
             <button onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-2.5 bg-white border border-admin-200
                 text-admin-700 rounded-xl text-sm font-admin font-semibold
@@ -428,7 +522,7 @@ export default function ReportsPage() {
         )}
 
         {/* ── Print area (wraps all reportable content) ─────────────── */}
-        <div className="print-area">
+        <div className="print-area" ref={reportRef}>
 
           <PrintHeader shopInfo={shopInfo} tab={tab} period={period} />
 

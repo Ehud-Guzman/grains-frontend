@@ -57,10 +57,18 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
       // ballooned to 20MB+ (the embedded logo photo doesn't compress well as PNG).
       const canvas  = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
       const imgData = canvas.toDataURL('image/jpeg', 0.92)
-      const pdfW    = 210 // A4 width mm
-      const pdfH    = (canvas.height * pdfW) / canvas.width
-      const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] })
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
+      // A4 width, and the page is cut to the receipt's own content height so a
+      // short receipt doesn't leave a half-empty A4 sheet. The margin matters:
+      // the image used to be drawn from 0,0 across the full page, so the rounded
+      // border and the KRA/eTIMS footer sat hard against the paper edge and were
+      // clipped by any printer with a non-zero unprintable border.
+      const PAGE_W  = 210   // A4 width in mm
+      const MARGIN  = 6     // mm of white on every side
+      const drawW   = PAGE_W - MARGIN * 2
+      const drawH   = (canvas.height * drawW) / canvas.width
+      const pageH   = drawH + MARGIN * 2
+      const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [PAGE_W, pageH] })
+      pdf.addImage(imgData, 'JPEG', MARGIN, MARGIN, drawW, drawH)
       pdf.save(`receipt-${order.orderRef}.pdf`)
     } catch {
       // silent — print fallback still available
@@ -166,12 +174,32 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
 
 // ── RECEIPT BODY ──────────────────────────────────────────────────────────────
 function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, shopInfo, kraPin, receiptFooterNote, cuSerialNumber }) {
-  const itemCount   = order.orderItems?.length || 0
   const hasDelivery = order.deliveryFee > 0
   const hasVat      = order.vatEnabled && order.vatAmount > 0
   const hasDiscount = order.couponDiscount > 0
   const invoiceNumber = order.etimsInvoiceNumber || order.orderRef
   const etimsConfirmed = order.etimsStatus === 'submitted' && order.etimsControlNumber
+
+  // ── WHAT THIS RECEIPT ACTUALLY REPEATS ──────────────────────────────────────
+  // orderRef, the order date and the delivery method/address were each printed
+  // two or three times (header, "Order Info" table, "Billed To", "Delivery"
+  // card), and the eTIMS invoice number fell back to orderRef — so with eTIMS
+  // off, "Invoice No." and "Reference" rendered the identical string on adjacent
+  // lines. Each fact now appears exactly once, in the place a reader looks for
+  // it, which also shortens the document (and the exported PDF) noticeably.
+  //
+  // Order Info therefore survives only for values that exist nowhere else: a
+  // real eTIMS invoice number, and a requested delivery date. When neither
+  // applies the column is dropped entirely (see hasOrderMeta) rather than being
+  // rendered as an empty gap next to "Billed To".
+  const hasEtimsInvoice = Boolean(order.etimsInvoiceNumber)
+  const orderMeta = [
+    ...(hasEtimsInvoice ? [['Invoice No.', invoiceNumber]] : []),
+    ...(order.preferredDeliveryDate
+      ? [['Requested', formatDate(order.preferredDeliveryDate)]]
+      : []),
+  ]
+  const hasOrderMeta = orderMeta.length > 0
 
   return (
     <div className="bg-white font-body" style={{ maxWidth: '680px', margin: '0 auto',
@@ -221,11 +249,14 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
           </div>
         </div>
 
-        {/* Receipt label + KRA PINs */}
+        {/* Receipt label + KRA PINs.
+            Labelled "Tax Invoice" only when the shop actually has a KRA PIN
+            configured — printing "Tax Invoice" on a business that is not
+            PIN/eTIMS registered is a compliance misstatement. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px' }}>
           <p style={{ color: '#833D19', fontSize: '10.5px', letterSpacing: '0.22em',
             textTransform: 'uppercase', margin: 0, fontWeight: 700 }}>
-            Tax Invoice
+            {kraPin ? 'Tax Invoice' : 'Receipt'}
           </p>
           <div style={{ textAlign: 'right' }}>
             {kraPin && (
@@ -247,8 +278,10 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
       {/* ── BODY ─────────────────────────────────────────────────── */}
       <div className="px-5 sm:px-10" style={{ paddingTop: '28px', paddingBottom: '28px' }}>
 
-        {/* Customer + Order meta — 2 columns from RECEIPT_WIDTH/print up, stacks on a narrow on-screen phone modal */}
-        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '20px 24px', marginBottom: '26px' }}>
+        {/* Billed To — two columns only when Order Info has something to show,
+            otherwise the grid collapses so there is no empty gap. */}
+        <div className={hasOrderMeta ? 'grid grid-cols-1 sm:grid-cols-2' : 'grid grid-cols-1'}
+          style={{ gap: '20px 24px', marginBottom: '26px' }}>
           <div>
             <p style={{ fontSize: '9px', fontWeight: 700, color: '#9CA3AF',
               letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '9px' }}>
@@ -257,13 +290,9 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
             <p style={{ fontWeight: 700, color: '#111827', fontSize: '13.5px', margin: '0 0 3px' }}>
               {customerName}
             </p>
-            <p style={{ color: '#4B5563', fontSize: '12px', margin: '0 0 3px' }}>{customerPhone}</p>
-            {order.deliveryAddress && (
-              <p style={{ color: '#6B7280', fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
-                {order.deliveryAddress}
-              </p>
-            )}
+            <p style={{ color: '#4B5563', fontSize: '12px', margin: 0 }}>{customerPhone}</p>
           </div>
+          {hasOrderMeta && (
           <div>
             <p style={{ fontSize: '9px', fontWeight: 700, color: '#9CA3AF',
               letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '9px' }}>
@@ -271,16 +300,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
             </p>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <tbody>
-                {[
-                  ['Invoice No.', invoiceNumber],
-                  ['Reference', order.orderRef],
-                  ['Date',      formatDate(order.createdAt)],
-                  ['Items',     `${itemCount} item${itemCount !== 1 ? 's' : ''}`],
-                  ['Delivery',  order.deliveryMethod === 'pickup' ? 'Pickup' : 'Home Delivery'],
-                  ...(order.preferredDeliveryDate
-                    ? [['Requested', formatDate(order.preferredDeliveryDate)]]
-                    : []),
-                ].map(([label, value]) => (
+                {orderMeta.map(([label, value]) => (
                   <tr key={label}>
                     <td style={{ color: '#6B7280', paddingBottom: '4px', paddingRight: '12px', whiteSpace: 'nowrap' }}>{label}</td>
                     <td style={{ color: '#111827', fontWeight: 600, paddingBottom: '4px', textAlign: 'right' }}>{value}</td>
@@ -289,6 +309,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
               </tbody>
             </table>
           </div>
+          )}
         </div>
 
         {/* Items table — overflow-x is a safety net for very narrow phones; not
@@ -378,7 +399,13 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
               title: 'Payment',
               lines: [
                 PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod,
-                order.paymentStatus === 'paid' ? 'Confirmed' : 'Pending',
+                // The tick used to live in a standalone "Payment confirmed" stamp
+                // below the totals, which just repeated the line above it. It
+                // moves here so there is one payment status on the receipt that
+                // reads correctly whether the order is paid or not. Kept as a
+                // text ✓ rather than the lucide CheckCircle icon, which
+                // html2canvas rasterizes unreliably in the exported PDF.
+                order.paymentStatus === 'paid' ? '✓ Confirmed' : 'Pending',
                 ...(isAdmin && order.paymentId?.mpesaTransactionId
                   ? [`Ref: ${order.paymentId.mpesaTransactionId}`] : [])
               ],
@@ -423,24 +450,6 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
               {order.specialInstructions}
             </p>
           </div>
-        )}
-
-        {/* Paid stamp — deliberately not display:'inline-flex'. html2canvas
-            (used for PDF export) silently drops this element's children when
-            the container is a flex box, even though the identical-looking
-            status badge above (a Tailwind flex pill) captures fine — narrowed
-            down by bisecting against a raw canvas dump. inline-block + margin
-            sidesteps it; also avoids the lucide-react CheckCircle icon, which
-            html2canvas rasterizes unreliably. */}
-        {order.paymentStatus === 'paid' && (
-          <span style={{ display: 'inline-block',
-            background: '#F0FDF4', border: '1px solid #DCFCE7', borderRadius: '999px',
-            padding: '5px 12px' }}>
-            <span style={{ color: '#16a34a', fontSize: '13px', fontWeight: 700, marginRight: '6px' }}>✓</span>
-            <span style={{ color: '#15803D', fontWeight: 600, fontSize: '12px' }}>
-              Payment confirmed
-            </span>
-          </span>
         )}
       </div>
 
