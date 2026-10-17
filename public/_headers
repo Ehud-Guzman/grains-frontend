@@ -5,6 +5,12 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# The HTML shell names the current hashed chunks, so it must never be served stale.
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+
 # connect-src note: this CSP is also served on /sw.js, and fetch() calls made
 # INSIDE the service worker are checked against connect-src — not img-src —
 # even when re-fetching an <img>. Any cross-origin host the SW runtime-caches
