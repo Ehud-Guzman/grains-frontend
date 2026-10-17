@@ -3,7 +3,8 @@ import { useShopInfo } from '../../context/AppSettingsContext'
 
 export default function CTABanner() {
   const shopInfo = useShopInfo()
-  const wholesaleWhatsapp = '254799031449'
+  // The branch's own WhatsApp number; the old hard-coded one sent every branch's wholesale enquiries to one phone.
+  const wholesaleWhatsapp = (shopInfo.whatsapp || shopInfo.phone || '').replace(/\D/g, '')
 
   return (
     <section className="relative overflow-hidden bg-earth-50 border-y border-earth-200 py-16">

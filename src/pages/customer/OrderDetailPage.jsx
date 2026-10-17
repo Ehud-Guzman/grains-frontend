@@ -14,6 +14,8 @@ import Receipt from '../../components/orders/Receipt'
 import PayNowPanel from '../../components/orders/PayNowPanel'
 import OrderTotals from '../../components/orders/OrderTotals'
 import { paymentStatusDisplay } from '../../utils/orderDisplay'
+import WhatsAppButton from '../../components/ui/WhatsAppButton'
+import { shopOrderMessage } from '../../utils/whatsapp'
 
 const STATUS_STEPS = ['pending', 'approved', 'preparing', 'out_for_delivery', 'completed']
 
@@ -344,6 +346,10 @@ export default function CustomerOrderDetailPage() {
               </button>
             )
           )}
+          <WhatsAppButton phone={shopInfo.whatsapp || shopInfo.phone}
+            message={shopOrderMessage({ ref: order.orderRef, total: order.total })}
+            label="Ask about this order on WhatsApp" size={16}
+            className="w-full py-3.5 border-2 border-green-200 text-green-700 rounded-xl text-sm font-body hover:bg-green-50" />
           <a href={`tel:${shopInfo.phone}`}
             className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-700
               text-white rounded-xl text-sm font-body font-semibold hover:bg-brand-800

@@ -5,6 +5,8 @@ import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
 import { CollectionBanner, NavigateLink } from '../../components/driver/DeliveryHelpers'
+import WhatsAppButton from '../../components/ui/WhatsAppButton'
+import { shopOrderMessage, customerStatusMessage, driverArrivalMessage } from '../../utils/whatsapp'
 import { flushCompletions, pendingOrderIds } from '../../utils/offlineQueue'
 import toast from 'react-hot-toast'
 
@@ -64,6 +66,8 @@ function OrderRow({ order, onComplete, onQueued, isPending }) {
               text-green-700 rounded-lg text-xs font-admin font-semibold hover:bg-green-100 transition-colors">
             <Phone size={11} /> Call
           </a>
+          <WhatsAppButton phone={customer.phone} message={driverArrivalMessage(order)} label="WhatsApp" size={11}
+            className="ml-2 px-3 py-1.5 bg-white border border-green-200 text-green-700 rounded-lg text-xs font-admin hover:bg-green-50" />
         </div>
       )}
 

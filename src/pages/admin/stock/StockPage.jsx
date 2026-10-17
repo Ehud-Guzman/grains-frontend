@@ -7,6 +7,7 @@ import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 import SearchAutocomplete from '../../../components/ui/SearchAutocomplete'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
+import RunningOutCard from './RunningOutCard'
 
 function SkeletonRow() {
   return (
@@ -118,6 +119,8 @@ export default function StockPage() {
           <RefreshCw size={14} /> Refresh
         </button>
       </div>
+
+      <RunningOutCard />
 
       {/* ── Filters ────────────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-4 mb-4 space-y-3">

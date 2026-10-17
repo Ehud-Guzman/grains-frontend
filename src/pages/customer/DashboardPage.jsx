@@ -15,6 +15,7 @@ import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingE
 import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
+import { usualOrder } from '../../utils/restock'
 
 function StatusPill({ status, deliveryMethod }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
@@ -133,6 +134,8 @@ export default function CustomerDashboardPage() {
     } finally { setCancelling(null) }
   }
 
+  // Only on the unfiltered first page, otherwise a search would change what "usual" means.
+  const usual = page === 1 && !search ? usualOrder(orders) : null
   const activeOrders = orders.filter(o => !['completed', 'rejected', 'cancelled'].includes(o.status))
   const pastOrders   = orders.filter(o =>  ['completed', 'rejected', 'cancelled'].includes(o.status))
 
@@ -384,6 +387,32 @@ export default function CustomerDashboardPage() {
           </div>
         ) : (
           <div className="space-y-5" data-tour="customer-orders-area">
+
+            {/* ── Your usual order ───────────────────────────────────── */}
+            {usual && (
+              <div data-testid="usual-order"
+                className={`rounded-2xl border p-4 ${usual.due ? 'border-brand-300 bg-brand-50' : 'border-earth-100 bg-white shadow-warm'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-body font-semibold uppercase tracking-wide text-brand-700">
+                      {usual.due ? 'Time to restock?' : 'Your usual order'}
+                    </p>
+                    <p className="font-body font-semibold text-earth-900 text-sm mt-1 truncate">
+                      {usual.order.orderItems.slice(0, 3).map(i => `${i.quantity}× ${i.productName}`).join(', ')}
+                      {usual.order.orderItems.length > 3 && ` +${usual.order.orderItems.length - 3} more`}
+                    </p>
+                    <p className="text-xs font-body text-earth-500 mt-0.5">
+                      {usual.daysSince === 0 ? 'Ordered today' : `Last ordered ${usual.daysSince} day${usual.daysSince === 1 ? '' : 's'} ago`}
+                      {usual.intervalDays ? ` · you usually order every ~${usual.intervalDays} days` : ''}
+                    </p>
+                  </div>
+                  <button onClick={() => handleReorder(usual.order)}
+                    className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-700 text-white rounded-xl text-xs font-body font-semibold hover:bg-brand-800 transition-colors min-h-[40px]">
+                    <RotateCcw size={13} /> Order again
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* ── Active orders ──────────────────────────────────────── */}
             {activeOrders.length > 0 && (

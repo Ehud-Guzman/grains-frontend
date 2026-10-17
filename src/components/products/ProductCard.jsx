@@ -4,7 +4,7 @@ import { ShoppingCart, Eye, Tag, Check, List } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
-import { formatKES, getFromPrice, getStockStatus } from '../../utils/helpers'
+import { formatKES, getFromPrice, getStockStatus, hasVolumePricing } from '../../utils/helpers'
 import { STOCK_CONFIG as stockConfig } from '../../utils/constants'
 import { getOptimizedImageUrl } from '../../utils/image'
 import AddToListModal from '../lists/AddToListModal'
@@ -57,6 +57,11 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
             font-medium px-2.5 py-1 rounded-full border border-white/50 shadow-sm">
             {product.category}
           </span>
+          {hasVolumePricing(product) && (
+            <span className="mt-1.5 inline-block bg-green-600 text-white text-xs font-body font-semibold px-2.5 py-1 rounded-full shadow-sm">
+              Bulk discount
+            </span>
+          )}
         </div>
 
         {/* Stock badge (not in stock) */}

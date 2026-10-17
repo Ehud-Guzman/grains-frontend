@@ -8,6 +8,8 @@ import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
 import { CollectionBanner, NavigateLink } from '../../components/driver/DeliveryHelpers'
+import WhatsAppButton from '../../components/ui/WhatsAppButton'
+import { shopOrderMessage, customerStatusMessage, driverArrivalMessage } from '../../utils/whatsapp'
 import toast from 'react-hot-toast'
 
 // ─── AVATAR UPLOADER (PREMIUM POLISH) ──────────────────────────────────────────
@@ -138,6 +140,8 @@ function OrderCard({ order, onComplete }) {
           >
             {customer.phone}
           </a>
+          <WhatsAppButton phone={customer.phone} message={driverArrivalMessage(order)} label="WhatsApp" size={12}
+            className="ml-2 px-2.5 py-1 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-admin hover:bg-green-100" />
         </div>
       )}
 

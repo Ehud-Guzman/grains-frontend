@@ -5,6 +5,8 @@ import { CheckCircle, AlertTriangle, Package, Phone, Copy, Check, ArrowRight, Ma
 import { formatKES } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import { useShopInfo } from '../../context/AppSettingsContext'
+import WhatsAppButton from '../../components/ui/WhatsAppButton'
+import { shopOrderMessage, customerStatusMessage, driverArrivalMessage } from '../../utils/whatsapp'
 
 export function OrderConfirmPage() {
   const shopInfo = useShopInfo()
@@ -333,6 +335,13 @@ export function OrderConfirmPage() {
               Track This Order
               <ArrowRight size={15} className="ml-auto" />
             </Link>
+          )}
+
+          {ref && (
+            <WhatsAppButton phone={shopInfo.whatsapp || shopInfo.phone}
+              message={shopOrderMessage({ ref, total, name })}
+              label="Send this order to us on WhatsApp" size={17}
+              className="w-full py-3.5 bg-green-600 text-white rounded-xl text-sm font-body hover:bg-green-700" />
           )}
 
           <Link to="/shop"

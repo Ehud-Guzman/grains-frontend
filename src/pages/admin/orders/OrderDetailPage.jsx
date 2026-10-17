@@ -18,6 +18,9 @@ import { formatKES, formatDate, getStatusLabel, timeAgo } from '../../../utils/h
 import { PAYMENT_LABELS } from '../../../utils/constants'
 import Spinner from '../../../components/ui/Spinner'
 import toast from 'react-hot-toast'
+import WhatsAppButton from '../../../components/ui/WhatsAppButton'
+import { customerStatusMessage } from '../../../utils/whatsapp'
+import { useShopInfo } from '../../../context/AppSettingsContext'
 
 // ── STATUS CONFIG ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -72,6 +75,7 @@ export default function AdminOrderDetailPage() {
   const canConfirmPayment = ['supervisor', 'admin'].includes(user?.role)
   const { markChecklistItem, markMilestone } = useOnboarding()
   const { id } = useParams()
+  const shopInfo = useShopInfo()
   const [order, setOrder]               = useState(null)
   const [loading, setLoading]           = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -651,6 +655,10 @@ export default function AdminOrderDetailPage() {
                       className="text-brand-600 hover:text-brand-700 hover:underline transition-colors">
                       {customer.phone}
                     </a>
+                    <WhatsAppButton phone={customer.phone}
+                      message={customerStatusMessage(order, shopInfo?.name)}
+                      label="WhatsApp" size={12}
+                      className="ml-3 px-2.5 py-1 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-admin hover:bg-green-100" />
                   </DetailRow>
                 )}
 

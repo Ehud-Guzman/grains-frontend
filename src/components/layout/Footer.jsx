@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Phone, Mail, Clock, MapPin, MessageCircle, ArrowUpRight } from 'lucide-react'
 import { useShopInfo } from '../../context/AppSettingsContext'
+import InstallAppButton from '../ui/InstallAppButton'
 
 const quickLinks = [
   { to: '/shop',     label: 'Shop All Products' },
@@ -56,6 +57,7 @@ export default function Footer() {
                 Chat on WhatsApp
               </a>
             )}
+            <div className="mt-3"><InstallAppButton /></div>
           </div>
 
           {/* ── Quick links ─────────────────────────────────────────── */}

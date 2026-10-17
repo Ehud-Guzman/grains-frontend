@@ -12,6 +12,7 @@ export const adminReportService = {
   getOnboarding: () => api.get('/admin/reports/onboarding'),
   getMargins: (params) => api.get('/admin/reports/margins', { params }),
   getRiders: (params) => api.get('/admin/reports/riders', { params }),
+  getCashUp: (params) => api.get('/admin/reports/cash-up', { params }),
   getVat: (params) => api.get('/admin/reports/vat', { params }),
   getCustomerStatement: (customerId, params) => api.get(`/admin/reports/customer-statement/${customerId}`, { params }),
   exportCSV: (type, params) => api.get(`/admin/reports/export/${type}`, {

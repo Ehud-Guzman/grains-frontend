@@ -61,3 +61,25 @@ describe('price per kilo', () => {
     expect(getFromPrice({ varieties: [{ packaging: [{ size: 'Bulk', quoteOnly: true }] }] })).toBe('Quote only')
   })
 })
+
+import { nextTierNudge, hasVolumePricing } from './helpers'
+
+describe('volume pricing nudges', () => {
+  const item = (quantity) => ({ quantity, priceKES: 1000, pricingTiers: [{ minQty: 5, priceKES: 950 }, { minQty: 10, priceKES: 900 }] })
+
+  it('points at the next tier that actually lowers the price', () => {
+    expect(nextTierNudge(item(3))).toEqual({ moreQty: 2, minQty: 5, unitPrice: 950, saving: 250 })
+    expect(nextTierNudge(item(5))).toEqual({ moreQty: 5, minQty: 10, unitPrice: 900, saving: 500 })
+  })
+
+  it('is null at the best tier or with no tiers', () => {
+    expect(nextTierNudge(item(10))).toBeNull()
+    expect(nextTierNudge({ quantity: 1, priceKES: 100, pricingTiers: [] })).toBeNull()
+  })
+
+  it('flags products that have volume pricing, ignoring quote-only packs', () => {
+    expect(hasVolumePricing({ varieties: [{ packaging: [{ pricingTiers: [{ minQty: 5, priceKES: 1 }] }] }] })).toBe(true)
+    expect(hasVolumePricing({ varieties: [{ packaging: [{ quoteOnly: true, pricingTiers: [{ minQty: 5, priceKES: 1 }] }] }] })).toBe(false)
+    expect(hasVolumePricing({ varieties: [{ packaging: [{ pricingTiers: [] }] }] })).toBe(false)
+  })
+})

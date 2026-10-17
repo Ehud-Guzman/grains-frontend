@@ -9,6 +9,8 @@ import OrderTotals from '../../components/orders/OrderTotals'
 import { paymentStatusDisplay } from '../../utils/orderDisplay'
 import { getRecentOrders } from '../../utils/recentOrders'
 import { useShopInfo } from '../../context/AppSettingsContext'
+import WhatsAppButton from '../../components/ui/WhatsAppButton'
+import { shopOrderMessage } from '../../utils/whatsapp'
 import { formatKES, formatDate, getStatusLabel, normalizeKenyanPhone } from '../../utils/helpers'
 
 // ── STATUS CONFIG ─────────────────────────────────────────────────────────────
@@ -329,6 +331,10 @@ export default function TrackOrderPage() {
                   <p className="font-body font-medium text-earth-700 text-sm">Questions about your order?</p>
                   <p className="text-earth-400 text-xs mt-0.5">Our team is available {shopInfo.hours}</p>
                 </div>
+                <WhatsAppButton phone={shopInfo.whatsapp || shopInfo.phone}
+                  message={shopOrderMessage({ ref: order.orderRef, total: order.total })}
+                  label="WhatsApp" size={15}
+                  className="px-5 py-2.5 border border-green-200 bg-white text-green-700 rounded-xl text-sm font-body hover:bg-green-50 whitespace-nowrap flex-shrink-0" />
                 <a href={`tel:${shopInfo.phone}`}
                   className="flex items-center gap-2 px-5 py-2.5 bg-brand-700 text-white
                     rounded-xl text-sm font-body font-semibold hover:bg-brand-800 transition-colors

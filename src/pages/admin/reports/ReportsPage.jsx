@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Download, TrendingUp, TrendingDown, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
-  Percent, Bike, Receipt, RefreshCw, History, AlertCircle, FileDown
+  Percent, Bike, Receipt, RefreshCw, History, AlertCircle, FileDown, Wallet
 } from 'lucide-react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -13,6 +13,7 @@ import { useShopInfo } from '../../../context/AppSettingsContext'
 import { useAuth } from '../../../context/AuthContext'
 import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import Spinner from '../../../components/ui/Spinner'
+import CashUpTab from './CashUpTab'
 import toast from 'react-hot-toast'
 
 const EXPORT_ROLES = ['admin', 'superadmin'] // must mirror requireMinRole('admin') on /export/:type
@@ -28,6 +29,7 @@ const TABS = [
   { key: 'orders',    label: 'Orders',    icon: ShoppingCart },
   { key: 'margins',   label: 'Margins',   icon: Percent      },
   { key: 'riders',    label: 'Riders',    icon: Bike         },
+  { key: 'cash-up',   label: 'Cash-up',   icon: Wallet       },
   { key: 'onboarding', label: 'Onboarding', icon: LifeBuoy   },
   { key: 'vat',        label: 'VAT',        icon: Receipt    },
 ]
@@ -327,6 +329,7 @@ export default function ReportsPage() {
       else if (tab === 'orders')    res = await adminReportService.getOrders(params)
       else if (tab === 'margins')   res = await adminReportService.getMargins(params)
       else if (tab === 'riders')    res = await adminReportService.getRiders(params)
+      else if (tab === 'cash-up')   res = await adminReportService.getCashUp(params)
       else if (tab === 'onboarding') res = await adminReportService.getOnboarding()
       else if (tab === 'vat')        res = await adminReportService.getVat(params)
       setData(res.data.data)
@@ -347,6 +350,7 @@ export default function ReportsPage() {
         customers: 'customers', orders: 'orders', onboarding: 'onboarding',
         vat: 'vat', margins: 'margins', riders: 'riders'
       }
+      if (!typeMap[tab]) { toast('Use Print or PDF for this report'); return }
       const res = await adminReportService.exportCSV(typeMap[tab], { period })
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }))
       const a   = document.createElement('a')
@@ -1025,6 +1029,8 @@ export default function ReportsPage() {
                   )}
                 </>
               )}
+
+              {tab === 'cash-up' && <CashUpTab data={data} />}
 
               {tab === 'onboarding' && (
                 <>

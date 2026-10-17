@@ -9,7 +9,10 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en-KE",
-  "categories": ["shopping", "food"],
+  "categories": [
+    "shopping",
+    "food"
+  ],
   "icons": [
     {
       "src": "/icons/icon-72.png",
@@ -66,30 +69,24 @@
       "short_name": "Shop",
       "description": "Browse our product catalogue",
       "url": "/shop",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Track Order",
       "short_name": "Track",
       "description": "Track your order status",
       "url": "/track",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home.jpg",
-      "sizes": "390x844",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "Homepage"
-    },
-    {
-      "src": "/screenshots/shop.jpg",
-      "sizes": "390x844",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "Product Catalogue"
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }

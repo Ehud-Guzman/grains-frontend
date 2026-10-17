@@ -11,7 +11,7 @@ import { ContextualTip } from '../../components/onboarding/OnboardingEnhancement
 import AddToListModal from '../../components/lists/AddToListModal'
 import MinimumOrderNotice from '../../components/ui/MinimumOrderNotice'
 import QuantityStepper from '../../components/ui/QuantityStepper'
-import { formatKES, getCartUnitPrice } from '../../utils/helpers'
+import { formatKES, getCartUnitPrice, nextTierNudge } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
 export default function CartPage() {
@@ -120,6 +120,17 @@ export default function CartPage() {
                       <span className="text-green-600 ml-1.5">volume price</span>
                     )}
                   </p>
+
+                  {(() => {
+                    const nudge = nextTierNudge(item)
+                    if (!nudge || (typeof item.stock === 'number' && item.quantity + nudge.moreQty > item.stock)) return null
+                    return (
+                      <button type="button" onClick={() => updateQuantity(item.key, nudge.minQty)}
+                        className="mb-2 text-left text-xs font-body text-green-700 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1.5 hover:bg-green-100 transition-colors">
+                        Add {nudge.moreQty} more to pay {formatKES(nudge.unitPrice)} each — save about {formatKES(nudge.saving)}
+                      </button>
+                    )
+                  })()}
 
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                     {/* Qty controls — typeable, with bulk quick-adds */}

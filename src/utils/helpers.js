@@ -160,6 +160,28 @@ export const isValidKenyanPhone = (phone) => {
 
 // Effective unit price for a cart item, honouring volume pricing tiers so the
 // cart/checkout totals match what the backend will actually charge.
+// The next volume tier above the current quantity, if buying more would lower the unit price.
+// Returns { moreQty, minQty, unitPrice, saving } where saving compares buying minQty at the price
+// the customer pays now against buying it at the tier price.
+export const nextTierNudge = (item) => {
+  const tiers = item.pricingTiers || []
+  const current = getCartUnitPrice(item)
+  const next = [...tiers]
+    .filter(t => t.minQty > item.quantity && t.priceKES < current)
+    .sort((a, b) => a.minQty - b.minQty)[0]
+  if (!next) return null
+  return {
+    moreQty: next.minQty - item.quantity,
+    minQty: next.minQty,
+    unitPrice: next.priceKES,
+    saving: Math.round((current - next.priceKES) * next.minQty),
+  }
+}
+
+// True when any sellable pack of the product has volume pricing — drives the "bulk discount" badge.
+export const hasVolumePricing = (product) =>
+  !!product?.varieties?.some(v => v.packaging?.some(p => !p.quoteOnly && p.pricingTiers?.length > 0))
+
 export const getCartUnitPrice = (item) => {
   const tiers = item.pricingTiers || []
   if (tiers.length === 0) return item.priceKES
