@@ -89,7 +89,7 @@ export function OrderConfirmPage() {
                   </>
                 : <>
                     {name ? `Thank you, ${name.split(' ')[0]}!` : 'Thank you!'}{' '}
-                    We'll review and confirm within <span className="text-white font-semibold">2 hours</span>.
+                    We'll review your order and confirm it with you shortly.
                   </>}
           </p>
         </div>
@@ -192,9 +192,9 @@ export function OrderConfirmPage() {
             <div>
               <p className="text-sm font-body font-semibold text-amber-800">Paying on Pickup</p>
               <p className="text-amber-700 text-xs font-body mt-0.5 leading-relaxed">
-                You chose to pay when collecting your order instead of M-Pesa.
-                Our team will confirm this with you when they review the order —
-                keep your reference <strong>{ref}</strong> handy.
+                Your order is now set to {paymentMethod === 'delivery' ? 'pay on delivery' : 'pay when you collect'} instead of M-Pesa.
+                Our team will confirm it when they review the order — keep your
+                reference <strong>{ref}</strong> handy.
               </p>
             </div>
           </div>
@@ -296,7 +296,7 @@ export function OrderConfirmPage() {
                 {
                   icon: Phone,
                   color: 'bg-amber-100 text-amber-600',
-                  title: 'We\'ll confirm within 2 hours',
+                  title: 'We\'ll confirm your order',
                   desc: 'Expect a call or WhatsApp from our team'
                 },
                 {

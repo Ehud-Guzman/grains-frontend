@@ -89,6 +89,7 @@ export default function CataloguePage() {
   const [products, setProducts]         = useState([])
   const [pagination, setPagination]     = useState(null)
   const [loading, setLoading]           = useState(true)
+  const [loadError, setLoadError]       = useState(false)
   const [searchInput, setSearchInput]   = useState(searchParams.get('search') || '')
   const [search, setSearch]             = useState(searchParams.get('search') || '')
   const [filtersOpen, setFiltersOpen]   = useState(false)
@@ -110,6 +111,7 @@ export default function CataloguePage() {
   const fetchProducts = useCallback(async () => {
     const seq = ++fetchSeq.current
     setLoading(true)
+    setLoadError(false)
     try {
       const params = { page, limit: 12 }
       if (filters.category)      params.category      = filters.category
@@ -123,7 +125,9 @@ export default function CataloguePage() {
       setProducts(res.data.data || [])
       setPagination(res.data.pagination)
     } catch {
-      if (seq === fetchSeq.current) setProducts([])
+      // A failed request is not an empty shop — say so and offer a retry (a cold server
+      // looked exactly like "No products found").
+      if (seq === fetchSeq.current) { setProducts([]); setLoadError(true) }
     }
     finally {
       if (seq === fetchSeq.current) setLoading(false)
@@ -307,6 +311,16 @@ export default function CataloguePage() {
             {loading ? (
               <div className={`grid gap-4 ${gridClass}`}>
                 {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} compact={compact} />)}
+              </div>
+            ) : loadError ? (
+              <div role="alert" className="text-center py-20">
+                <h3 className="font-display text-xl text-earth-700 font-semibold mb-2">
+                  We couldn't load the products
+                </h3>
+                <p className="text-earth-600 text-sm font-body mb-6">
+                  Check your connection — the shop may also be waking up. This usually clears in a few seconds.
+                </p>
+                <button type="button" onClick={fetchProducts} className="btn-primary">Try again</button>
               </div>
             ) : products.length === 0 ? (
               <div className="text-center py-20">

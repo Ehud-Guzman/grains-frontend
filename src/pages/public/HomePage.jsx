@@ -298,15 +298,9 @@ function FarmStorySection() {
   return (
     <section
       id="farm-story"
-      className="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-900
+      className="relative overflow-hidden bg-brand-800
         py-14 sm:py-20 scroll-mt-32"
     >
-      {/* Warm glows — echo the hero so the page bookends */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-500/15 rounded-full
-        blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-700/20 rounded-full
-        blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-
       <div className="container-page relative">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
@@ -420,7 +414,7 @@ function PriceTicker({ products, priceChanges }) {
         <div style={{ perspective: '400px' }}>
           <div className={animCls} style={{ animationDelay: '0ms' }}>
             <div className="flex items-center gap-2">
-              <p className="text-white/90 text-xs font-body font-semibold leading-none">
+              <p className="text-white text-sm font-body font-semibold leading-none">
                 {product.name}
               </p>
               {change && (
@@ -432,8 +426,8 @@ function PriceTicker({ products, priceChanges }) {
           </div>
         </div>
         <Link to="/shop"
-          className="flex-shrink-0 text-[10px] font-body text-white/50 hover:text-white/90 transition-colors flex items-center gap-1">
-          All prices <ArrowRight size={10} />
+          className="flex-shrink-0 text-xs font-body text-white/75 hover:text-white transition-colors flex items-center gap-1 min-h-[32px]">
+          All prices <ArrowRight size={12} />
         </Link>
       </div>
 
@@ -443,8 +437,8 @@ function PriceTicker({ products, priceChanges }) {
           <div key={i} style={{ perspective: '400px' }}>
             <div className={animCls} style={{ animationDelay: `${i * COL_STAGGER}ms` }}>
               <Link to={`/shop/${product._id}`} className="group block">
-                <p className="text-white/60 text-[10px] font-body leading-none">{pkg.size}</p>
-                <span className="text-brand-300 font-display font-bold text-base leading-none group-hover:text-brand-200 transition-colors">
+                <p className="text-white/80 text-xs font-body leading-none mb-1">{pkg.size}</p>
+                <span className="text-brand-300 font-display font-bold text-lg leading-none group-hover:text-brand-200 transition-colors">
                   {formatKES(pkg.priceKES)}
                 </span>
               </Link>
@@ -538,21 +532,10 @@ export default function HomePage() {
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       {/* Single-family gradient — terracotta→gray mixes pass through a muddy
           desaturated brown, so dark sections stay inside the brand scale */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-900 to-brand-800">
-
-        {/* Subtle dot texture */}
-        <div className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'1\'/%3E%3Ccircle cx=\'33\' cy=\'33\' r=\'1\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
-
-        {/* Warm glow — top-right */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-500/20 rounded-full
-          blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        {/* Warm glow — top-left, softens the dark corner */}
-        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-brand-700/25 rounded-full
-          blur-3xl -translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+      <section className="relative overflow-hidden bg-brand-800">
 
         <div className="container-page pt-2 pb-8 sm:pt-4 sm:pb-12 relative">
-          <div className="grid lg:grid-cols-2 gap-8 xl:gap-12 items-start" data-tour="public-home-hero">
+          <div className="grid lg:grid-cols-2 gap-8 xl:gap-12 items-start lg:items-center" data-tour="public-home-hero">
 
             {/* Left: text + CTAs */}
             <div>
@@ -574,7 +557,7 @@ export default function HomePage() {
 
                 return (
                   <div className="mb-12 pb-4 border-b border-white/10">
-                    <p className="text-white/60 text-[10px] font-body uppercase tracking-[0.2em] mb-2">
+                    <p className="text-white/75 text-xs font-body uppercase tracking-[0.2em] mb-2.5">
                       Today's Prices
                     </p>
                     <PriceTicker products={pulseProducts} priceChanges={priceChanges} />
@@ -623,14 +606,9 @@ export default function HomePage() {
 
             {/* Right: 2×2 editorial image mosaic */}
             <div className="hidden lg:block relative select-none">
-              {/* Blend edges into the hero background */}
-              <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-brand-900/30 to-transparent z-10 pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-brand-900/70 to-transparent z-10 pointer-events-none" />
-              <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-brand-900/50 to-transparent z-10 pointer-events-none" />
-
               {/* Journey teaser — tiles read as the farm-to-sack sequence and
                   scroll to the full story section below */}
-              <p className="relative z-20 mb-2.5 text-[10px] font-body font-semibold uppercase tracking-[0.2em] text-white/50">
+              <p className="relative z-20 mb-2.5 text-xs font-body font-semibold uppercase tracking-[0.2em] text-white/70">
                 From our farm to your sack
               </p>
               <div className="grid grid-cols-2 gap-2.5">
@@ -644,7 +622,7 @@ export default function HomePage() {
                   <a
                     key={i}
                     href="#farm-story"
-                    className={`relative block overflow-hidden rounded-2xl border border-white/8 group ${i % 2 === 1 ? 'mt-6' : ''}`}
+                    className={`relative block overflow-hidden rounded-2xl border border-white/10 group ${i % 2 === 1 ? 'mt-6' : ''}`}
                     style={{ aspectRatio: '1/1' }}
                   >
                     <img
@@ -659,10 +637,8 @@ export default function HomePage() {
                       loading="lazy"
                       decoding="async"
                     />
-                    {/* Depth gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                    {/* Subtle warm tint overlay */}
-                    <div className="absolute inset-0 bg-brand-900/15 mix-blend-multiply" />
+                    {/* Label legibility only — no colour tint, so the photos keep their own colour */}
+                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/55 to-transparent" />
                     {/* Step label */}
                     <div className="absolute bottom-3 left-3.5 flex items-baseline gap-2">
                       <span className="font-display font-bold text-brand-300 text-xs leading-none">{num}</span>

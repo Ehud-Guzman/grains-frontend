@@ -135,7 +135,7 @@ const fieldClass = `w-full border border-admin-200 rounded-xl px-3.5 py-2.5 text
 
 const EMPTY_FORM = {
   code: '', discountType: 'percentage', discountValue: '', minOrderValue: '',
-  usageLimit: '', expiresAt: '', isActive: true, assignedTo: '',
+  usageLimit: '', perCustomerLimit: '', expiresAt: '', isActive: true, assignedTo: '',
 }
 
 function CouponModal({ coupon, onClose, onSaved }) {
@@ -144,6 +144,7 @@ function CouponModal({ coupon, onClose, onSaved }) {
     ...coupon,
     expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : '',
     assignedTo: coupon.assignedTo?._id || coupon.assignedTo || '',
+    perCustomerLimit: coupon.perCustomerLimit ?? '',
   } : EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -158,6 +159,7 @@ function CouponModal({ coupon, onClose, onSaved }) {
         discountValue: Number(form.discountValue),
         minOrderValue: Number(form.minOrderValue) || 0,
         usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
+        perCustomerLimit: form.perCustomerLimit ? Number(form.perCustomerLimit) : null,
         expiresAt: form.expiresAt || null,
         assignedTo: form.assignedTo || null,
       }
@@ -228,6 +230,11 @@ function CouponModal({ coupon, onClose, onSaved }) {
               <label className="block text-xs font-admin font-semibold text-admin-600 mb-1.5 uppercase tracking-wide">Expires</label>
               <input className={fieldClass} type="date" value={form.expiresAt}
                 onChange={e => set('expiresAt', e.target.value)} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-admin font-semibold text-admin-600 mb-1.5 uppercase tracking-wide">Uses per customer</label>
+              <input className={fieldClass} type="number" min="1" placeholder="Blank = no per-customer limit (1 = once each)"
+                value={form.perCustomerLimit} onChange={e => set('perCustomerLimit', e.target.value)} />
             </div>
           </div>
 

@@ -60,10 +60,13 @@ function HelpCenter() {
       <button
         onClick={openHelpCenter}
         style={{ bottom: `${20 + fabLift}px` }}
-        className="fixed right-5 z-[110] inline-flex items-center gap-2 rounded-full border border-brand-300 bg-white px-4 py-3 text-sm font-body font-semibold text-brand-700 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all hover:-translate-y-0.5 hover:bg-brand-50"
+        aria-label="Help"
+        className="fixed right-3 sm:right-5 z-[110] inline-flex items-center justify-center gap-2 rounded-full border border-brand-300 bg-white
+          w-12 h-12 sm:w-auto sm:h-auto sm:px-4 sm:py-3 text-sm font-body font-semibold text-brand-700
+          shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all hover:-translate-y-0.5 hover:bg-brand-50"
       >
-        <LifeBuoy size={16} />
-        Help
+        <LifeBuoy size={18} aria-hidden="true" />
+        <span className="hidden sm:inline">Help</span>
       </button>
 
       {helpCenterOpen && (

@@ -80,7 +80,7 @@ function AllCategoriesMenu({ categories }) {
           transition-all ${
             open
               ? 'bg-brand-700 text-white'
-              : 'bg-brand-600 text-white hover:bg-brand-700'
+              : 'bg-brand-700 text-white hover:bg-brand-800'
           }`}
       >
         <LayoutGrid size={15} />
@@ -267,7 +267,7 @@ function BranchSwitcher({ inline = false }) {
 // ── TopBar ────────────────────────────────────────────────────────────────────
 function TopBar({ shopInfo }) {
   return (
-    <div className="bg-gradient-to-r from-brand-800 to-brand-700 hidden sm:block">
+    <div className="bg-brand-800 hidden sm:block">
       <div className="container-page">
         <div className="flex items-center justify-between h-8 text-[11px] font-body text-brand-200">
 
@@ -520,8 +520,8 @@ export default function Navbar() {
                   onClick={() => openCart?.()}
                   aria-label="Open cart"
                   className={`relative flex items-center gap-2.5 pl-3 pr-4 py-2 rounded-xl
-                    bg-brand-600 text-white transition-all
-                    active:scale-[0.97] group shadow-md hover:bg-brand-700
+                    bg-brand-700 text-white transition-all
+                    active:scale-[0.97] group shadow-md hover:bg-brand-800
                     ${itemCount > 0 ? 'ring-2 ring-brand-300 ring-offset-1' : ''}`}
                 >
                   <div className="relative">
@@ -653,7 +653,7 @@ export default function Navbar() {
           >
             {/* Drawer header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-brand-700
-              bg-gradient-to-r from-brand-800 to-brand-600">
+              bg-brand-800">
               <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3">
                 <img src="/Vittorios-logo.jpeg" alt={shopInfo.name}
                   className="w-10 h-10 rounded-xl object-cover border-2 border-brand-400 shadow-sm" />

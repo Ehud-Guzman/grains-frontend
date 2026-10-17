@@ -3,7 +3,7 @@ import Seo from '../../components/ui/Seo'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useParams, Link } from 'react-router-dom'
 import {
-  ArrowLeft, Plus, Minus, ShoppingCart, Phone, Check, Tag, ChevronRight,
+  ArrowLeft, ShoppingCart, Phone, Check, Tag, ChevronRight,
   Bell, BellOff, TrendingDown, Clock, List
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -12,11 +12,12 @@ import { customerAlertService } from '../../services/customerAlert.service'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
-import { formatKES, getPriceRange, truncate } from '../../utils/helpers'
+import { formatKES, getPriceRange, pricePerKg, truncate } from '../../utils/helpers'
 import { SITE_URL } from '../../utils/site'
 import { STOCK_CONFIG, CART_FEEDBACK_DELAY_MS } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import AddToListModal from '../../components/lists/AddToListModal'
+import QuantityStepper from '../../components/ui/QuantityStepper'
 import { getOptimizedImageUrl } from '../../utils/image'
 import { trackViewItem } from '../../utils/analytics'
 
@@ -100,8 +101,13 @@ export default function ProductPage() {
   const [alertLoading, setAlertLoading] = useState(false)
   const [showAddToList, setShowAddToList] = useState(false)
 
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+
   useEffect(() => {
+    let cancelled = false   // a slow response for the previous product must not overwrite this one
     setLoading(true)
+    setLoadError(false)
     setSelectedVariety(0)
     setSelectedPkg(0)
     setQuantity(1)
@@ -111,19 +117,31 @@ export default function ProductPage() {
 
     productService.getById(id)
       .then(res => {
+        if (cancelled) return undefined
         const p = res.data.data
         setProduct(p)
+        // Start on a pack the customer can actually buy, not a sold-out first one.
+        const firstBuyable = (p.varieties?.[0]?.packaging || []).findIndex(pk => !pk.quoteOnly && pk.stock > 0)
+        if (firstBuyable > 0) setSelectedPkg(firstBuyable)
         trackViewItem(p, p.varieties?.[0]?.packaging?.[0])
         return productService.getAll({ category: p.category, limit: 8, isActive: true })
           .then(r => {
+            if (cancelled) return
             const others = (r.data.data || []).filter(x => x._id !== id)
             setSuggested(others.slice(0, 6))
           })
           .catch(() => {})
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [id])
+      .catch((err) => {
+        if (cancelled) return
+        setProduct(null)
+        // Only a 404 means "no such product"; offline / a cold server is a retryable failure.
+        setLoadError(err.response?.status !== 404)
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    return () => { cancelled = true }
+  }, [id, reloadKey])
 
   // Product JSON-LD (schema.org Product + AggregateOffer) for Google rich
   // results. Computed here and handed to <Seo>, which owns the managed <script>
@@ -264,8 +282,13 @@ export default function ProductPage() {
 
   if (!product) return (
     <div className="container-page py-16 text-center">
-      <p className="text-earth-500 font-body mb-4">Product not found.</p>
-      <Link to="/shop" className="btn-primary">Back to Shop</Link>
+      <p className="text-earth-600 font-body mb-4">
+        {loadError ? "We couldn't load this product — check your connection and try again." : 'Product not found.'}
+      </p>
+      {loadError && (
+        <button type="button" onClick={() => setReloadKey(k => k + 1)} className="btn-primary mr-2">Try again</button>
+      )}
+      <Link to="/shop" className={loadError ? 'btn-outline' : 'btn-primary'}>Back to Shop</Link>
     </div>
   )
 
@@ -418,19 +441,30 @@ export default function ProductPage() {
               <div>
                 <p className="text-xs font-body font-semibold text-earth-800 uppercase
                   tracking-wide mb-2">Packaging Size</p>
-                <div className="flex flex-wrap gap-2">
-                  {variety.packaging.map((pkg, i) => (
-                    <button key={pkg.size} onClick={() => { setSelectedPkg(i); setQuantity(1) }}
-                      className={`px-4 py-3 rounded-xl border text-sm font-body transition-all text-left ${
-                        i === selectedPkg
-                          ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                          : 'bg-white text-earth-700 border-earth-200 hover:border-brand-300'}`}>
-                      <span className="font-semibold block">{pkg.size}</span>
-                      <span className={`text-xs ${i === selectedPkg ? 'text-white/80' : 'text-earth-400'}`}>
-                        {pkg.quoteOnly ? 'Quote only' : formatKES(pkg.priceKES)}
-                      </span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-label="Packaging size">
+                  {variety.packaging.map((pkg, i) => {
+                    const perKg = pricePerKg(pkg)
+                    const selected = i === selectedPkg
+                    return (
+                      <button key={pkg.size} type="button" role="radio" aria-checked={selected}
+                        onClick={() => { setSelectedPkg(i); setQuantity(1) }}
+                        className={`px-4 py-3 rounded-xl border text-sm font-body transition-all text-left min-h-[44px] ${
+                          selected
+                            ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                            : 'bg-white text-earth-800 border-earth-200 hover:border-brand-300'} ${
+                          pkg.stock === 0 && !pkg.quoteOnly ? 'opacity-60' : ''}`}>
+                        <span className="font-semibold block">{pkg.size}</span>
+                        <span className={`text-xs block ${selected ? 'text-white/90' : 'text-earth-700'}`}>
+                          {pkg.quoteOnly ? 'Quote only' : formatKES(pkg.priceKES)}
+                        </span>
+                        {perKg !== null && (
+                          <span className={`text-[11px] block ${selected ? 'text-white/80' : 'text-earth-500'}`}>
+                            {formatKES(perKg)} / kg
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -493,27 +527,18 @@ export default function ProductPage() {
             ) : (
               <>
                 {/* Quantity */}
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <p className="text-xs font-body font-semibold text-earth-600 uppercase tracking-wide">
                     Quantity
                   </p>
-                  <div className="flex items-center gap-1 bg-earth-50 rounded-xl border border-earth-200 p-1">
-                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      className="w-9 h-9 rounded-lg bg-white border border-earth-200 flex items-center
-                        justify-center hover:bg-earth-100 transition-colors shadow-sm">
-                      <Minus size={14} className="text-earth-600" />
-                    </button>
-                    <span className="w-10 text-center font-body font-bold text-earth-900">
-                      {quantity}
-                    </span>
-                    <button onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
-                      disabled={quantity >= maxQty}
-                      className="w-9 h-9 rounded-lg bg-white border border-earth-200 flex items-center
-                        justify-center hover:bg-earth-100 transition-colors shadow-sm
-                        disabled:opacity-40 disabled:cursor-not-allowed">
-                      <Plus size={14} className="text-earth-600" />
-                    </button>
-                  </div>
+                  <QuantityStepper
+                    value={quantity}
+                    onChange={setQuantity}
+                    max={maxQty}
+                    label="Quantity"
+                    disabled={!inStock}
+                    quickAdds={[10, 50].filter(n => n < maxQty)}
+                  />
                   {packaging && inStock && (
                     <p className="text-xs text-earth-600 font-body">{packaging.stock} available</p>
                   )}

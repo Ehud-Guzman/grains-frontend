@@ -19,6 +19,7 @@ import { ContextualTip } from '../../components/onboarding/OnboardingEnhancement
 import { formatKES, isValidKenyanPhone, normalizeKenyanPhone, getCartUnitPrice } from '../../utils/helpers'
 import { PAYMENT_LABELS } from '../../utils/constants'
 import { trackBeginCheckout, trackPurchase } from '../../utils/analytics'
+import { rememberOrder } from '../../utils/recentOrders'
 import MpesaCountdown from '../../components/ui/MpesaCountdown'
 import Spinner from '../../components/ui/Spinner'
 import Seo from '../../components/ui/Seo'
@@ -96,6 +97,7 @@ export default function CheckoutPage() {
   // charges current prices, so the review screen must show them too.
   useEffect(() => { refreshPrices() }, [refreshPrices])
   const { user, isAuthenticated } = useAuth()
+  const isCustomerAccount = isAuthenticated && user?.role === 'customer'
   const { branchId } = useBranch()
   const { orderSettings, shopInfo, isLoading: settingsLoading, hasLoaded, loadFailed, refreshSettings } = useAppSettings()
   const { dismissedTips, dismissTip, markChecklistItem, markMilestone } = useOnboarding()
@@ -269,17 +271,30 @@ export default function CheckoutPage() {
       return
     }
     if (reason === 'switch') {
-      navigate(`/order-confirmed?ref=${placedOrder.orderRef}`, {
-        state: {
-          orderRef:      placedOrder.orderRef,
-          total:         placedOrder.total,
-          paymentMethod: 'pickup',
-          paymentSwitched: true,
-          deliveryMethod: form.deliveryMethod,
-          phone:         form.phone,
-          name:          form.name,
-        }
-      })
+      // Actually move the order to cash on the server. It used to just navigate away,
+      // leaving the order set to M-Pesa — which the approval gate then refused forever.
+      if (loading) return
+      const cashMethod = form.deliveryMethod === 'pickup' ? 'pickup' : 'delivery'
+      setLoading(true)
+      paymentService.changeMethod(placedOrder.orderId, cashMethod, normalizeKenyanPhone(form.phone))
+        .then(() => {
+          setLoading(false)
+          navigate(`/order-confirmed?ref=${placedOrder.orderRef}`, {
+            state: {
+              orderRef:      placedOrder.orderRef,
+              total:         placedOrder.total,
+              paymentMethod: cashMethod,
+              paymentSwitched: true,
+              deliveryMethod: form.deliveryMethod,
+              phone:         form.phone,
+              name:          form.name,
+            }
+          })
+        })
+        .catch(err => {
+          setLoading(false)
+          toast.error(err.response?.data?.message || 'Could not change the payment method — you can try again from your order page.')
+        })
       return
     }
     navigate(`/order-confirmed?ref=${placedOrder.orderRef}`, {
@@ -403,7 +418,7 @@ export default function CheckoutPage() {
     setLocationFeeData(null)
   }
 
-  if (!isAuthenticated && !orderSettings.allowGuestOrders) {
+  if (!isCustomerAccount && !orderSettings.allowGuestOrders) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl border border-earth-200 shadow-warm p-5 sm:p-7 text-center">
@@ -471,7 +486,7 @@ export default function CheckoutPage() {
     setCouponLoading(true)
     setCouponError('')
     try {
-      const res = await couponService.validate(couponInput, total)
+      const res = await couponService.validate(couponInput, total, form.phone)
       setCouponData({ code: res.data.data.code, discountAmount: res.data.data.discountAmount })
       toast.success(`Coupon applied — ${formatKES(res.data.data.discountAmount)} off!`)
     } catch (err) {
@@ -514,11 +529,14 @@ export default function CheckoutPage() {
         }))
       }
 
-      const res = isAuthenticated
+      // Only a customer account uses the account endpoint; a staff/admin who happens to be
+      // signed in on the storefront checks out as a guest (the account route is customer-only).
+      const res = isCustomerAccount
         ? await orderService.placeOrder(orderData)
         : await orderService.placeGuestOrder(orderData)
 
       const { orderRef, orderId, total: orderTotal } = res.data.data
+      rememberOrder(orderRef)
       trackPurchase({ orderRef, total: orderTotal }, items)
       if (isAuthenticated && user?.role === 'customer') {
         markChecklistItem('customer', 'first_order')
@@ -586,6 +604,11 @@ export default function CheckoutPage() {
             phone={form.mpesaPhone}
             pollPhone={normalizeKenyanPhone(form.phone)}
             amount={placedOrder.total}
+            cashLabel={
+              form.deliveryMethod === 'pickup'
+                ? (orderSettings.allowPayOnPickup ? 'Pay on Pickup' : null)
+                : (orderSettings.allowCashOnDelivery ? 'Pay on Delivery' : null)
+            }
             onSuccess={handleMpesaSuccess}
             onFailure={handleMpesaFailure}
           />
@@ -1048,7 +1071,7 @@ export default function CheckoutPage() {
                     <p className="text-earth-500 text-sm font-body">
                       {form.paymentMethod === 'mpesa'
                         ? `You'll receive an M-Pesa prompt on ${form.mpesaPhone}`
-                        : `We'll confirm within 2 hours at ${form.phone}`
+                        : `We'll confirm your order shortly at ${form.phone}`
                       }
                     </p>
                   </div>

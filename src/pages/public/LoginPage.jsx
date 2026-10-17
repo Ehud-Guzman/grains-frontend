@@ -220,8 +220,9 @@ export default function LoginPage() {
       navigateAfterLogin(result.user)
     } catch (err) {
       setLoading(false)
-      if (err.response?.status === 423)      setError('Your account is locked. Please contact support.')
-      else if (err.response?.status === 401) setError('Invalid phone number or password.')
+      // 429 = too many wrong passwords (a timed block) — the server's message says how long.
+      if (err.response?.status === 429)      setError(err.response?.data?.message || 'Too many attempts. Please try again in a few minutes.')
+      else if (err.response?.status === 401) setError('Invalid phone number or password. Forgot it? Use "Forgot password?" to reset it.')
       else                                   setError(err.response?.data?.message || 'Login failed. Please try again.')
     }
   }
@@ -353,11 +354,13 @@ export default function LoginPage() {
                   <form onSubmit={handleSubmit} className="space-y-3">
 
                     <div>
-                      <label className="block text-sm font-body font-medium text-earth-700 mb-1.5">
+                      <label htmlFor="login-phone" className="block text-sm font-body font-medium text-earth-700 mb-1.5">
                         Phone number
                       </label>
                       <input
+                        id="login-phone"
                         type="tel"
+                        inputMode="tel"
                         value={form.phone}
                         onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
                         placeholder="0712 345 678"
@@ -372,7 +375,7 @@ export default function LoginPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-sm font-body font-medium text-earth-700">
+                        <label htmlFor="login-password" className="text-sm font-body font-medium text-earth-700">
                           Password
                         </label>
                         <Link to="/forgot-password"
@@ -383,6 +386,7 @@ export default function LoginPage() {
                       </div>
                       <div className="relative">
                         <input
+                          id="login-password"
                           type={showPass ? 'text' : 'password'}
                           value={form.password}
                           onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
@@ -394,15 +398,17 @@ export default function LoginPage() {
                           required
                         />
                         <button type="button" onClick={() => setShowPass(s => !s)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400
-                            hover:text-earth-700 p-1 transition-colors">
+                          aria-label={showPass ? 'Hide password' : 'Show password'}
+                          aria-pressed={showPass}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 text-earth-500
+                            hover:text-earth-700 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors">
                           {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
                         </button>
                       </div>
                     </div>
 
                     {error && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-sm text-red-700 font-body">
+                      <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-sm text-red-700 font-body">
                         {error}
                       </div>
                     )}

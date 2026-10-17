@@ -4,7 +4,7 @@ import { ShoppingCart, Eye, Tag, Check, List } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
-import { formatKES, getPriceRange, getStockStatus } from '../../utils/helpers'
+import { formatKES, getFromPrice, getStockStatus } from '../../utils/helpers'
 import { STOCK_CONFIG as stockConfig } from '../../utils/constants'
 import { getOptimizedImageUrl } from '../../utils/image'
 import AddToListModal from '../lists/AddToListModal'
@@ -109,7 +109,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
         <div className="flex items-center gap-1.5 mt-auto mb-3 flex-wrap">
           <Tag size={13} className="text-brand-400 flex-shrink-0" />
           <span className="font-display text-brand-600 font-semibold text-sm">
-            {getPriceRange(product)}
+            {getFromPrice(product)}
           </span>
           <PriceChangeBadge priceChange={priceChange} />
         </div>
@@ -235,7 +235,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
         <div className="flex items-center justify-between mt-auto gap-1 flex-wrap">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="font-display text-brand-600 font-bold text-sm">
-              {getPriceRange(product)}
+              {getFromPrice(product)}
             </span>
             <PriceChangeBadge priceChange={priceChange} />
           </div>

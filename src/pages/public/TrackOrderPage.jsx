@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Seo from '../../components/ui/Seo'
 import { useLocation, useSearchParams } from 'react-router-dom'
 import { Search, Phone, Package, CheckCircle, Clock, XCircle, Truck } from 'lucide-react'
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
+import PayNowPanel from '../../components/orders/PayNowPanel'
+import OrderTotals from '../../components/orders/OrderTotals'
+import { paymentStatusDisplay } from '../../utils/orderDisplay'
+import { getRecentOrders } from '../../utils/recentOrders'
 import { useShopInfo } from '../../context/AppSettingsContext'
 import { formatKES, formatDate, getStatusLabel, normalizeKenyanPhone } from '../../utils/helpers'
 
@@ -83,22 +87,27 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [recent, setRecent] = useState([])
+  useEffect(() => { setRecent(getRecentOrders()) }, [])
 
-  const handleTrack = async (e) => {
-    e.preventDefault()
-    const normalizedRef = ref.trim().toUpperCase()
-    if (!phone.trim() || !normalizedRef) return
-    setLoading(true)
+  const lookUp = async (rawPhone, rawRef, { quiet = false } = {}) => {
+    const normalizedRef = rawRef.trim().toUpperCase()
+    if (!rawPhone.trim() || !normalizedRef) return
+    if (!quiet) { setLoading(true); setOrder(null) }
     setError('')
-    setOrder(null)
     try {
-      const res = await orderService.trackOrder(normalizeKenyanPhone(phone), normalizedRef)
+      const res = await orderService.trackOrder(normalizeKenyanPhone(rawPhone), normalizedRef)
       setOrder(res.data.data)
     } catch (err) {
-      setError(err.response?.data?.message || 'Order not found. Check your phone number and reference.')
+      if (!quiet) setError(err.response?.data?.message || 'Order not found. Check your phone number and reference.')
     } finally {
-      setLoading(false)
+      if (!quiet) setLoading(false)
     }
+  }
+
+  const handleTrack = (e) => {
+    e.preventDefault()
+    lookUp(phone, ref)
   }
 
   const statusCfg = order ? (STATUS_CONFIG[order.status] || STATUS_CONFIG.pending) : null
@@ -132,12 +141,15 @@ export default function TrackOrderPage() {
           <form onSubmit={handleTrack} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-700
+                <label htmlFor="track-phone" className="block text-xs font-body font-semibold text-earth-700
                   uppercase tracking-wide mb-1.5">
                   Phone Number
                 </label>
                 <input
+                  id="track-phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="0712 345 678"
@@ -149,12 +161,15 @@ export default function TrackOrderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-body font-semibold text-earth-700
+                <label htmlFor="track-ref" className="block text-xs font-body font-semibold text-earth-700
                   uppercase tracking-wide mb-1.5">
                   Order Reference
                 </label>
                 <input
+                  id="track-ref"
                   type="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
                   value={ref}
                   onChange={e => setRef(e.target.value.toUpperCase())}
                   placeholder="ORD-2026-0001"
@@ -166,8 +181,27 @@ export default function TrackOrderPage() {
               </div>
             </div>
 
+            {recent.length > 0 && !order && (
+              <div>
+                <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide mb-2">
+                  Your recent orders on this device
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {recent.map(r => (
+                    <button key={r.ref} type="button" onClick={() => setRef(r.ref)}
+                      className={`min-h-[44px] px-3 rounded-xl border text-sm font-body font-semibold tracking-wide transition-colors ${
+                        ref === r.ref ? 'border-brand-500 bg-brand-50 text-brand-800' : 'border-earth-200 bg-white text-earth-700 hover:border-brand-300'
+                      }`}>
+                      {r.ref}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs font-body text-earth-400 mt-2">Tap one, then enter your phone number.</p>
+              </div>
+            )}
+
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 text-sm text-red-700 font-body flex items-start gap-2">
+              <div role="alert" className="bg-red-50 border border-red-200 rounded-xl p-3.5 text-sm text-red-700 font-body flex items-start gap-2">
                 <XCircle size={16} className="flex-shrink-0 mt-0.5 text-red-500" />
                 {error}
               </div>
@@ -250,6 +284,7 @@ export default function TrackOrderPage() {
                       </span>
                     </div>
                   ))}
+                  <OrderTotals order={order} />
                   <div className="flex items-center justify-between px-4 py-3 bg-earth-100">
                     <span className="font-body font-bold text-earth-800 text-sm">Total</span>
                     <span className="font-display font-bold text-brand-600 text-base">
@@ -258,6 +293,21 @@ export default function TrackOrderPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Payment status + pay now */}
+              <div className="flex items-center justify-between rounded-xl bg-earth-50 border border-earth-100 px-4 py-3">
+                <span className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide">Payment</span>
+                <span className={`text-sm font-body font-semibold ${paymentStatusDisplay(order).tone}`}>
+                  {paymentStatusDisplay(order).label}
+                </span>
+              </div>
+              <PayNowPanel
+                order={order}
+                contactPhone={phone}
+                defaultPhone={phone}
+                onPaid={() => lookUp(phone, order.orderRef, { quiet: true })}
+                onChanged={(patch) => setOrder(o => ({ ...o, ...patch }))}
+              />
 
               {/* Timeline */}
               {order.statusHistory?.length > 0 && (
@@ -294,7 +344,7 @@ export default function TrackOrderPage() {
         {/* ── Help text (no order yet) ────────────────────────────────────── */}
         {!order && !loading && (
           <div className="text-center text-earth-400 text-sm font-body space-y-1 mt-2">
-            <p>Your order reference was sent to you via SMS after placing your order.</p>
+            <p>Your order reference was shown on the confirmation page when you placed the order.</p>
             <p>It looks like <span className="font-medium text-earth-600">ORD-2026-0001</span></p>
           </div>
         )}

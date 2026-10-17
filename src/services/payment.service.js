@@ -7,6 +7,11 @@ export const paymentService = {
   initiate: (orderId, phone, contactPhone) =>
     api.post('/payments/mpesa/initiate', { orderId, phone, contactPhone }),
 
+  // Move an unpaid, still-pending order to another payment method (mpesa | pickup |
+  // delivery). `contactPhone` proves ownership for guests, as it does for initiate.
+  changeMethod: (orderId, paymentMethod, contactPhone) =>
+    api.post('/payments/change-method', { orderId, paymentMethod, contactPhone }),
+
   // Poll payment status — call every 5s after STK push
   getStatus: (orderId, phone) =>
     api.get(`/payments/status/${orderId}`, { params: phone ? { phone } : undefined }),

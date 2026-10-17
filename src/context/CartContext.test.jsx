@@ -3,6 +3,7 @@ import { render, screen, act } from '@testing-library/react'
 import { CartProvider, useCart } from './CartContext'
 import { useBranch } from './BranchContext'
 import { productService } from '../services/product.service'
+import toast from 'react-hot-toast'
 
 vi.mock('./BranchContext', () => ({ useBranch: vi.fn() }))
 vi.mock('react-hot-toast', () => {
@@ -327,6 +328,34 @@ describe('CartContext — reorder and drawer', () => {
     // Stock is unknown for an old snapshot → must be null, not Infinity (which
     // does not survive JSON persistence).
     expect(readItems()[0].stock).toBeNull()
+  })
+
+  it('merges a reorder into the existing cart instead of wiping it', () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging(), 2))
+
+    act(() => api.reorderItems([
+      { productId: 'p1', productName: 'Yellow Maize', variety: 'Grade 1', packaging: '50kg', quantity: 3, priceKES: 100 },
+      { productId: 'p2', productName: 'Beans', variety: 'Grade 1', packaging: '50kg', quantity: 1, priceKES: 60 },
+    ]))
+
+    const items = readItems()
+    expect(items).toHaveLength(2)
+    expect(items.find(i => i.productId === 'p1').quantity).toBe(5)
+  })
+
+  it('ignores blank, fractional or zero typed quantities', () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging(), 4))
+    const key = readItems()[0].key
+    for (const bad of [NaN, 0, -2, 1.5, undefined]) act(() => api.updateQuantity(key, bad))
+    expect(readItems()[0].quantity).toBe(4)
+  })
+
+  it('announces an add once, not once per state-updater run', () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging(), 1))
+    expect(toast.success).toHaveBeenCalledTimes(1)
   })
 
   it('opens and closes the drawer', () => {

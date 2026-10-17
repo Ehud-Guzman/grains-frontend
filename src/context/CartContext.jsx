@@ -33,6 +33,17 @@ export const CartProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false)
   const { branch, branchId } = useBranch()
 
+  // The cart's current contents, readable synchronously. Cart actions used to do their
+  // work (and fire toasts and analytics) INSIDE a setItems(prev => …) updater. Updaters
+  // must be pure — React may run one twice (StrictMode, concurrent rendering) — so
+  // customers could get duplicate toasts and the funnel double-counted add-to-cart.
+  // Actions now read this ref, decide, side-effect once, then commit.
+  const itemsRef = useRef(items)
+  const commit = useCallback((next) => {
+    itemsRef.current = next
+    setItems(next)
+  }, [])
+
   // Cart items belong to one branch's catalog (per-branch products/prices/stock).
   // If the resolved branch changes while the cart has items from another branch,
   // clear it — otherwise checkout would 404 on the other branch's product IDs.
@@ -40,12 +51,12 @@ export const CartProvider = ({ children }) => {
     if (!branchId) return
     const cartBranch = localStorage.getItem(CART_BRANCH_KEY)
     if (cartBranch && cartBranch !== branchId && items.length > 0) {
-      setItems([])
+      commit([])
       localStorage.removeItem(CART_KEY)
       toast(`Cart cleared — now shopping from ${branch?.name || 'a different branch'}`, { icon: '🧺' })
     }
     localStorage.setItem(CART_BRANCH_KEY, branchId)
-  }, [branchId, branch?.name, items.length])
+  }, [branchId, branch?.name, items.length, commit])
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items))
@@ -53,25 +64,27 @@ export const CartProvider = ({ children }) => {
 
   const addItem = useCallback((product, variety, packaging, quantity = 1) => {
     const key = `${product._id}-${variety.varietyName}-${packaging.size}`
-    setItems(prev => {
-      const existing = prev.find(i => i.key === key)
-      if (existing) {
-        const newQty = existing.quantity + quantity
-        if (newQty > packaging.stock) {
-          toast.error(`Only ${packaging.stock} bags available`)
-          return prev
-        }
-        toast.success('Cart updated')
-        trackAddToCart(product, variety, packaging, quantity)
-        return prev.map(i => i.key === key ? { ...i, quantity: newQty } : i)
+    const prev = itemsRef.current
+    const existing = prev.find(i => i.key === key)
+    // "available" not "bags": packs are sold as 1kg, 5kg … 100kg, not only bags.
+    if (existing) {
+      const newQty = existing.quantity + quantity
+      if (newQty > packaging.stock) {
+        toast.error(`Only ${packaging.stock} available`)
+        return
       }
-      if (quantity > packaging.stock) {
-        toast.error(`Only ${packaging.stock} bags available`)
-        return prev
-      }
-      toast.success(`${product.name} added to cart`)
+      toast.success('Cart updated')
       trackAddToCart(product, variety, packaging, quantity)
-      return [...prev, {
+      commit(prev.map(i => i.key === key ? { ...i, quantity: newQty } : i))
+      return
+    }
+    if (quantity > packaging.stock) {
+      toast.error(`Only ${packaging.stock} available`)
+      return
+    }
+    toast.success(`${product.name} added to cart`)
+    trackAddToCart(product, variety, packaging, quantity)
+    commit([...prev, {
         key,
         productId: product._id,
         productName: product.name,
@@ -87,30 +100,29 @@ export const CartProvider = ({ children }) => {
         stock: packaging.stock,
         imageURL: variety.imageURLs?.[0] || product.imageURLs?.[0] || null,
         quantity
-      }]
-    })
-  }, [])
+      }])
+  }, [commit])
 
   const removeItem = useCallback((key) => {
-    setItems(prev => prev.filter(i => i.key !== key))
-  }, [])
+    commit(itemsRef.current.filter(i => i.key !== key))
+  }, [commit])
 
   const updateQuantity = useCallback((key, quantity) => {
-    if (quantity < 1) return
-    setItems(prev => prev.map(i => {
-      if (i.key !== key) return i
-      if (hasKnownStock(i) && quantity > i.stock) {
-        toast.error(`Only ${i.stock} bags available`)
-        return i
-      }
-      return { ...i, quantity }
-    }))
-  }, [])
+    // A typed value can be blank/NaN/fractional — only whole numbers from 1 up count.
+    if (!Number.isInteger(quantity) || quantity < 1) return
+    const target = itemsRef.current.find(i => i.key === key)
+    if (!target) return
+    if (hasKnownStock(target) && quantity > target.stock) {
+      toast.error(`Only ${target.stock} available`)
+      return
+    }
+    commit(itemsRef.current.map(i => i.key === key ? { ...i, quantity } : i))
+  }, [commit])
 
   const clearCart = useCallback(() => {
-    setItems([])
+    commit([])
     localStorage.removeItem(CART_KEY)
-  }, [])
+  }, [commit])
 
   // Bulk-load items from a previous order (reorder flow) or a saved list
   // (which resolves live product data before calling this). Clears the cart
@@ -132,9 +144,21 @@ export const CartProvider = ({ children }) => {
       imageURL:    item.imageURL || null,
       quantity:    item.quantity
     }))
-    setItems(cartItems)
+    // Merge into what is already in the cart (summing quantities) instead of replacing
+    // it — "Reorder" used to wipe a cart the customer had already filled, without asking.
+    const merged = [...itemsRef.current]
+    for (const incoming of cartItems) {
+      const at = merged.findIndex(i => i.key === incoming.key)
+      if (at === -1) { merged.push(incoming); continue }
+      const current = merged[at]
+      let quantity = current.quantity + incoming.quantity
+      const stock = hasKnownStock(incoming) ? incoming.stock : (hasKnownStock(current) ? current.stock : null)
+      if (stock !== null) quantity = Math.min(quantity, stock)
+      merged[at] = { ...current, ...incoming, quantity }
+    }
+    commit(merged)
     toast.success('Items added to cart')
-  }, [])
+  }, [commit])
 
   const openCart = useCallback(() => setIsOpen(true), [])
   const closeCart = useCallback(() => setIsOpen(false), [])
@@ -170,7 +194,9 @@ export const CartProvider = ({ children }) => {
       let removed = 0
       let stockClamped = false
 
-      setItems(prev => prev.flatMap(item => {
+      // Computed from the live ref (not inside an updater) so the counters below, and the
+      // toasts they drive, are only ever produced once.
+      const nextItems = itemsRef.current.flatMap(item => {
         if (goneSet.has(item.productId)) { removed++; return [] }
         const product = liveMap.get(item.productId)
         if (!product) return [item]
@@ -186,7 +212,8 @@ export const CartProvider = ({ children }) => {
         next.stock = packaging.stock
         if (item.quantity > packaging.stock) { stockClamped = true; next.quantity = packaging.stock }
         return [next]
-      }))
+      })
+      commit(nextItems)
 
       if (removed > 0) toast(`${removed} item${removed !== 1 ? 's' : ''} no longer available — removed from your cart`, { icon: '🧺' })
       if (priceChanged) toast('Some prices changed since you added items — your cart now shows current prices', { icon: '💰' })
@@ -196,7 +223,7 @@ export const CartProvider = ({ children }) => {
     } finally {
       refreshing.current = false
     }
-  }, [])
+  }, [commit])
 
   // Tier-aware subtotal — matches the server-side price derivation.
   // Memoised: every ProductCard in the catalogue calls useCart(), so an

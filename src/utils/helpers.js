@@ -108,6 +108,34 @@ export const getPriceRange = (product) => {
   return `${formatKES(min)} – ${formatKES(max)}`
 }
 
+// "50kg" → 50. Null for sizes that are not a plain weight ("Bulk", "1 bag"...).
+export const parseKg = (size) => {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*kg\s*$/i.exec(size || '')
+  return m ? Number(m[1]) : null
+}
+
+// Price per kilo for a packaging, or null when it has no weight or no fixed price. Wholesale
+// buyers compare pack sizes by this number, not by the sticker price.
+export const pricePerKg = (pkg) => {
+  const kg = parseKg(pkg?.size)
+  if (!kg || !pkg?.priceKES || pkg.quoteOnly) return null
+  return Math.round((pkg.priceKES / kg) * 100) / 100
+}
+
+// Catalogue-card price line. A range like "KES 49 – KES 2,160" (a 1kg pack to a 100kg pack)
+// tells a buyer nothing, so show the cheapest price per kilo when every pack is a weight,
+// otherwise the lowest pack price.
+export const getFromPrice = (product) => {
+  const priced = []
+  product.varieties?.forEach(v => v.packaging?.forEach(p => {
+    if (p.priceKES && !p.quoteOnly) priced.push(p)
+  }))
+  if (priced.length === 0) return 'Quote only'
+  const perKg = priced.map(pricePerKg)
+  if (perKg.every(n => n !== null)) return `From ${formatKES(Math.min(...perKg))} / kg`
+  return `From ${formatKES(Math.min(...priced.map(p => p.priceKES)))}`
+}
+
 // Truncate text
 export const truncate = (str, n = 100) => {
   if (!str) return ''

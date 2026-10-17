@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Seo from '../../components/ui/Seo'
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package, List } from 'lucide-react'
+import { ShoppingCart, Trash2, ArrowRight, List } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
@@ -10,6 +10,7 @@ import { useOnboarding } from '../../context/OnboardingContext'
 import { ContextualTip } from '../../components/onboarding/OnboardingEnhancements'
 import AddToListModal from '../../components/lists/AddToListModal'
 import MinimumOrderNotice from '../../components/ui/MinimumOrderNotice'
+import QuantityStepper from '../../components/ui/QuantityStepper'
 import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
@@ -25,7 +26,9 @@ export default function CartPage() {
   const [showAddToList, setShowAddToList] = useState(false)
   const vatEnabled = orderSettings.vatEnabled === true
   const vatRate    = vatEnabled ? (Number(orderSettings.vatRate) || 0) : 0
-  const vatAmount  = vatEnabled ? Math.round(total * vatRate / 100) : 0
+  // Same basis as checkout and the server: only taxable lines carry VAT, to the cent.
+  const taxableTotal = items.reduce((s, i) => s + (i.taxable !== false ? getCartUnitPrice(i) * i.quantity : 0), 0)
+  const vatAmount  = vatEnabled ? Math.round(taxableTotal * vatRate / 100 * 100) / 100 : 0
   const showCartTip = !dismissedTips['customer-cart-tip']
 
   const handleSaveAsList = () => {
@@ -38,6 +41,7 @@ export default function CartPage() {
 
   if (items.length === 0) return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4">
+      <Seo title="Your Cart" description="Your cart is empty." noindex />
       <div className="text-center max-w-sm">
         <div className="w-20 h-20 bg-earth-100 rounded-3xl flex items-center justify-center
           mx-auto mb-5">
@@ -102,40 +106,31 @@ export default function CartPage() {
                         {item.variety} · {item.packaging}
                       </p>
                     </div>
-                    <button onClick={() => removeItem(item.key)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-earth-300
-                        hover:text-red-500 transition-colors flex-shrink-0">
-                      <Trash2 size={15} />
+                    <button type="button" onClick={() => removeItem(item.key)}
+                      aria-label={`Remove ${item.productName} ${item.variety} ${item.packaging} from cart`}
+                      className="-mr-2 -mt-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg
+                        hover:bg-red-50 text-earth-400 hover:text-red-500 transition-colors flex-shrink-0">
+                      <Trash2 size={16} aria-hidden="true" />
                     </button>
                   </div>
 
                   <p className="text-brand-600 text-xs font-body font-semibold mb-3">
-                    {formatKES(getCartUnitPrice(item))} / bag
+                    {formatKES(getCartUnitPrice(item))} each
                     {getCartUnitPrice(item) < item.priceKES && (
                       <span className="text-green-600 ml-1.5">volume price</span>
                     )}
                   </p>
 
-                  <div className="flex items-center justify-between">
-                    {/* Qty controls */}
-                    <div className="flex items-center gap-1 bg-earth-50 rounded-lg border
-                      border-earth-200 p-0.5">
-                      <button onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        className="w-7 h-7 rounded-md bg-white border border-earth-200 flex
-                          items-center justify-center hover:bg-earth-100 transition-colors shadow-sm
-                          disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed">
-                        <Minus size={12} className="text-earth-600" />
-                      </button>
-                      <span className="w-7 text-center text-sm font-body font-bold text-earth-900">
-                        {item.quantity}
-                      </span>
-                      <button onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                        className="w-7 h-7 rounded-md bg-white border border-earth-200 flex
-                          items-center justify-center hover:bg-earth-100 transition-colors shadow-sm">
-                        <Plus size={12} className="text-earth-600" />
-                      </button>
-                    </div>
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                    {/* Qty controls — typeable, with bulk quick-adds */}
+                    <QuantityStepper
+                      compact
+                      value={item.quantity}
+                      onChange={(q) => updateQuantity(item.key, q)}
+                      max={typeof item.stock === 'number' ? item.stock : null}
+                      label={`Quantity of ${item.productName} ${item.variety} ${item.packaging}`}
+                      quickAdds={[10, 50].filter(n => typeof item.stock !== 'number' || n < item.stock)}
+                    />
 
                     {/* Line total */}
                     <span className="font-display font-bold text-earth-900">

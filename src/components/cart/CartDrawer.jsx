@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
-import { X, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
+import { X, ShoppingCart, Trash2 } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { formatKES, getCartUnitPrice } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 import MinimumOrderNotice from '../ui/MinimumOrderNotice'
 import Modal from '../ui/Modal'
+import QuantityStepper from '../ui/QuantityStepper'
 
 export default function CartDrawer() {
   const { items, subtotal, isOpen, closeCart, removeItem, updateQuantity } = useCart()
@@ -65,23 +66,18 @@ export default function CartDrawer() {
                   <p className="font-body font-medium text-earth-900 text-sm truncate">{item.productName}</p>
                   <p className="text-earth-500 text-xs">{item.variety} · {item.packaging}</p>
                   <p className="text-brand-600 font-medium text-sm mt-1">{formatKES(getCartUnitPrice(item) * item.quantity)}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <button type="button" onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      aria-label={`Decrease quantity of ${item.productName}`}
-                      className="w-9 h-9 rounded-lg bg-earth-100 hover:bg-earth-200 flex items-center justify-center transition-colors disabled:opacity-40 disabled:hover:bg-earth-100 disabled:cursor-not-allowed">
-                      <Minus size={12} aria-hidden="true" />
-                    </button>
-                    <span className="text-sm font-medium text-earth-900 w-6 text-center">{item.quantity}</span>
-                    <button type="button" onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                      aria-label={`Increase quantity of ${item.productName}`}
-                      className="w-9 h-9 rounded-lg bg-earth-100 hover:bg-earth-200 flex items-center justify-center transition-colors">
-                      <Plus size={12} aria-hidden="true" />
-                    </button>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <QuantityStepper
+                      compact
+                      value={item.quantity}
+                      onChange={(q) => updateQuantity(item.key, q)}
+                      max={typeof item.stock === 'number' ? item.stock : null}
+                      label={`Quantity of ${item.productName}`}
+                    />
                     <button type="button" onClick={() => removeItem(item.key)}
                       aria-label={`Remove ${item.productName} from cart`}
-                      className="ml-auto p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-red-50 text-earth-400 hover:text-red-500 transition-colors">
-                      <Trash2 size={14} aria-hidden="true" />
+                      className="ml-auto p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-red-50 text-earth-400 hover:text-red-500 transition-colors">
+                      <Trash2 size={16} aria-hidden="true" />
                     </button>
                   </div>
                 </div>

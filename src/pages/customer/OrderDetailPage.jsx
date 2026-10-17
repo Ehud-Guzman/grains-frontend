@@ -4,12 +4,16 @@ import { ArrowLeft, Phone, XCircle, Package, Truck, Store, CreditCard, Receipt a
 import { orderService } from '../../services/order.service'
 import { OrderStatusTimeline } from '../../components/orders/OrderStatusTimeline'
 import { useShopInfo } from '../../context/AppSettingsContext'
+import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { formatKES, formatDate, getStatusLabel } from '../../utils/helpers'
 import { PAYMENT_LABELS, ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
 import toast from 'react-hot-toast'
 import Receipt from '../../components/orders/Receipt'
+import PayNowPanel from '../../components/orders/PayNowPanel'
+import OrderTotals from '../../components/orders/OrderTotals'
+import { paymentStatusDisplay } from '../../utils/orderDisplay'
 
 const STATUS_STEPS = ['pending', 'approved', 'preparing', 'out_for_delivery', 'completed']
 
@@ -23,6 +27,7 @@ const PICKUP_STEP_LABELS = {
 
 export default function CustomerOrderDetailPage() {
   const shopInfo = useShopInfo()
+  const { user } = useAuth()
   const { reorderItems, openCart } = useCart()
   const navigate = useNavigate()
   const { id } = useParams()
@@ -38,13 +43,20 @@ export default function CustomerOrderDetailPage() {
     openCart()
   }
 
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+
   useEffect(() => {
     const load = async (silent = false) => {
-      if (!silent) setLoading(true)
+      if (!silent) { setLoading(true); setLoadFailed(false) }
       try {
         const res = await orderService.getMyOrder(id)
         setOrder(res.data.data || null)
-      } catch { if (!silent) setOrder(null) }
+      } catch (err) {
+        // A 404 really is "not found"; anything else (offline, a cold server) is a
+        // temporary failure and must not be reported as a missing order.
+        if (!silent) { setOrder(null); setLoadFailed(err.response?.status !== 404) }
+      }
       finally { if (!silent) setLoading(false) }
     }
     load()
@@ -53,14 +65,14 @@ export default function CustomerOrderDetailPage() {
     // polls every 60s. Silent: no spinner flash over a page the customer is reading.
     const interval = setInterval(() => load(true), 60000)
     return () => clearInterval(interval)
-  }, [id])
+  }, [id, reloadKey])
 
   const handleCancel = async () => {
     setCancelling(true)
     setConfirmCancel(false)
     try {
-      await orderService.cancelOrder(id)
-      setOrder(o => ({ ...o, status: 'cancelled' }))
+      const res = await orderService.cancelOrder(id)
+      setOrder(o => ({ ...o, status: 'cancelled', paymentStatus: res.data?.data?.paymentStatus || o.paymentStatus }))
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not cancel order')
     } finally { setCancelling(false) }
@@ -71,8 +83,13 @@ export default function CustomerOrderDetailPage() {
   if (!order) return (
     <div className="container-page py-16 text-center">
       <Package size={32} className="text-earth-300 mx-auto mb-3" />
-      <p className="text-earth-500 font-body mb-4">Order not found</p>
-      <Link to="/dashboard" className="btn-primary">Back to Dashboard</Link>
+      <p className="text-earth-500 font-body mb-4">
+        {loadFailed ? "We couldn't load this order — check your connection." : 'Order not found'}
+      </p>
+      {loadFailed && (
+        <button type="button" onClick={() => setReloadKey(k => k + 1)} className="btn-primary mr-2">Try again</button>
+      )}
+      <Link to="/dashboard" className={loadFailed ? 'btn-outline' : 'btn-primary'}>Back to Dashboard</Link>
     </div>
   )
 
@@ -198,6 +215,7 @@ export default function CustomerOrderDetailPage() {
                 </span>
               </div>
             ))}
+            <OrderTotals order={order} />
             <div className="flex items-center justify-between px-5 py-4 bg-earth-50">
               <span className="font-body font-bold text-earth-800">Total</span>
               <span className="font-display font-bold text-brand-600 text-lg">
@@ -206,6 +224,14 @@ export default function CustomerOrderDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Pay now (unpaid, still awaiting approval) ──────────────── */}
+        <PayNowPanel
+          order={order}
+          defaultPhone={user?.phone || ''}
+          onPaid={() => setReloadKey(k => k + 1)}
+          onChanged={(patch) => setOrder(o => ({ ...o, ...patch }))}
+        />
 
         {/* ── Delivery + Payment ──────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-5">
@@ -249,10 +275,8 @@ export default function CustomerOrderDetailPage() {
                 <p className="text-sm font-body font-semibold text-earth-800">
                   {PAYMENT_LABELS[order.paymentMethod]}
                 </p>
-                <p className={`text-xs font-body font-semibold mt-0.5 ${
-                  order.paymentStatus === 'paid' ? 'text-green-600' : 'text-amber-600'
-                }`}>
-                  {order.paymentStatus === 'paid' ? '✓ Paid' : 'Payment pending'}
+                <p className={`text-xs font-body font-semibold mt-0.5 ${paymentStatusDisplay(order).tone}`}>
+                  {paymentStatusDisplay(order).label}
                 </p>
               </div>
             </div>
@@ -293,7 +317,12 @@ export default function CustomerOrderDetailPage() {
             confirmCancel ? (
               <div className="flex items-center gap-2 p-4 border-2 border-red-200 rounded-xl bg-red-50">
                 <AlertTriangle size={15} className="text-amber-500 flex-shrink-0" />
-                <span className="text-sm font-body text-red-700 flex-1">Cancel this order?</span>
+                <span className="text-sm font-body text-red-700 flex-1">
+                  Cancel this order?
+                  {order.paymentStatus === 'paid' && (
+                    <span className="block text-xs text-red-600 mt-0.5">You have already paid — we will refund you.</span>
+                  )}
+                </span>
                 <button onClick={handleCancel} disabled={cancelling}
                   className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-body
                     font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors">

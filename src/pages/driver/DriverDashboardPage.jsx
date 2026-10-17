@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
+import { CollectionBanner, NavigateLink } from '../../components/driver/DeliveryHelpers'
 import toast from 'react-hot-toast'
 
 // ─── AVATAR UPLOADER (PREMIUM POLISH) ──────────────────────────────────────────
@@ -147,6 +148,11 @@ function OrderCard({ order, onComplete }) {
           <span className="text-sm font-admin text-admin-700 leading-relaxed">{order.deliveryAddress}</span>
         </div>
       )}
+
+      <NavigateLink order={order} />
+
+      {/* Money at the door */}
+      <CollectionBanner order={order} />
 
       {/* Items summary */}
       <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-gradient-to-r from-admin-50 to-admin-100/50 rounded-xl border border-admin-100">

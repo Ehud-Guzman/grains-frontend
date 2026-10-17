@@ -4,6 +4,7 @@ import { driverService } from '../../services/driver.service'
 import { formatKES, formatDate } from '../../utils/helpers'
 import Spinner from '../../components/ui/Spinner'
 import CompleteDeliveryModal from '../../components/driver/CompleteDeliveryModal'
+import { CollectionBanner, NavigateLink } from '../../components/driver/DeliveryHelpers'
 import { flushCompletions, pendingOrderIds } from '../../utils/offlineQueue'
 import toast from 'react-hot-toast'
 
@@ -73,6 +74,11 @@ function OrderRow({ order, onComplete, onQueued, isPending }) {
           <span className="text-sm font-admin text-admin-700">{order.deliveryAddress}</span>
         </div>
       )}
+
+      <NavigateLink order={order} />
+
+      {/* Money at the door */}
+      {isActive && <CollectionBanner order={order} />}
 
       {/* Items & total */}
       <div className="flex items-center justify-between px-3 py-2 bg-admin-50 rounded-xl">

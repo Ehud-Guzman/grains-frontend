@@ -128,9 +128,9 @@ export default function RegisterPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-700
+                  <label htmlFor="reg-name" className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">Full Name</label>
-                  <input type="text" placeholder="John Kamau" required autoFocus
+                  <input id="reg-name" type="text" placeholder="John Kamau" required autoFocus autoComplete="name"
                     value={form.name}
                     onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                     className={fieldClass('name')} />
@@ -138,9 +138,9 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-700
+                  <label htmlFor="reg-phone" className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">Phone Number</label>
-                  <input type="tel" placeholder="0712 345 678" required
+                  <input id="reg-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0712 345 678" required
                     value={form.phone}
                     onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
                     className={fieldClass('phone')} />
@@ -148,11 +148,11 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-700
+                  <label htmlFor="reg-email" className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">
                     Email <span className="text-earth-500 font-normal normal-case">(optional)</span>
                   </label>
-                  <input type="email" placeholder="john@example.com"
+                  <input id="reg-email" type="email" inputMode="email" autoComplete="email" placeholder="john@example.com"
                     value={form.email}
                     onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                     className={fieldClass('email')} />
@@ -160,10 +160,12 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-body font-semibold text-earth-700
+                  <label htmlFor="reg-password" className="block text-xs font-body font-semibold text-earth-700
                     uppercase tracking-wide mb-1.5">Password</label>
                   <div className="relative">
                     <input
+                      id="reg-password"
+                      autoComplete="new-password"
                       type={showPass ? 'text' : 'password'}
                       placeholder="At least 8 characters" required
                       value={form.password}
@@ -171,8 +173,10 @@ export default function RegisterPage() {
                       className={fieldClass('password') + ' pr-12'}
                     />
                     <button type="button" onClick={() => setShowPass(s => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400
-                        hover:text-earth-700 p-1 transition-colors">
+                      aria-label={showPass ? 'Hide password' : 'Show password'}
+                      aria-pressed={showPass}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 text-earth-500
+                        hover:text-earth-700 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors">
                       {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                   </div>

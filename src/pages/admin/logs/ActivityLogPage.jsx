@@ -41,6 +41,11 @@ const ACTION_CONFIG = {
   PAYMENT_FAILED:            { label: 'Payment Failed',           icon: CreditCard,   color: 'red',    category: 'payment' },
   PAYMENT_MANUALLY_CONFIRMED:{ label: 'Manual Payment Confirm',   icon: CreditCard,   color: 'amber',  category: 'payment' },
   PAYMENT_REFUNDED:          { label: 'Payment Refunded',         icon: CreditCard,   color: 'red',    category: 'payment' },
+  PAYMENT_OVERPAID:          { label: 'Overpayment Received',     icon: CreditCard,   color: 'amber',  category: 'payment' },
+  PAYMENT_METHOD_CHANGED:    { label: 'Payment Method Changed',   icon: CreditCard,   color: 'blue',   category: 'payment' },
+  COUPON_CREATED:            { label: 'Coupon Created',           icon: Settings2,    color: 'blue',   category: 'system'  },
+  COUPON_UPDATED:            { label: 'Coupon Updated',           icon: Settings2,    color: 'amber',  category: 'system'  },
+  COUPON_DELETED:            { label: 'Coupon Deleted',           icon: Settings2,    color: 'red',    category: 'system'  },
   // Accounts
   ADMIN_CREATED:             { label: 'Admin Created',            icon: Users,        color: 'blue',   category: 'account' },
   ADMIN_ROLE_CHANGED:        { label: 'Role Changed',             icon: Users,        color: 'amber',  category: 'account' },

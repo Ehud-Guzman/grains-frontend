@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { X, ChevronRight, Sparkles, Tag } from 'lucide-react'
+import { X } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
 
@@ -96,111 +96,33 @@ export default function ProductSpotlight({ products = [] }) {
   const product = eligible[current]
   const pricing = getLowestPrice(product)
   const image = getProductImage(product)
-  const dismissalsLeft = MAX_DISMISSALS - Number(sessionStorage.getItem(SESSION_KEY) || 0)
 
   return (
+    <>
+    {/* One compact pill at every size, bottom-left: the old 320px card sat on top of the hero
+        headline on phones and over the photo mosaic on desktop. */}
     <div
-      className={`fixed top-20 right-4 sm:right-6 z-40 w-72 sm:w-80 transition-all duration-500 ease-out
-        ${entered ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}
+      className={`fixed bottom-4 left-3 right-[4.5rem] sm:left-6 sm:right-auto sm:w-[26rem] z-40 transition-all duration-500 ease-out
+        ${entered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+      data-testid="spotlight-pill"
     >
-      <div className="bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-earth-100 overflow-hidden">
-
-        {/* Header bar */}
-        <div className="bg-brand-700 px-4 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Sparkles size={13} className="text-brand-200" />
-            <span className="text-xs font-admin font-semibold text-white tracking-wide uppercase">
-              Today's Pick
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5">
-              {Array.from({ length: MAX_DISMISSALS }).map((_, i) => (
-                <div key={i}
-                  className={`w-1 h-1 rounded-full transition-colors ${
-                    i < dismissalsLeft ? 'bg-brand-300' : 'bg-brand-900'
-                  }`}
-                />
-              ))}
-            </div>
-            <button
-              onClick={handleDismiss}
-              className="p-1 rounded-full hover:bg-brand-800 text-brand-200 hover:text-white transition-colors"
-              title={dismissalsLeft <= 1 ? "Close (won't show again)" : `Close (${dismissalsLeft - 1} more time${dismissalsLeft - 1 !== 1 ? 's' : ''} remaining)`}
-            >
-              <X size={13} />
-            </button>
-          </div>
-        </div>
-
-        {/* Product content */}
-        <div className={`transition-all duration-350 ${animating ? 'opacity-0 translate-x-3' : 'opacity-100 translate-x-0'}`}>
-          <Link to={`/shop/${product._id}`} onClick={handleDismiss} className="block">
-            {/* Image */}
-            <div className="relative h-36 bg-earth-50 overflow-hidden">
-              <img
-                src={getOptimizedImageUrl(image, { width: 640, height: 360 })}
-                alt={product.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="absolute top-2 left-2">
-                <span className="bg-white/90 backdrop-blur-sm text-earth-700 text-xs font-admin font-medium px-2 py-1 rounded-full">
-                  {product.category}
-                </span>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="px-4 py-3">
-              <h3 className="font-display font-semibold text-earth-900 text-base leading-tight">
-                {product.name}
-              </h3>
-              {product.description && (
-                <p className="text-earth-500 text-xs font-body mt-1 leading-relaxed line-clamp-2">
-                  {product.description}
-                </p>
-              )}
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-1.5">
-                  <Tag size={12} className="text-brand-500" />
-                  <div>
-                    <span className="text-xs text-earth-400 font-body">from </span>
-                    <span className="text-brand-600 font-display font-bold text-sm">
-                      {formatKES(pricing.price)}
-                    </span>
-                    <span className="text-earth-400 text-xs font-body"> / {pricing.size}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-brand-600 text-xs font-body font-medium">
-                  View <ChevronRight size={13} />
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Product dots */}
-        {eligible.length > 1 && (
-          <div className="flex items-center justify-center gap-1.5 pb-3">
-            {eligible.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setAnimating(true)
-                  setTimeout(() => { setCurrent(i); setAnimating(false) }, 350)
-                }}
-                className={`rounded-full transition-all duration-300 ${
-                  i === current
-                    ? 'w-4 h-1.5 bg-brand-500'
-                    : 'w-1.5 h-1.5 bg-earth-200 hover:bg-earth-300'
-                }`}
-              />
-            ))}
-          </div>
-        )}
+      <div className="flex items-center gap-2 bg-white rounded-2xl border border-earth-100 shadow-[0_8px_30px_rgba(0,0,0,0.18)] pl-2 pr-1 py-1.5">
+        <Link to={`/shop/${product._id}`} onClick={handleDismiss} className="flex items-center gap-2.5 flex-1 min-w-0">
+          <img src={getOptimizedImageUrl(image, { width: 96, height: 96 })} alt="" width="40" height="40"
+            className="w-10 h-10 rounded-xl object-cover flex-shrink-0" loading="lazy" decoding="async" />
+          <span className="min-w-0">
+            <span className="block text-[10px] font-admin font-semibold uppercase tracking-wide text-brand-700">Today&apos;s pick</span>
+            <span className="block text-sm font-body font-semibold text-earth-900 truncate">{product.name}</span>
+            <span className="block text-xs font-body text-earth-700">from {formatKES(pricing.price)} / {pricing.size}</span>
+          </span>
+        </Link>
+        <button type="button" onClick={handleDismiss} aria-label="Close today's pick"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-earth-500 hover:bg-earth-100">
+          <X size={16} aria-hidden="true" />
+        </button>
       </div>
     </div>
+
+    </>
   )
 }

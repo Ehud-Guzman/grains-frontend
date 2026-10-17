@@ -10,7 +10,9 @@ const TIMEOUT_MS    = MPESA_POLL_TIMEOUT_SECONDS * 1000
 // `phone` is the STK-push target shown to the customer; `pollPhone` is the
 // order's contact number — the status endpoint verifies guest ownership against
 // the CONTACT phone, so polling with a different M-Pesa number would 404 forever.
-export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, amount, onSuccess, onFailure }) {
+// `cashLabel` names the cash alternative for this order ("Pay on Pickup" / "Pay on Delivery");
+// pass `cashLabel={null}` to hide the switch when the branch doesn't offer it.
+export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, amount, onSuccess, onFailure, cashLabel = 'Pay on Pickup' }) {
   const [secondsLeft, setSecondsLeft] = useState(MPESA_POLL_TIMEOUT_SECONDS)
   const [status, setStatus]           = useState('pending') // pending | paid | failed | timeout
   const [message, setMessage]         = useState('')
@@ -110,11 +112,13 @@ export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, am
               rounded-xl font-body font-semibold hover:bg-brand-600 transition-colors">
             <RefreshCw size={15} /> Try Again
           </button>
-          <button onClick={() => onFailure?.('switch')}
-            className="flex items-center justify-center gap-2 px-5 py-3 border border-earth-200
-              text-earth-600 rounded-xl font-body font-medium hover:bg-earth-50 transition-colors">
-            Pay on Pickup Instead
-          </button>
+          {cashLabel && (
+            <button onClick={() => onFailure?.('switch')}
+              className="flex items-center justify-center gap-2 px-5 py-3 border border-earth-200
+                text-earth-600 rounded-xl font-body font-medium hover:bg-earth-50 transition-colors">
+              {cashLabel} Instead
+            </button>
+          )}
         </div>
         <button onClick={() => onFailure?.('continue')}
           className="mt-4 text-sm text-earth-400 hover:text-earth-700 font-body underline transition-colors">
@@ -131,7 +135,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, am
       <div className="relative w-24 h-24 mx-auto mb-5">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="44" fill="none" stroke="#E5E7EB" strokeWidth="8" />
-          <circle cx="50" cy="50" r="44" fill="none" stroke="#C8912A" strokeWidth="8"
+          <circle cx="50" cy="50" r="44" fill="none" stroke="var(--brand-500)" strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 44}`}
             strokeDashoffset={`${2 * Math.PI * 44 * (1 - progress / 100)}`}
