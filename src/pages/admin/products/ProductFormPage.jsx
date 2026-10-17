@@ -812,7 +812,7 @@ export default function ProductFormPage() {
       </div>
 
       {/* ── STICKY SAVE BAR ────────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 lg:left-60 bg-white border-t border-admin-200 px-6 py-4 z-30">
+      <div data-fab-avoid className="fixed bottom-0 left-0 right-0 lg:left-60 bg-white border-t border-admin-200 px-6 py-4 z-30">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <Link to="/admin/products"
             className="px-4 py-2.5 border border-admin-200 text-admin-600 rounded-xl text-sm

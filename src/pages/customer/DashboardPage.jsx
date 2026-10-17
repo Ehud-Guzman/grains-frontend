@@ -191,8 +191,9 @@ export default function CustomerDashboardPage() {
       {/* ── Content ──────────────────────────────────────────────────── */}
       <div className="container-page max-w-2xl py-4 pb-12">
 
-        {/* Onboarding checklist */}
-        {!allChecklistDone && (
+        {/* Onboarding checklist — only until the first order. After that it is just a tall
+            card that pushes the customer's actual orders below the fold. */}
+        {!allChecklistDone && stats && stats.allTime.orderCount === 0 && (
           <div className="mb-4">
             <OnboardingChecklistCard
               eyebrow="Getting started"

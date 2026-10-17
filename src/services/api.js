@@ -160,9 +160,9 @@ api.interceptors.response.use(
 
       } catch (refreshError) {
         processQueue(refreshError, null)
-        // Only a real auth rejection means the session is gone. A network
-        // error or cold-start timeout must not destroy a valid session.
-        if (refreshError.response) {
+        // Only a real auth rejection (401/403) means the session is gone. A network error,
+        // cold-start timeout, rate limit (429) or server error (5xx) must not destroy a valid session.
+        if ([401, 403].includes(refreshError.response?.status)) {
           clearSession()
         }
         return Promise.reject(refreshError)

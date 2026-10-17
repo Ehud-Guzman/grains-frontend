@@ -30,15 +30,29 @@ function HelpCenter() {
 
   useEffect(() => {
     function updateFabLift() {
+      // The footer scrolls into view; fixed bottom bars (marked data-fab-avoid) are always there.
+      let overlap = 0
       const footer = document.querySelector('footer')
-      if (!footer) { setFabLift(0); return }
-      const overlap = window.innerHeight - footer.getBoundingClientRect().top
+      if (footer) overlap = window.innerHeight - footer.getBoundingClientRect().top
+      document.querySelectorAll('[data-fab-avoid]').forEach(el => {
+        const r = el.getBoundingClientRect()
+        if (r.height > 0) overlap = Math.max(overlap, window.innerHeight - r.top)
+      })
       setFabLift(overlap > 0 ? overlap + 12 : 0)
     }
     updateFabLift()
     window.addEventListener('scroll', updateFabLift, { passive: true })
     window.addEventListener('resize', updateFabLift)
+    // Layouts mount after this component and swap on navigation, so re-measure when the DOM changes.
+    let frame = 0
+    const observer = new MutationObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(updateFabLift)
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
     return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
       window.removeEventListener('scroll', updateFabLift)
       window.removeEventListener('resize', updateFabLift)
     }

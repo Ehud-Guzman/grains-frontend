@@ -1109,7 +1109,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ── STICKY SAVE BAR ───────────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 lg:left-60 bg-white/90 backdrop-blur-sm
+      <div data-fab-avoid className="fixed bottom-0 left-0 right-0 lg:left-60 bg-white/90 backdrop-blur-sm
         border-t border-admin-200 px-6 py-3.5 z-30">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <p className={`text-sm font-admin transition-all duration-200 ${

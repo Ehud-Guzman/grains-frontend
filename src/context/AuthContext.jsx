@@ -26,8 +26,17 @@ export const AuthProvider = ({ children }) => {
       }
       try {
         // Long timeout: a Render cold start takes ~30s and must not be treated
-        // as a dead session.
-        const res = await authService.refresh({ timeout: 65000 })
+        // as a dead session. A 429/502/503/504 is transient too, so retry those twice.
+        let res
+        for (let attempt = 0; ; attempt++) {
+          try {
+            res = await authService.refresh({ timeout: 65000 })
+            break
+          } catch (e) {
+            if (attempt >= 2 || ![429, 502, 503, 504].includes(e.response?.status)) throw e
+            await new Promise(r => setTimeout(r, 1500 * (attempt + 1)))
+          }
+        }
         const { accessToken, user: freshUser } = res.data.data
         setToken(accessToken)
         const userData = freshUser || JSON.parse(stored)
@@ -35,10 +44,10 @@ export const AuthProvider = ({ children }) => {
         setUser(userData)
         if (storedBranch) setCurrentBranch(JSON.parse(storedBranch))
       } catch (err) {
-        // Only clear local state when the server actually rejected the cookie.
-        // Network errors / timeouts keep the stored session so the next visit
-        // can retry the restore.
-        if (err.response) {
+        // Only clear local state when the server actually rejected the cookie (401/403).
+        // Network errors, timeouts, 429s and 5xx keep the stored session so the next
+        // visit can retry the restore.
+        if ([401, 403].includes(err.response?.status)) {
           clearToken()
           localStorage.removeItem('user')
           localStorage.removeItem('currentBranch')

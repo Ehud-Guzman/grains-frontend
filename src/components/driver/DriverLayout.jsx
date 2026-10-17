@@ -68,7 +68,7 @@ export default function DriverLayout() {
           one-handed in the field, usually mid-delivery, so the two destinations
           need to be permanently visible and thumb-reachable rather than one tap
           behind a menu. Hidden from sm up, where the header nav takes over. */}
-      <nav aria-label="Driver navigation"
+      <nav aria-label="Driver navigation" data-fab-avoid
         className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-brand-800
           border-t border-brand-700 pb-safe px-safe">
         <div className="flex items-stretch">

@@ -81,9 +81,9 @@ function AvatarUploader({ avatarURL, name, onUpload }) {
 // ─── ENHANCED STAT CARD ────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, value, label, color, loading }) {
   return (
-    <div className="group bg-white rounded-2xl border border-admin-100 shadow-sm hover:shadow-md transition-all duration-200 p-5 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color} transition-transform duration-200 group-hover:scale-105`}>
-        <Icon size={22} strokeWidth={1.8} />
+    <div className="group bg-white rounded-2xl border border-admin-100 shadow-sm hover:shadow-md transition-all duration-200 p-3 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+      <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color} transition-transform duration-200 group-hover:scale-105`}>
+        <Icon size={20} strokeWidth={1.8} />
       </div>
       <div className="overflow-hidden">
         {loading ? (
@@ -94,7 +94,7 @@ function StatCard({ icon: Icon, value, label, color, loading }) {
         ) : (
           <>
             <p className="text-2xl font-admin font-bold text-admin-900 tracking-tight">{value ?? '—'}</p>
-            <p className="text-sm font-admin text-admin-400">{label}</p>
+            <p className="text-xs sm:text-sm font-admin text-admin-500 leading-tight">{label}</p>
           </>
         )}
       </div>
@@ -123,7 +123,7 @@ function OrderCard({ order, onComplete }) {
               : 'bg-purple-50 text-purple-700 border-purple-200'
           }`}
         >
-          {order.status.replace('_', ' ')}
+          {order.status.replace(/_/g, ' ')}
         </span>
       </div>
 
@@ -328,7 +328,7 @@ export default function DriverDashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-3 gap-2 sm:gap-5">
         <StatCard
           icon={Clock}
           value={stats.active}

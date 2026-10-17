@@ -214,7 +214,7 @@ export default function LoginPage() {
       }
       if (result.requiresBranchSelection) {
         setLoading(false)
-        setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
+        await goToBranchStep(result)
         return
       }
       navigateAfterLogin(result.user)
@@ -231,10 +231,21 @@ export default function LoginPage() {
     const result = await verifyTwoFactor(twoFactorToken, otp)
     if (result.requiresBranchSelection) {
       setTwoFactorStep(null)
-      setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
+      await goToBranchStep(result)
       return
     }
     navigateAfterLogin(result.user)
+  }
+
+  // One branch means nothing to choose: go straight in. If that fails, fall back to the picker.
+  const goToBranchStep = async (result) => {
+    if (result.branches?.length === 1) {
+      try {
+        await handleBranchSelect(result.preAuthToken, result.branches[0]._id)
+        return
+      } catch { /* show the picker so the person can retry and see the error */ }
+    }
+    setBranchStep({ preAuthToken: result.preAuthToken, branches: result.branches, user: result.user })
   }
 
   const handleBranchSelect = async (preAuthToken, branchId) => {
@@ -454,7 +465,7 @@ export default function LoginPage() {
         {/* Bottom branding */}
         <div className="relative z-10 pb-2 sm:pb-3 text-center flex-shrink-0">
           <p className="text-white/30 text-xs font-body">
-            Vittorios Grains &amp; Cereals · Nairobi, Kenya
+            Vittorios Grains &amp; Cereals
           </p>
         </div>
 
