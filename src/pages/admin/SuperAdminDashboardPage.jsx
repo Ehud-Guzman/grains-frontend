@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import {
   GitBranch, Users, ShoppingCart, Package, TrendingUp, Shield,
   Settings2, Activity, RefreshCw, ArrowUpRight, CheckCircle,
-  AlertCircle, Clock, DollarSign, Eye, Layers, UserCog, Archive,
+  AlertCircle, Clock, DollarSign, Eye, Layers, UserCog, Archive, Gauge,
 } from 'lucide-react'
 import { adminBranchService } from '../../services/admin/branch.service'
 import { adminUserService } from '../../services/admin/user.service'
@@ -287,6 +287,7 @@ export default function SuperAdminDashboardPage() {
         {/* ── Quick Actions ────────────────────────────────────────────── */}
         <div className="space-y-2.5" data-tour="superadmin-system-controls">
           <h2 className="font-admin font-bold text-admin-900 text-sm px-1 mb-3">System Controls</h2>
+          <ActionCard icon={Gauge}     label="Control Center"    desc="Health, switches, sessions, security" to="/admin/control-center" color="red" />
           <ActionCard icon={GitBranch} label="Branch Management" desc="Create, edit, assign staff" to="/admin/branches" color="brand" />
           <ActionCard icon={UserCog}   label="User Management"   desc="Accounts, roles, passwords" to="/admin/users"    color="blue" />
           <ActionCard icon={Shield}    label="Activity Log"       desc="Full audit trail"           to="/admin/logs"     color="purple" />

@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Users, LogOut,
   Menu, X, Layers, TrendingUp, UserCog, Shield, Settings2,
   Bell, ChevronRight, GitBranch, Eye, Archive, Truck, ClipboardList,
-  Tag, Megaphone, FileCheck, AlertTriangle, Send,
+  Tag, Megaphone, FileCheck, AlertTriangle, Send, Gauge,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useShopInfo } from '../../context/AppSettingsContext'
@@ -49,7 +49,8 @@ const SUPERADMIN_NAV = [
   {
     group: 'Platform',
     items: [
-      { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Control Center' },
+      { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard'      },
+      { to: '/admin/control-center', icon: Gauge,      label: 'Control Center' },
       { to: '/admin/branches',  icon: GitBranch,       label: 'Branches'       },
     ]
   },
@@ -98,6 +99,7 @@ const getGreeting = () => {
 // ── PAGE TITLE MAP ─────────────────────────────────────────────────────────────
 const PAGE_TITLES = {
   '/admin/dashboard': 'Dashboard',
+  '/admin/control-center': 'Control Center',
   '/admin/branches':  'Branch Management',
   '/admin/orders':    'Orders',
   '/admin/stock/intake': 'Stock Intake',

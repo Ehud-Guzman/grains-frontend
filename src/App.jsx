@@ -68,6 +68,7 @@ const UserManagementPage = lazy(() => import("./pages/admin/users/UserManagement
 const BranchManagementPage = lazy(() => import("./pages/admin/branches/BranchManagementPage"));
 const BackupManagementPage = lazy(() => import("./pages/admin/backups/BackupManagementPage"));
 const EtimsPage            = lazy(() => import("./pages/admin/settings/EtimsPage"));
+const ControlCenterPage    = lazy(() => import("./pages/admin/control/ControlCenterPage"));
 const NotFoundPage         = lazy(() => import("./pages/public/NotFoundPage"));
 
 // Remounts its subtree when the resolved storefront branch changes, so
@@ -287,6 +288,11 @@ export default function App() {
               } />
 
               {/* System — superadmin only */}
+              <Route path="control-center" element={
+                <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
+                  <ControlCenterPage />
+                </ProtectedRoute>
+              } />
               <Route path="logs" element={
                 <ProtectedRoute requireRole={SUPERADMIN_ROLES}>
                   <ActivityLogPage />

@@ -57,6 +57,12 @@ const ACTION_CONFIG = {
   SYSTEM_BACKUP_CREATED:     { label: 'Backup Created',           icon: Archive,      color: 'blue',   category: 'system'  },
   SYSTEM_BACKUP_RESTORED:    { label: 'Backup Restored',          icon: Archive,      color: 'amber',  category: 'system'  },
   SYSTEM_BACKUP_DELETED:     { label: 'Backup Deleted',           icon: Archive,      color: 'red',    category: 'system'  },
+  // Control Center (superadmin)
+  CONTROL_SESSIONS_REVOKED:  { label: 'Sessions Ended',           icon: LogOut,       color: 'amber',  category: 'system'  },
+  CONTROL_SWITCH_CHANGED:    { label: 'Switch Changed',           icon: Settings2,    color: 'amber',  category: 'system'  },
+  CONTROL_JOB_PAUSED:        { label: 'Job Paused',               icon: Settings2,    color: 'amber',  category: 'system'  },
+  CONTROL_JOB_RESUMED:       { label: 'Job Resumed',              icon: Settings2,    color: 'green',  category: 'system'  },
+  CONTROL_AUDIT_EXPORTED:    { label: 'Log Exported',             icon: Shield,       color: 'blue',   category: 'system'  },
 }
 
 const CATEGORIES = [
@@ -154,6 +160,13 @@ function LogRow({ log }) {
     if (log.action === 'SETTINGS_UPDATED') return d.updatedFields?.join(', ') || ''
     if (['SYSTEM_BACKUP_CREATED','SYSTEM_BACKUP_DELETED','SYSTEM_BACKUP_RESTORED'].includes(log.action))
       return d.filename || d.backupId || ''
+    if (['PLATFORM_LOCKED','PLATFORM_UNLOCKED'].includes(log.action)) return d.branch || ''
+    if (log.action === 'CONTROL_SWITCH_CHANGED' && d.changes)
+      return `${d.branch ? `${d.branch}: ` : ''}${Object.entries(d.changes).map(([k, v]) => `${k} ${v.from} → ${v.to}`).join(', ')}`
+    if (log.action === 'CONTROL_SESSIONS_REVOKED')
+      return d.name ? `${d.name}` : `${d.accounts ?? 0} account(s), scope: ${d.scope}`
+    if (['CONTROL_JOB_PAUSED','CONTROL_JOB_RESUMED'].includes(log.action)) return d.label || d.job || ''
+    if (log.action === 'CONTROL_AUDIT_EXPORTED') return `${d.rows ?? 0} rows`
     return ''
   }
 
