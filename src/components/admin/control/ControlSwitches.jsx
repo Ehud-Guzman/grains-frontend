@@ -83,7 +83,7 @@ function BranchSwitches({ branch, definitions, reload }) {
   const visible = definitions.filter(d => !d.global || branch.isDefault)
 
   return (
-    <div className="rounded-xl border border-admin-200 p-4">
+    <div className="min-w-0 rounded-xl border border-admin-200 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
         <h3 className="font-admin font-bold text-admin-900 text-sm">{branch.name}</h3>
         <div className="flex gap-1">
@@ -206,7 +206,7 @@ export default function ControlSwitches({ overview, reload }) {
           )
         }>
         {overview.branches?.error ? <SectionError message={overview.branches.error} onRetry={reload} /> : (
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {branches.map(b => <BranchSwitches key={b.id} branch={b} definitions={overview.switchDefinitions} reload={reload} />)}
           </div>
         )}

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ShoppingCart, TrendingUp, DollarSign, Package, AlertTriangle,
   Clock, ChevronRight, RefreshCw, CheckCircle, ArrowUpRight,
-  Banknote, Hourglass, ListOrdered
+  Banknote, Hourglass, ListOrdered, Plus, PackageSearch
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -14,6 +14,8 @@ import SuperAdminDashboardPage from './SuperAdminDashboardPage'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { adminReportService } from '../../services/admin/report.service'
 import { adminStockService } from '../../services/admin/stock.service'
+import { adminOrderService } from '../../services/admin/order.service'
+import { SEES_KPIS } from '../../components/admin/adminNav'
 import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
@@ -56,7 +58,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, badge, link }) {
           </span>
         )}
       </div>
-      <p className="font-admin font-bold text-admin-900 text-2xl leading-tight tracking-tight">{value}</p>
+      <p className="font-admin font-bold text-admin-900 text-xl sm:text-2xl leading-tight tracking-tight break-words">{value}</p>
       <p className="text-admin-500 text-xs font-admin mt-1.5 font-medium">{label}</p>
       {sub && <p className="text-admin-400 text-xs font-admin mt-0.5">{sub}</p>}
     </div>
@@ -76,6 +78,37 @@ function KpiSkeleton() {
   )
 }
 
+// What needs doing right now, as tappable chips. Silent when there is nothing: a dashboard
+// that always shouts stops being read.
+function AttentionStrip({ pending, lowStock, unpaid }) {
+  const items = [
+    pending > 0 && { to: '/admin/orders?status=pending', icon: Clock, tone: 'amber',
+      text: `${pending} order${pending === 1 ? '' : 's'} waiting for approval` },
+    lowStock > 0 && { to: '/admin/stock', icon: PackageSearch, tone: 'red',
+      text: `${lowStock} item${lowStock === 1 ? '' : 's'} low or out of stock` },
+    unpaid > 0 && { to: '/admin/orders', icon: Hourglass, tone: 'blue',
+      text: `${unpaid} order${unpaid === 1 ? '' : 's'} awaiting payment this month` },
+  ].filter(Boolean)
+  if (items.length === 0) return null
+
+  const tones = {
+    amber: 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100',
+    red:   'bg-red-50 border-red-200 text-red-800 hover:bg-red-100',
+    blue:  'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100',
+  }
+  return (
+    <ul aria-label="Needs attention" className="flex flex-wrap gap-2 mb-6">
+      {items.map(({ to, icon: Icon, tone, text }) => (
+        <li key={to + text}>
+          <Link to={to} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-admin font-semibold transition-colors ${tones[tone]}`}>
+            <Icon size={14} aria-hidden="true" /> {text} <ArrowUpRight size={13} aria-hidden="true" className="opacity-60" />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 // Thin role switch: superadmin gets its own dashboard component. Kept as a
 // wrapper so each variant has a stable hook order — an early return above
 // other hook calls violates the Rules of Hooks.
@@ -87,6 +120,10 @@ export default function AdminDashboardPage() {
 
 function BusinessDashboardPage() {
   const { user } = useAuth()
+  // Reports and stock levels are supervisor+ on the API. Staff used to get the same page
+  // and therefore only ever saw an error; they now get an orders-based view instead.
+  const canSeeKpis = SEES_KPIS.includes(user?.role)
+  const isAdmin = user?.role === 'admin'
   const { getChecklist } = useOnboarding()
   const [kpis, setKpis]             = useState(null)
   const [lowStock, setLowStock]     = useState([])
@@ -111,12 +148,24 @@ function BusinessDashboardPage() {
     else setRefreshing(true)
     try {
       setError('')
-      const [kpiRes, stockRes] = await Promise.all([
-        adminReportService.getKPIs(),
-        adminStockService.getLowStock()
-      ])
-      setKpis(kpiRes.data.data)
-      setLowStock(stockRes.data.data?.slice(0, 8) || [])
+      if (canSeeKpis) {
+        const [kpiRes, stockRes] = await Promise.all([
+          adminReportService.getKPIs(),
+          adminStockService.getLowStock()
+        ])
+        setKpis(kpiRes.data.data)
+        setLowStock(stockRes.data.data?.slice(0, 8) || [])
+      } else {
+        // Staff: the order queue only.
+        const [recentRes, pendingRes] = await Promise.all([
+          adminOrderService.getAll({ limit: 10 }),
+          adminOrderService.getAll({ status: 'pending', limit: 1 }),
+        ])
+        setKpis({
+          recentOrders: recentRes.data?.data || [],
+          pendingOrders: pendingRes.data?.pagination?.total || 0,
+        })
+      }
       setLastRefreshed(new Date())
     } catch {
       setError('Could not load dashboard metrics right now. Try refreshing.')
@@ -144,9 +193,10 @@ function BusinessDashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
-  useEffect(() => { fetchRevenue(revPeriod) }, [revPeriod])
+  useEffect(() => { if (canSeeKpis) fetchRevenue(revPeriod) }, [revPeriod, canSeeKpis])
 
   useEffect(() => {
+    if (!canSeeKpis) { setTrendingLoading(false); return }
     setTrendingLoading(true)
     adminReportService.getBestSellers({ period: 'week', limit: 5 })
       .then(res => setTrending(res.data?.data?.products || []))
@@ -155,10 +205,10 @@ function BusinessDashboardPage() {
   }, [])
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 mb-6" data-tour="admin-dashboard-header">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6" data-tour="admin-dashboard-header">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Dashboard</h1>
           <p className="text-admin-400 text-xs font-admin mt-0.5">
@@ -167,9 +217,23 @@ function BusinessDashboardPage() {
             Updated {timeAgo(lastRefreshed)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => fetchData(true)} disabled={refreshing}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Only the shortcuts this role can actually open: a link to a page the role is
+              bounced from is worse than no link. */}
+          <Link to="/admin/orders?status=pending"
             className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg
+              text-sm font-admin font-semibold text-admin-700 hover:bg-admin-50 transition-colors shadow-admin">
+            <Clock size={14} className="text-amber-600" /> Pending orders
+          </Link>
+          {isAdmin && (
+            <Link to="/admin/products/new"
+              className="flex items-center gap-2 px-3 py-2 bg-brand-600 text-white rounded-lg
+                text-sm font-admin font-semibold hover:bg-brand-700 transition-colors shadow-admin">
+              <Plus size={14} /> Add product
+            </Link>
+          )}
+          <button onClick={() => fetchData(true)} disabled={refreshing} aria-label="Refresh dashboard"
+            className="flex items-center gap-2 px-3 py-2 min-h-[40px] bg-white border border-admin-200 rounded-lg
               text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
@@ -183,22 +247,26 @@ function BusinessDashboardPage() {
         </div>
       )}
 
-      {showAdminChecklist && (
-        <div className="mb-6">
-          <OnboardingChecklistCard
-            eyebrow="Operational Readiness"
-            title="Bring new staff up to speed fast"
-            description="This admin checklist keeps the first session focused on the pages that matter most."
-            items={adminChecklist}
-            theme="admin"
-          />
-        </div>
+      {!loading && (
+        <AttentionStrip
+          pending={kpis?.pendingOrders ?? 0}
+          lowStock={canSeeKpis ? (kpis?.lowStockCount ?? 0) : 0}
+          unpaid={canSeeKpis ? (kpis?.cashFlow?.unpaidOrders ?? 0) : 0}
+        />
       )}
 
       {/* ── KPI Grid ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6" data-tour="admin-kpis">
         {loading ? (
-          Array.from({ length: 5 }).map((_, i) => <KpiSkeleton key={i} />)
+          Array.from({ length: canSeeKpis ? 5 : 2 }).map((_, i) => <KpiSkeleton key={i} />)
+        ) : !canSeeKpis ? (
+          <>
+            <KpiCard icon={Clock} label="Pending Orders" color="amber"
+              value={kpis?.pendingOrders ?? 0} badge={kpis?.pendingOrders}
+              link="/admin/orders?status=pending" />
+            <KpiCard icon={ShoppingCart} label="All Orders" color="blue"
+              value="View" sub="Open the full order list" link="/admin/orders" />
+          </>
         ) : (
           <>
             <KpiCard icon={ShoppingCart} label="Orders Today"    color="blue"
@@ -212,10 +280,12 @@ function BusinessDashboardPage() {
               value={formatKES(kpis?.revenueToday ?? 0)} />
             <KpiCard icon={TrendingUp}   label="This Month (gross)"     color="brand"
               value={formatKES(kpis?.revenueThisMonth ?? 0)} />
-            <KpiCard icon={AlertTriangle} label="Low Stock Items" color="red"
-              value={kpis?.lowStockCount ?? 0}
-              badge={kpis?.lowStockCount}
-              link="/admin/stock" />
+            <div className="col-span-2 lg:col-span-1">
+              <KpiCard icon={AlertTriangle} label="Low Stock Items" color="red"
+                value={kpis?.lowStockCount ?? 0}
+                badge={kpis?.lowStockCount}
+                link="/admin/stock" />
+            </div>
           </>
         )}
       </div>
@@ -241,7 +311,20 @@ function BusinessDashboardPage() {
         </div>
       )}
 
+      {showAdminChecklist && (
+        <div className="mb-6">
+          <OnboardingChecklistCard
+            eyebrow="Operational Readiness"
+            title="Bring new staff up to speed fast"
+            description="This admin checklist keeps the first session focused on the pages that matter most."
+            items={adminChecklist}
+            theme="admin"
+          />
+        </div>
+      )}
+
       {/* ── Revenue Trend Chart ────────────────────────────────────────── */}
+      {canSeeKpis && (
       <div className="bg-white rounded-xl border border-admin-100 shadow-admin p-5 mb-5">
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -284,8 +367,8 @@ function BusinessDashboardPage() {
             <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="dashRevGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#C8912A" stopOpacity={0.18} />
-                  <stop offset="95%" stopColor="#C8912A" stopOpacity={0}    />
+                  <stop offset="5%"  stopColor="#C4622D" stopOpacity={0.18} />
+                  <stop offset="95%" stopColor="#C4622D" stopOpacity={0}    />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1EDE6" vertical={false} />
@@ -313,22 +396,23 @@ function BusinessDashboardPage() {
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#C8912A"
+                stroke="#C4622D"
                 strokeWidth={2}
-                dot={{ r: 3, fill: '#C8912A', strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: '#C8912A', stroke: '#fff', strokeWidth: 2 }}
+                dot={{ r: 3, fill: '#C4622D', strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#C4622D', stroke: '#fff', strokeWidth: 2 }}
                 fill="url(#dashRevGrad)"
               />
             </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
+      )}
 
       {/* ── Bottom panels ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden" data-tour="admin-recent-orders">
+        <div className={`${canSeeKpis ? 'lg:col-span-2' : 'lg:col-span-3'} bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden`} data-tour="admin-recent-orders">
           <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 bg-admin-50/40">
             <div>
               <h2 className="font-admin font-bold text-admin-900 text-sm">Recent Orders</h2>
@@ -368,8 +452,8 @@ function BusinessDashboardPage() {
                 <Link key={order._id} to={`/admin/orders/${order._id}`}
                   className="flex items-center gap-4 px-5 py-3.5 hover:bg-admin-50 transition-colors group">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-admin font-bold text-admin-800 text-sm tracking-wide">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-0.5">
+                      <span className="font-admin font-bold text-admin-800 text-sm tracking-wide whitespace-nowrap">
                         {order.orderRef}
                       </span>
                       <StatusBadge status={order.status} deliveryMethod={order.deliveryMethod} />
@@ -389,24 +473,10 @@ function BusinessDashboardPage() {
             </div>
           )}
 
-          {/* Quick actions */}
-          <div className="border-t border-admin-100 px-5 py-3 bg-admin-50/40 flex gap-3">
-            <Link to="/admin/orders?status=pending"
-              className="text-xs font-admin text-admin-600 hover:text-brand-600 transition-colors">
-              View pending →
-            </Link>
-            <Link to="/admin/products/new"
-              className="text-xs font-admin text-admin-600 hover:text-brand-600 transition-colors">
-              Add product →
-            </Link>
-            <Link to="/admin/reports"
-              className="text-xs font-admin text-admin-600 hover:text-brand-600 transition-colors">
-              View reports →
-            </Link>
-          </div>
         </div>
 
         {/* Low Stock */}
+        {canSeeKpis && (
         <div className="bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden" data-tour="admin-low-stock">
           <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 bg-admin-50/40">
             <div>
@@ -481,9 +551,11 @@ function BusinessDashboardPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* ── Most Moving Products (last 7 days) ───────────────────────────── */}
+      {canSeeKpis && (
       <div className="bg-white rounded-xl border border-admin-100 shadow-admin overflow-hidden mt-5">
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 bg-admin-50/40">
           <div>
@@ -522,6 +594,7 @@ function BusinessDashboardPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

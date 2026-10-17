@@ -36,7 +36,7 @@ function AttentionItem({ item }) {
 function BranchCard({ branch }) {
   const f = branch.figures
   return (
-    <div className="rounded-xl border border-admin-200 bg-white p-4">
+    <div className="min-w-0 rounded-xl border border-admin-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 bg-brand-50 border border-brand-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -132,7 +132,7 @@ export default function ControlOverview({ overview }) {
         {branches?.error ? <SectionError message={branches.error} /> : (
           branches.length === 0
             ? <p className="text-sm font-admin text-admin-400">No branches yet.</p>
-            : <div className="grid gap-3 lg:grid-cols-2">{branches.map(b => <BranchCard key={b.id} branch={b} />)}</div>
+            : <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{branches.map(b => <BranchCard key={b.id} branch={b} />)}</div>
         )}
       </Section>
     </div>

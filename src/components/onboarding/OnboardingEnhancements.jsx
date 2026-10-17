@@ -25,7 +25,7 @@ const ACCENT_STYLES = {
   },
   admin: {
     shell: 'border-admin-200 bg-white',
-    badge: 'border-admin-300/40 bg-admin-900 text-black',
+    badge: 'border-admin-300/40 bg-admin-900 text-white',
     icon: 'bg-admin-900 text-white',
     title: 'text-admin-900',
     body: 'text-admin-600',
@@ -91,8 +91,9 @@ export function OnboardingChecklistCard({
 
       <div className="relative p-6 sm:p-7">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-5">
-          <div>
+        {/* Stacks on phones: beside the title the stat squeezed it into three lines. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-5">
+          <div className="min-w-0">
             <BadgePill styles={styles}>{eyebrow}</BadgePill>
             <h3 className={`font-display text-2xl font-bold mt-4 mb-2 ${styles.title}`}>
               {title}
@@ -102,9 +103,9 @@ export function OnboardingChecklistCard({
             </p>
           </div>
 
-          <div className="min-w-[88px] text-right">
+          <div className="flex items-baseline gap-2 sm:block sm:min-w-[88px] sm:text-right flex-shrink-0">
             <p className={`font-display text-3xl font-bold ${styles.stat}`}>{progress}%</p>
-            <p className={`text-xs font-body mt-1 ${styles.subtext}`}>
+            <p className={`text-xs font-body sm:mt-1 ${styles.subtext}`}>
               {doneCount} of {total} complete
             </p>
           </div>
