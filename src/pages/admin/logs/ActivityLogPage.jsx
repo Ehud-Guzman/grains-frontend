@@ -43,6 +43,7 @@ const ACTION_CONFIG = {
   PAYMENT_REFUNDED:          { label: 'Payment Refunded',         icon: CreditCard,   color: 'red',    category: 'payment' },
   PAYMENT_OVERPAID:          { label: 'Overpayment Received',     icon: CreditCard,   color: 'amber',  category: 'payment' },
   PAYMENT_METHOD_CHANGED:    { label: 'Payment Method Changed',   icon: CreditCard,   color: 'blue',   category: 'payment' },
+  PAYMENT_RECONCILED:        { label: 'Payment Recovered (Status Check)', icon: CreditCard, color: 'amber', category: 'payment' },
   COUPON_CREATED:            { label: 'Coupon Created',           icon: Settings2,    color: 'blue',   category: 'system'  },
   COUPON_UPDATED:            { label: 'Coupon Updated',           icon: Settings2,    color: 'amber',  category: 'system'  },
   COUPON_DELETED:            { label: 'Coupon Deleted',           icon: Settings2,    color: 'red',    category: 'system'  },

@@ -4,10 +4,17 @@ import { useBranch } from './BranchContext'
 import { getCartUnitPrice } from '../utils/helpers'
 import { trackAddToCart } from '../utils/analytics'
 import { productService } from '../services/product.service'
+import { safeStorage, readStoredArray } from '../utils/safeStorage'
 
 const CartContext = createContext(null)
 const CART_KEY = 'vittorios_cart'
 const CART_BRANCH_KEY = 'vittorios_cart_branch'
+
+// A stored cart line has to look like one before anything maps over it; a damaged or old-format
+// entry is dropped rather than crashing the cart and every page that shows its badge.
+const isCartLine = (line) => (
+  line && typeof line === 'object' && typeof line.productId === 'string' && Number.isFinite(line.quantity) && line.quantity > 0
+)
 
 // stock === null means "unknown" (reorder from an old order snapshot) — the
 // quantity is then validated server-side at checkout instead of client-side.
@@ -21,15 +28,9 @@ export const CartProvider = ({ children }) => {
   // that stale value first and overwrite the real stored cart with "[]"
   // before the hydration landed (most visible under React 18 StrictMode's
   // dev-only double-effect-invocation).
-  const [items, setItems] = useState(() => {
-    try {
-      const stored = localStorage.getItem(CART_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      localStorage.removeItem(CART_KEY)
-      return []
-    }
-  })
+  // (safeStorage: storage can throw in Safari "block all cookies" and in-app browsers, and the old
+  // catch block called localStorage again, so the error escaped the initializer and blanked the shop.)
+  const [items, setItems] = useState(() => readStoredArray(CART_KEY, isCartLine))
   const [isOpen, setIsOpen] = useState(false)
   const { branch, branchId } = useBranch()
 
@@ -49,17 +50,17 @@ export const CartProvider = ({ children }) => {
   // clear it — otherwise checkout would 404 on the other branch's product IDs.
   useEffect(() => {
     if (!branchId) return
-    const cartBranch = localStorage.getItem(CART_BRANCH_KEY)
+    const cartBranch = safeStorage.get(CART_BRANCH_KEY)
     if (cartBranch && cartBranch !== branchId && items.length > 0) {
       commit([])
-      localStorage.removeItem(CART_KEY)
+      safeStorage.remove(CART_KEY)
       toast(`Cart cleared — now shopping from ${branch?.name || 'a different branch'}`, { icon: '🧺' })
     }
-    localStorage.setItem(CART_BRANCH_KEY, branchId)
+    safeStorage.set(CART_BRANCH_KEY, branchId)
   }, [branchId, branch?.name, items.length, commit])
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(items))
+    safeStorage.set(CART_KEY, JSON.stringify(items))
   }, [items])
 
   const addItem = useCallback((product, variety, packaging, quantity = 1) => {
@@ -121,7 +122,7 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = useCallback(() => {
     commit([])
-    localStorage.removeItem(CART_KEY)
+    safeStorage.remove(CART_KEY)
   }, [commit])
 
   // Bulk-load items from a previous order (reorder flow) or a saved list
@@ -175,7 +176,9 @@ export const CartProvider = ({ children }) => {
   const refreshing = useRef(false)
   const refreshPrices = useCallback(async () => {
     if (refreshing.current) return
-    const current = JSON.parse(localStorage.getItem(CART_KEY) || '[]')
+    // The live cart, not a fresh read of storage: storage is only written after render, can be
+    // unavailable, and may hold something older than what the customer is looking at.
+    const current = itemsRef.current
     if (current.length === 0) return
     refreshing.current = true
     try {

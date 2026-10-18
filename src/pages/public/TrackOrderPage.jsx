@@ -174,7 +174,7 @@ export default function TrackOrderPage() {
                   autoCapitalize="characters"
                   value={ref}
                   onChange={e => setRef(e.target.value.toUpperCase())}
-                  placeholder="ORD-2026-0001"
+                  placeholder="NAI-2026-0001"
                   className="w-full border border-earth-200 rounded-xl px-4 py-3 text-sm font-body
                     text-earth-800 placeholder-earth-400 focus:outline-none focus:ring-2
                     focus:ring-brand-400 focus:border-transparent transition-all bg-earth-50 uppercase tracking-wider"
@@ -351,7 +351,7 @@ export default function TrackOrderPage() {
         {!order && !loading && (
           <div className="text-center text-earth-400 text-sm font-body space-y-1 mt-2">
             <p>Your order reference was shown on the confirmation page when you placed the order.</p>
-            <p>It looks like <span className="font-medium text-earth-600">ORD-2026-0001</span></p>
+            <p>It looks like <span className="font-medium text-earth-600">NAI-2026-0001</span> (orders placed earlier look like ORD-2026-0001)</p>
           </div>
         )}
       </div>

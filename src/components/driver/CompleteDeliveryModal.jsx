@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Camera, CheckCircle } from 'lucide-react'
 import { driverService } from '../../services/driver.service'
 import { enqueueCompletion, isSupported } from '../../utils/offlineQueue'
+import { compressImage } from '../../utils/imageCompress'
 import toast from 'react-hot-toast'
 
 // Proof-of-delivery capture at handover. Everything is optional — a driver
@@ -14,13 +15,26 @@ export default function CompleteDeliveryModal({ order, onClose, onCompleted, onQ
   const [recipientName, setRecipientName] = useState('')
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [preparing, setPreparing] = useState(false)
 
-  const handlePhoto = (e) => {
+  // A phone camera photo is routinely 4-12MB but the server takes 5MB, and a driver at the customer's
+  // gate cannot do anything about that. Shrink it here (long edge 1600px, JPEG) - typically well under
+  // 500KB, which also saves the driver's mobile data - and only refuse it if it is somehow still too big.
+  const handlePhoto = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be under 5 MB'); return }
-    setPhoto(file)
-    setPreview(URL.createObjectURL(file))
+    setPreparing(true)
+    try {
+      const prepared = await compressImage(file)
+      if (prepared.size > 5 * 1024 * 1024) { toast.error('That photo is too large. Please take another one.'); return }
+      setPhoto(prepared)
+      setPreview((previous) => {
+        if (previous) URL.revokeObjectURL(previous)
+        return URL.createObjectURL(prepared)
+      })
+    } finally {
+      setPreparing(false)
+    }
   }
 
   const handleSubmit = async () => {
@@ -121,11 +135,11 @@ export default function CompleteDeliveryModal({ order, onClose, onCompleted, onQ
               focus:ring-green-400 focus:border-transparent" />
         </div>
 
-        <button onClick={handleSubmit} disabled={submitting}
+        <button onClick={handleSubmit} disabled={submitting || preparing}
           className="w-full py-3 bg-green-500 text-white rounded-xl text-sm font-admin font-semibold
             hover:bg-green-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
           <CheckCircle size={16} />
-          {submitting ? 'Completing…' : 'Mark as Delivered'}
+          {submitting ? 'Completing…' : preparing ? 'Preparing photo…' : 'Mark as Delivered'}
         </button>
       </div>
     </div>

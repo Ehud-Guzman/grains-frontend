@@ -406,3 +406,65 @@ describe('CartContext — reorder and drawer', () => {
     expect(readItems()).toHaveLength(0)
   })
 })
+
+describe('CartContext — unreliable browser storage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.restoreAllMocks()
+    localStorage.clear()
+    useBranch.mockReturnValue({
+      branch: { _id: 'branch-A', name: 'Nairobi' },
+      branchId: 'branch-A',
+    })
+  })
+
+  it('still renders and works when every storage call throws (Safari "block all cookies", in-app browsers)', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new DOMException('denied', 'SecurityError') })
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('quota', 'QuotaExceededError') })
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new DOMException('denied', 'SecurityError') })
+
+    expect(() => renderCart()).not.toThrow()
+    expect(readItems()).toEqual([])
+
+    // The cart works in memory even though nothing can be remembered.
+    act(() => api.addItem(product(), variety, packaging(), 3))
+    expect(screen.getByTestId('count').textContent).toBe('3')
+    act(() => api.clearCart())
+    expect(screen.getByTestId('count').textContent).toBe('0')
+  })
+
+  it('starts empty, and drops the entry, when the stored cart is not an array', () => {
+    for (const damaged of ['null', '42', '{"a":1}', '"text"', '{broken json']) {
+      localStorage.setItem(CART_KEY, damaged)
+      const { unmount } = renderCart()
+      expect(readItems()).toEqual([])
+      unmount()
+    }
+  })
+
+  it('ignores damaged lines inside an otherwise valid stored cart', () => {
+    localStorage.setItem(CART_KEY, JSON.stringify([
+      null,
+      'junk',
+      { productId: 'p1' },                                     // no quantity
+      { productId: 'p1', quantity: 0, key: 'zero' },           // nothing to buy
+      { productId: 'p1', key: 'p1-Grade 1-50kg', productName: 'Yellow Maize', variety: 'Grade 1', packaging: '50kg', priceKES: 100, quantity: 2, stock: 10 },
+    ]))
+    renderCart()
+    expect(readItems()).toHaveLength(1)
+    expect(screen.getByTestId('count').textContent).toBe('2')
+  })
+
+  it('refreshPrices works from the live cart even if storage is unreadable', async () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging({ priceKES: 100 }), 1))
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new DOMException('denied', 'SecurityError') })
+    productService.getById.mockResolvedValue({ data: { data: product({
+      varieties: [{ varietyName: 'Grade 1', packaging: [{ size: '50kg', priceKES: 120, stock: 100 }] }],
+    }) } })
+
+    await act(async () => { await api.refreshPrices() })
+
+    expect(readItems()[0].priceKES).toBe(120)
+  })
+})
