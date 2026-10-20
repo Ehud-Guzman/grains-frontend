@@ -121,7 +121,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, am
           )}
         </div>
         <button onClick={() => onFailure?.('continue')}
-          className="mt-4 text-sm text-earth-400 hover:text-earth-700 font-body underline transition-colors">
+          className="mt-4 text-sm text-earth-500 hover:text-earth-700 font-body underline transition-colors">
           Skip for now — view my order
         </button>
       </div>
@@ -176,7 +176,7 @@ export default function MpesaCountdown({ orderId, orderRef, phone, pollPhone, am
       </div>
 
       {/* Polling indicator */}
-      <div className="flex items-center justify-center gap-2 text-xs text-earth-400 font-body">
+      <div className="flex items-center justify-center gap-2 text-xs text-earth-500 font-body">
         <div className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
         Checking payment status…
       </div>

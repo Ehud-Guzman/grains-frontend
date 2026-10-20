@@ -74,14 +74,14 @@ export default function AddToListModal({ items, onClose }) {
           </div>
           <div>
             <h2 className="font-body font-bold text-earth-900 text-sm">Add to List</h2>
-            <p className="text-earth-400 text-xs font-body">
+            <p className="text-earth-500 text-xs font-body">
               {items.length} item{items.length !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
         <button type="button" onClick={onClose} aria-label="Close"
           className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center
-            rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-700 transition-colors">
+            rounded-lg hover:bg-earth-100 text-earth-500 hover:text-earth-700 transition-colors">
           <X size={16} aria-hidden="true" />
         </button>
       </div>
@@ -100,19 +100,19 @@ export default function AddToListModal({ items, onClose }) {
                     transition-colors disabled:opacity-50 text-left">
                   <div className="min-w-0">
                     <p className="font-body font-semibold text-earth-800 text-sm truncate">{list.name}</p>
-                    <p className="text-earth-400 text-xs font-body">
+                    <p className="text-earth-500 text-xs font-body">
                       {list.items?.length || 0} item{list.items?.length !== 1 ? 's' : ''}
                     </p>
                   </div>
                   {busyId === list._id
-                    ? <Loader2 size={15} className="text-brand-500 animate-spin flex-shrink-0" />
-                    : <Plus size={15} className="text-brand-500 flex-shrink-0" />
+                    ? <Loader2 size={15} className="text-brand-600 animate-spin flex-shrink-0" />
+                    : <Plus size={15} className="text-brand-600 flex-shrink-0" />
                   }
                 </button>
               ))}
 
               {lists.length === 0 && !creatingNew && (
-                <p className="text-earth-400 text-xs font-body text-center py-3">
+                <p className="text-earth-500 text-xs font-body text-center py-3">
                   No lists yet — create one below.
                 </p>
               )}

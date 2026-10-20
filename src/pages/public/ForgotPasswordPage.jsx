@@ -50,7 +50,7 @@ function RequestCodeStep({ onSent }) {
           required
           autoFocus
         />
-        <p className="text-earth-400 text-xs mt-1.5 font-body">
+        <p className="text-earth-500 text-xs mt-1.5 font-body">
           We'll send a 6-digit reset code by SMS (and email, if one is on file).
         </p>
       </div>
@@ -126,7 +126,7 @@ function ResetStep({ phone, onDone, onBack }) {
           required
           autoFocus
         />
-        <p className="text-earth-400 text-xs mt-1.5 font-body">
+        <p className="text-earth-500 text-xs mt-1.5 font-body">
           Sent to {phone} · expires in 10 minutes
         </p>
       </div>
@@ -148,7 +148,7 @@ function ResetStep({ phone, onDone, onBack }) {
             required
           />
           <button type="button" onClick={() => setShowPass(s => !s)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-400
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-earth-500
               hover:text-earth-700 p-1 transition-colors">
             {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>

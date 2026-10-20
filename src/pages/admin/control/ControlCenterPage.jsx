@@ -10,6 +10,7 @@ import ControlAccounts from '../../../components/admin/control/ControlAccounts'
 import ControlSecurity from '../../../components/admin/control/ControlSecurity'
 import ControlDataHealth from '../../../components/admin/control/ControlDataHealth'
 import ControlPermissions from '../../../components/admin/control/ControlPermissions'
+import { startVisiblePolling } from '../../../utils/visiblePolling'
 
 // The Control Center: the superadmin's one screen for seeing the whole system and
 // putting it right. Everything on it is refused by the API for every other role; the
@@ -52,8 +53,8 @@ export default function ControlCenterPage() {
   useEffect(() => {
     mounted.current = true
     load()
-    const timer = setInterval(load, AUTO_REFRESH_MS)
-    return () => { mounted.current = false; clearInterval(timer) }
+    const stopPolling = startVisiblePolling(load, AUTO_REFRESH_MS)
+    return () => { mounted.current = false; stopPolling() }
   }, [load])
 
   if (!overview) {

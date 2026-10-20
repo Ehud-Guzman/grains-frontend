@@ -16,8 +16,10 @@ describe('paymentService.initiate', () => {
     const [url, body, config] = api.post.mock.calls[0]
     expect(url).toBe('/payments/mpesa/initiate')
     expect(body).toEqual({ orderId: 'order1', phone: '0712345678', contactPhone: '0712345678' })
-    // The server allows up to ~40s (token + push); the default 15s reported "failed" for prompts that were sent.
+    // The server allows ~22s (token + push); the default 15s reported "failed" for prompts that were sent.
+    // It must also stay under the proxy's ~26s limit, past which the browser gets a 504 anyway.
     expect(config.timeout).toBe(STK_INITIATE_TIMEOUT)
-    expect(STK_INITIATE_TIMEOUT).toBeGreaterThanOrEqual(40000)
+    expect(STK_INITIATE_TIMEOUT).toBeGreaterThan(22000)
+    expect(STK_INITIATE_TIMEOUT).toBeLessThanOrEqual(30000)
   })
 })

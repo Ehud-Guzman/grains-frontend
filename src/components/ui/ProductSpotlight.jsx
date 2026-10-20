@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { formatKES } from '../../utils/helpers'
 import { getOptimizedImageUrl } from '../../utils/image'
+import { safeSession } from '../../utils/safeStorage'
 
 const MAX_DISMISSALS = 3
 const SESSION_KEY = 'spotlight_dismissals'
@@ -34,7 +35,7 @@ export default function ProductSpotlight({ products = [] }) {
 
   // Check session dismissal count on mount — if already hit limit, never show
   useEffect(() => {
-    const count = Number(sessionStorage.getItem(SESSION_KEY) || 0)
+    const count = Number(safeSession.get(SESSION_KEY) || 0)
     if (count >= MAX_DISMISSALS) setDismissed(true)
   }, [])
 
@@ -66,8 +67,8 @@ export default function ProductSpotlight({ products = [] }) {
 
   const handleDismiss = () => {
     // Increment session dismissal count
-    const count = Number(sessionStorage.getItem(SESSION_KEY) || 0) + 1
-    sessionStorage.setItem(SESSION_KEY, count)
+    const count = Number(safeSession.get(SESSION_KEY) || 0) + 1
+    safeSession.set(SESSION_KEY, String(count))
 
     setEntered(false)
     setTimeout(() => {

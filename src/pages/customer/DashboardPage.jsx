@@ -163,14 +163,14 @@ export default function CustomerDashboardPage() {
               <p className="font-display font-bold text-earth-900 text-sm leading-none truncate">
                 Hello, {user?.name?.split(' ')[0]}
               </p>
-              <p className="text-earth-400 text-xs font-body mt-0.5">
+              <p className="text-earth-500 text-xs font-body mt-0.5">
                 {loading ? '…' : fetchError ? (
                 <span className="text-red-400">Couldn't load orders</span>
               ) : (
                 <>
                   {pagination.total || orders.length} order{(pagination.total || orders.length) !== 1 ? 's' : ''}
                   {activeOrders.length > 0 && (
-                    <span className="text-brand-500 font-semibold"> · {activeOrders.length} active</span>
+                    <span className="text-brand-600 font-semibold"> · {activeOrders.length} active</span>
                   )}
                 </>
               )}
@@ -219,7 +219,7 @@ export default function CustomerDashboardPage() {
               <p className="font-display font-bold text-earth-900 text-lg leading-none">
                 {formatKES(stats.thisMonth.total)}
               </p>
-              <p className="text-earth-400 text-xs font-body mt-1">
+              <p className="text-earth-500 text-xs font-body mt-1">
                 {stats.thisMonth.orderCount} order{stats.thisMonth.orderCount !== 1 ? 's' : ''}
                 {stats.lastMonth.total > 0 && (
                   <span className={`ml-1.5 font-semibold ${
@@ -238,7 +238,7 @@ export default function CustomerDashboardPage() {
               <p className="font-display font-bold text-earth-900 text-lg leading-none">
                 {formatKES(stats.allTime.total)}
               </p>
-              <p className="text-earth-400 text-xs font-body mt-1">
+              <p className="text-earth-500 text-xs font-body mt-1">
                 {stats.allTime.orderCount} order{stats.allTime.orderCount !== 1 ? 's' : ''}
               </p>
             </div>
@@ -268,7 +268,7 @@ export default function CustomerDashboardPage() {
                     <p className={`font-body font-bold text-sm ${tier.color || 'text-earth-800'}`}>
                       {tier.label ? `${tier.label} Member` : 'Loyalty Programme'}
                     </p>
-                    <p className="text-earth-400 text-xs font-body">
+                    <p className="text-earth-500 text-xs font-body">
                       {formatKES(stats.allTime.total)} lifetime spend
                     </p>
                   </div>
@@ -287,7 +287,7 @@ export default function CustomerDashboardPage() {
                       className={`h-1.5 rounded-full ${tier === LOYALTY_TIERS.none ? 'bg-amber-600' : tier.color.replace('text-', 'bg-')}`}
                       style={{ width: `${progress}%` }} />
                   </div>
-                  <p className="text-earth-400 text-xs font-body">
+                  <p className="text-earth-500 text-xs font-body">
                     {formatKES(nextTier.threshold - stats.allTime.total)} more to reach {nextTier.name}
                   </p>
                 </>
@@ -325,7 +325,7 @@ export default function CustomerDashboardPage() {
         {(pagination.total > 10 || search) && (
           <div className="relative mb-4">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2
-              text-earth-400 pointer-events-none" />
+              text-earth-500 pointer-events-none" />
             <input
               type="text"
               value={searchInput}
@@ -338,7 +338,7 @@ export default function CustomerDashboardPage() {
             {searchInput && (
               <button onClick={() => setSearchInput('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-                  hover:bg-earth-100 text-earth-400 transition-colors">
+                  hover:bg-earth-100 text-earth-500 transition-colors">
                 <X size={13} />
               </button>
             )}
@@ -418,7 +418,7 @@ export default function CustomerDashboardPage() {
             {activeOrders.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
-                  <Clock size={13} className="text-brand-500" />
+                  <Clock size={13} className="text-brand-600" />
                   <p className="text-xs font-body font-semibold text-earth-700 uppercase tracking-wide">
                     Active
                   </p>
@@ -442,7 +442,7 @@ export default function CustomerDashboardPage() {
                               <p className="font-display font-bold text-brand-700 tracking-wide text-sm">
                                 {order.orderRef}
                               </p>
-                              <p className="text-earth-400 text-xs font-body mt-0.5">
+                              <p className="text-earth-500 text-xs font-body mt-0.5">
                                 {formatDate(order.createdAt)} · {timeAgo(order.createdAt)}
                               </p>
                             </div>
@@ -478,7 +478,7 @@ export default function CustomerDashboardPage() {
                                     </button>
                                     <button
                                       onClick={() => setConfirmCancel(null)}
-                                      className="text-xs text-earth-400 font-body px-2 py-1
+                                      className="text-xs text-earth-500 font-body px-2 py-1
                                         rounded-lg hover:bg-earth-100 transition-colors">
                                       No
                                     </button>
@@ -513,7 +513,7 @@ export default function CustomerDashboardPage() {
             {pastOrders.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
-                  <Package size={13} className="text-earth-400" />
+                  <Package size={13} className="text-earth-500" />
                   <p className="text-xs font-body font-semibold text-earth-500 uppercase tracking-wide">
                     Past Orders
                   </p>
@@ -531,11 +531,11 @@ export default function CustomerDashboardPage() {
                             </span>
                             <StatusPill status={order.status} deliveryMethod={order.deliveryMethod} />
                           </div>
-                          <p className="text-earth-400 text-xs font-body">{formatDate(order.createdAt)}</p>
+                          <p className="text-earth-500 text-xs font-body">{formatDate(order.createdAt)}</p>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="font-body font-bold text-earth-800 text-sm">{formatKES(order.total)}</p>
-                          <p className="text-earth-400 text-xs font-body">
+                          <p className="text-earth-500 text-xs font-body">
                             {order.orderItems?.length} item{order.orderItems?.length !== 1 ? 's' : ''}
                           </p>
                         </div>
@@ -549,7 +549,7 @@ export default function CustomerDashboardPage() {
                           <RotateCcw size={14} />
                         </button>
                         <Link to={`/orders/${order._id}`}
-                          className="p-1.5 text-earth-200 group-hover:text-earth-400 transition-colors">
+                          className="p-1.5 text-earth-200 group-hover:text-earth-500 transition-colors">
                           <ChevronRight size={15} />
                         </Link>
                       </div>

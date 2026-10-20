@@ -60,7 +60,7 @@ export default function MyAlertsPage() {
           <div className="bg-white rounded-2xl border border-earth-100 shadow-warm p-8 text-center">
             <Bell size={28} className="text-earth-300 mx-auto mb-3" />
             <p className="text-earth-700 font-body font-semibold">No active alerts</p>
-            <p className="text-earth-400 text-sm font-body mt-1 mb-4">
+            <p className="text-earth-500 text-sm font-body mt-1 mb-4">
               Turn on "Notify me when back in stock" or "Alert me if price drops" on any product page.
             </p>
             <Link to="/shop"
@@ -84,7 +84,7 @@ export default function MyAlertsPage() {
                     <p className="text-sm font-body font-semibold text-earth-800 truncate">
                       {alert.productId?.name || alert.productName}
                     </p>
-                    <p className="text-earth-400 text-xs font-body mt-0.5">
+                    <p className="text-earth-500 text-xs font-body mt-0.5">
                       {alert.varietyName} · {alert.packaging} · {meta.label}
                       {alert.type === 'price_drop' && alert.priceAtSubscription
                         ? ` · was ${formatKES(alert.priceAtSubscription)}` : ''}
@@ -94,7 +94,7 @@ export default function MyAlertsPage() {
                     </p>
                   </div>
                   <button onClick={() => handleRemove(alert._id)} disabled={removing === alert._id}
-                    className="p-2 text-earth-400 hover:text-red-500 hover:bg-red-50 rounded-lg
+                    className="p-2 text-earth-500 hover:text-red-500 hover:bg-red-50 rounded-lg
                       transition-colors flex-shrink-0 disabled:opacity-50">
                     <Trash2 size={15} />
                   </button>

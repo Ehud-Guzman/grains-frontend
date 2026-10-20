@@ -1,9 +1,10 @@
 import api from './api'
 
-// The server gives Daraja up to ~10s for its access token plus ~30s for the push itself, so a slow
-// Safaricom response can legitimately take longer than the app-wide 15s timeout. Giving up at 15s
-// told the customer "payment failed" while the prompt was in fact on its way to their phone.
-export const STK_INITIATE_TIMEOUT = 45000
+// The server gives Daraja up to ~10s for its access token plus ~12s for the push itself (about 22s worst
+// case), so a slow Safaricom response can legitimately take longer than the app-wide 15s timeout. Giving up
+// at 15s told the customer "payment failed" while the prompt was in fact on its way to their phone. It must
+// stay near the proxy's own ~26s response limit, though: past that the browser gets a 504 regardless.
+export const STK_INITIATE_TIMEOUT = 30000
 
 export const paymentService = {
   // Initiate STK push — returns { checkoutRequestId, paymentId }.
@@ -18,6 +19,7 @@ export const paymentService = {
     api.post('/payments/change-method', { orderId, paymentMethod, contactPhone }),
 
   // Poll payment status — call every 5s after STK push
+  // POST so a guest's phone number travels in the body, not the URL.
   getStatus: (orderId, phone) =>
-    api.get(`/payments/status/${orderId}`, { params: phone ? { phone } : undefined }),
+    api.post(`/payments/status/${orderId}`, phone ? { phone } : {}),
 }

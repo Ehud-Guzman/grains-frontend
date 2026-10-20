@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { authService } from '../services/auth.service'
+import { safeStorage } from '../utils/safeStorage'
 
 const OnboardingContext = createContext(null)
 
@@ -45,12 +46,8 @@ const CHECKLIST_DEFINITIONS = {
 }
 
 function readStoredMap(key) {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : {}
-  } catch {
-    return {}
-  }
+  const value = safeStorage.getJSON(key, {})
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
 }
 
 function roleToExperience(user) {
@@ -97,18 +94,20 @@ export function OnboardingProvider({ children }) {
   const lastSyncedPayloadRef    = useRef('')
 
   // ── Persist to localStorage ──────────────────────────────────────────────
+  // Through safeStorage: these effects run on every public page, and a raw setItem that throws (blocked
+  // storage, full quota) used to take the whole storefront down with "Something went wrong".
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.checklist.customer,   JSON.stringify(checklistProgress.customer   || {}))
-    localStorage.setItem(STORAGE_KEYS.checklist.admin,      JSON.stringify(checklistProgress.admin      || {}))
-    localStorage.setItem(STORAGE_KEYS.checklist.superadmin, JSON.stringify(checklistProgress.superadmin || {}))
+    safeStorage.setJSON(STORAGE_KEYS.checklist.customer,   checklistProgress.customer   || {})
+    safeStorage.setJSON(STORAGE_KEYS.checklist.admin,      checklistProgress.admin      || {})
+    safeStorage.setJSON(STORAGE_KEYS.checklist.superadmin, checklistProgress.superadmin || {})
   }, [checklistProgress])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.tips, JSON.stringify(dismissedTips))
+    safeStorage.setJSON(STORAGE_KEYS.tips, dismissedTips)
   }, [dismissedTips])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.milestones, JSON.stringify({ items: milestones }))
+    safeStorage.setJSON(STORAGE_KEYS.milestones, { items: milestones })
   }, [milestones])
 
   // ── Remote load ──────────────────────────────────────────────────────────

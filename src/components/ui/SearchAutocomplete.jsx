@@ -138,7 +138,7 @@ export default function SearchAutocomplete({
     <div className={`relative ${className}`} ref={containerRef}>
       {/* Input */}
       <div className="relative">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-earth-400 pointer-events-none" aria-hidden="true" />
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-earth-500 pointer-events-none" aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -165,7 +165,7 @@ export default function SearchAutocomplete({
             aria-label="Clear search"
             onClick={() => { onChange(''); setOpen(false); onSearch?.('') }}
             className="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 min-w-[36px] min-h-[36px]
-              flex items-center justify-center rounded-full text-earth-400 hover:text-earth-700
+              flex items-center justify-center rounded-full text-earth-500 hover:text-earth-700
               hover:bg-earth-100 transition-colors"
           >
             <X size={13} aria-hidden="true" />
@@ -200,13 +200,13 @@ export default function SearchAutocomplete({
                   {highlightMatch(s.name, value)}
                 </p>
                 {s.category && (
-                  <p className="text-xs text-earth-400 font-body mt-0.5">{s.category}</p>
+                  <p className="text-xs text-earth-500 font-body mt-0.5">{s.category}</p>
                 )}
               </div>
             </li>
           ))}
           <li className="border-t border-earth-100 px-4 py-2 bg-earth-50/80 list-none">
-            <p className="text-[11px] text-earth-400 font-body">↵ Enter to search all results</p>
+            <p className="text-[11px] text-earth-500 font-body">↵ Enter to search all results</p>
           </li>
         </ul>
       )}

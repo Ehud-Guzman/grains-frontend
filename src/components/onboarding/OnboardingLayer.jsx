@@ -106,7 +106,7 @@ function HelpCenter() {
                 </div>
                 <button
                   onClick={closeHelpCenter}
-                  className="rounded-full border border-earth-200 bg-earth-50 p-2 text-earth-400 transition-colors hover:bg-earth-100 hover:text-earth-700"
+                  className="rounded-full border border-earth-200 bg-earth-50 p-2 text-earth-500 transition-colors hover:bg-earth-100 hover:text-earth-700"
                 >
                   <X size={16} />
                 </button>
@@ -133,12 +133,12 @@ function HelpCenter() {
                   <div className="rounded-[1.5rem] border border-brand-200 bg-brand-50 p-5 mb-5">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] text-earth-400">Your Progress</p>
+                        <p className="text-xs font-body font-semibold uppercase tracking-[0.18em] text-earth-500">Your Progress</p>
                         <p className="font-display text-2xl font-bold capitalize text-earth-900 mt-2">{currentExperience}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-display text-3xl font-bold text-brand-700">{progress}%</p>
-                        <p className="text-xs font-body text-earth-400">{doneCount} of {items.length} done</p>
+                        <p className="text-xs font-body text-earth-500">{doneCount} of {items.length} done</p>
                       </div>
                     </div>
                     {/* Progress bar */}
@@ -154,12 +154,12 @@ function HelpCenter() {
                     {items.map(item => (
                       <div key={item.id} className="rounded-[1.35rem] border border-earth-200 bg-white p-4">
                         <div className="flex items-center gap-3">
-                          <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-earth-100 text-earth-400'}`}>
+                          <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${item.done ? 'bg-green-500 text-white' : 'bg-earth-100 text-earth-500'}`}>
                             <CheckCircle2 size={18} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-body font-semibold text-earth-800">{item.label}</p>
-                            <p className="text-xs font-body text-earth-400 mt-1">{item.helper}</p>
+                            <p className="text-xs font-body text-earth-500 mt-1">{item.helper}</p>
                           </div>
                           {!item.done && item.href && (
                             <Link
@@ -190,7 +190,7 @@ function HelpCenter() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-body font-bold uppercase tracking-widest text-earth-400">Step {i + 1}</span>
+                              <span className="text-[10px] font-body font-bold uppercase tracking-widest text-earth-500">Step {i + 1}</span>
                             </div>
                             <p className="text-sm font-body font-semibold text-earth-800">{step.title}</p>
                             <p className="text-xs font-body text-earth-500 mt-1 leading-relaxed">{step.body}</p>

@@ -219,7 +219,7 @@ export function ContextualTip({
           {tipId && onDismiss && (
             <button
               onClick={() => onDismiss(tipId)}
-              className="rounded-full p-1.5 text-earth-400 transition-colors hover:bg-white/70 hover:text-earth-700"
+              className="rounded-full p-1.5 text-earth-500 transition-colors hover:bg-white/70 hover:text-earth-700"
             >
               <X size={14} />
             </button>

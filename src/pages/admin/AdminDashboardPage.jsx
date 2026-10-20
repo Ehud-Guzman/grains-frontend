@@ -20,6 +20,7 @@ import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingE
 import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import Spinner from '../../components/ui/Spinner'
+import { startVisiblePolling } from '../../utils/visiblePolling'
 
 function StatusBadge({ status, deliveryMethod }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
@@ -189,8 +190,7 @@ function BusinessDashboardPage() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(() => fetchData(true), 60000)
-    return () => clearInterval(interval)
+    return startVisiblePolling(() => fetchData(true), 60000)
   }, [])
 
   useEffect(() => { if (canSeeKpis) fetchRevenue(revPeriod) }, [revPeriod, canSeeKpis])

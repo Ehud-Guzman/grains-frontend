@@ -9,6 +9,7 @@ import WhatsAppButton from '../../components/ui/WhatsAppButton'
 import { shopOrderMessage, customerStatusMessage, driverArrivalMessage } from '../../utils/whatsapp'
 import { flushCompletions, pendingOrderIds } from '../../utils/offlineQueue'
 import toast from 'react-hot-toast'
+import { startVisiblePolling } from '../../utils/visiblePolling'
 
 const STATUS_TABS = [
   { value: '',                  label: 'All'         },
@@ -161,10 +162,10 @@ export default function DriverOrdersPage() {
     // Poll for status updates while this tab is open — this page previously had
     // zero live refresh (load only on mount/tab-change). Silent: doesn't reset
     // loading (would spin the whole list under a driver's thumb mid-scroll).
-    const interval = setInterval(() => load(true), 60000)
+    const stopPolling = startVisiblePolling(() => load(true), 60000)
     window.addEventListener('online', syncPending)
     return () => {
-      clearInterval(interval)
+      stopPolling()
       window.removeEventListener('online', syncPending)
     }
   }, [activeTab])

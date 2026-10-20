@@ -8,7 +8,8 @@ const PLACE_ORDER_TIMEOUT = 60000
 export const orderService = {
   placeGuestOrder: (data) => api.post('/orders/guest', data, { timeout: PLACE_ORDER_TIMEOUT }),
   placeOrder: (data) => api.post('/orders', data, { timeout: PLACE_ORDER_TIMEOUT }),
-  trackOrder: (phone, ref) => api.get('/orders/track', { params: { phone, ref } }),
+  // POST, not GET: the phone number must not appear in a URL (access logs, proxies, error reports).
+  trackOrder: (phone, ref) => api.post('/orders/track', { phone, ref }),
   getMyOrders: (params) => api.get('/orders/my', { params }),
   getMyOrder: (id) => api.get(`/orders/my/${id}`),
   getMyStats: () => api.get('/orders/my/stats'),

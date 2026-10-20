@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { captureException } from '../utils/sentry'
+import { safeStorage } from '../utils/safeStorage'
+import { installRequestDedupe } from './requestDedupe'
 
 // ── IN-MEMORY TOKEN STORE ─────────────────────────────────────────────────────
 // Storing the access token in sessionStorage exposes it to XSS. Keeping it in a
@@ -38,6 +40,10 @@ const api = axios.create({
   // Required so the browser sends the HttpOnly refreshToken cookie on auth requests
   withCredentials: true,
 })
+
+// Identical GETs in flight share one request, and a few public answers are remembered for 20s (see
+// requestDedupe.js). A no-op in test doubles that have no adapter slot.
+installRequestDedupe(api, axios)
 
 // ── REQUEST INTERCEPTOR ───────────────────────────────────────────────────────
 // Attach access token to every request
@@ -86,8 +92,8 @@ const NO_REFRESH_PATHS = [
 
 const clearSession = () => {
   clearToken()
-  localStorage.removeItem('user')
-  localStorage.removeItem('currentBranch')
+  safeStorage.remove('user')
+  safeStorage.remove('currentBranch')
   // AuthContext listens for this and clears React state, which lets
   // ProtectedRoute redirect with the current location preserved.
   window.dispatchEvent(new Event('auth:session-expired'))
@@ -151,7 +157,7 @@ api.interceptors.response.use(
 
         setToken(newAccessToken)
         if (user) {
-          localStorage.setItem('user', JSON.stringify(user))
+          safeStorage.setJSON('user', user)
         }
 
         processQueue(null, newAccessToken)

@@ -183,14 +183,30 @@ export const CartProvider = ({ children }) => {
     refreshing.current = true
     try {
       const ids = [...new Set(current.map(i => i.productId))]
-      const results = await Promise.allSettled(ids.map(id => productService.getById(id)))
       const liveMap = new Map()   // productId → product
-      const goneSet = new Set()   // productId → 404 (deactivated/removed)
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') liveMap.set(ids[i], r.value.data.data)
-        else if (r.reason?.response?.status === 404) goneSet.add(ids[i])
-        // other rejections (network) → leave those items untouched
-      })
+      const goneSet = new Set()   // productId → no longer sold (deactivated/removed)
+
+      // One request for the whole cart. Anything missing from a successful answer is gone. If the batch
+      // call is unavailable (an older server, a network hiccup) fall back to one request per product.
+      let usedBatch = false
+      if (typeof productService.getMany === 'function') {
+        try {
+          const list = (await productService.getMany(ids))?.data?.data
+          if (Array.isArray(list)) {
+            list.forEach(p => liveMap.set(String(p._id), p))
+            ids.forEach(id => { if (!liveMap.has(String(id))) goneSet.add(id) })
+            usedBatch = true
+          }
+        } catch { /* fall back below */ }
+      }
+      if (!usedBatch) {
+        const results = await Promise.allSettled(ids.map(id => productService.getById(id, { noCache: true })))
+        results.forEach((r, i) => {
+          if (r.status === 'fulfilled') liveMap.set(ids[i], r.value.data.data)
+          else if (r.reason?.response?.status === 404) goneSet.add(ids[i])
+          // other rejections (network) → leave those items untouched
+        })
+      }
       if (liveMap.size === 0 && goneSet.size === 0) return
 
       let priceChanged = false

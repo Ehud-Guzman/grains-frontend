@@ -95,6 +95,27 @@ export default [
     },
   },
 
+  // Browser storage goes through src/utils/safeStorage.js and nowhere else. A raw localStorage /
+  // sessionStorage call throws in Safari "Block All Cookies", in-app browsers (WhatsApp / Facebook)
+  // and when the quota is full, and inside a render or effect that blanks the whole storefront - the
+  // 2026-10 audit reproduced "Something went wrong" on every public route this way.
+  {
+    files: ['src/**/*.{js,jsx}'],
+    ignores: ['src/utils/safeStorage.js', '**/*.test.{js,jsx}', 'src/test/**'],
+    rules: {
+      'no-restricted-globals': ['error',
+        { name: 'localStorage',   message: 'Use safeStorage from src/utils/safeStorage.js - raw storage access throws when the browser blocks it.' },
+        { name: 'sessionStorage', message: 'Use safeSession from src/utils/safeStorage.js - raw storage access throws when the browser blocks it.' },
+      ],
+      'no-restricted-properties': ['error',
+        { object: 'window',     property: 'localStorage',   message: 'Use safeStorage from src/utils/safeStorage.js.' },
+        { object: 'window',     property: 'sessionStorage', message: 'Use safeSession from src/utils/safeStorage.js.' },
+        { object: 'globalThis', property: 'localStorage',   message: 'Use safeStorage from src/utils/safeStorage.js.' },
+        { object: 'globalThis', property: 'sessionStorage', message: 'Use safeSession from src/utils/safeStorage.js.' },
+      ],
+    },
+  },
+
   // Test files: vitest globals.
   {
     files: ['**/*.test.{js,jsx}', 'src/test/**/*.{js,jsx}'],
@@ -117,9 +138,9 @@ export default [
     },
   },
 
-  // Config files run in Node.
+  // Config files and build/ops scripts run in Node.
   {
-    files: ['*.config.js', 'postcss.config.js', 'tailwind.config.js'],
+    files: ['*.config.js', 'postcss.config.js', 'tailwind.config.js', 'scripts/**/*.{js,mjs}'],
     languageOptions: {
       globals: { ...globals.node },
     },

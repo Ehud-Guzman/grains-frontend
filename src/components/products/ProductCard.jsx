@@ -26,7 +26,7 @@ function PriceChangeBadge({ priceChange }) {
 }
 
 // ── FULL CARD (default) ───────────────────────────────────────────────────────
-function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, onAddToList, adding, added, priceChange }) {
+function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, onAddToList, adding, added, priceChange, priority }) {
   const cfg = stockConfig[stockStatus] || stockConfig.out
 
   return (
@@ -39,9 +39,13 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
         {imageURL ? (
           <img src={getOptimizedImageUrl(imageURL, { width: 640, height: 480 })}
             alt={product.name}
+            width="640" height="480"
             className="w-full h-full object-cover group-hover:scale-105
               transition-transform duration-700 ease-out"
-            loading="lazy"
+            // The first row is what the visitor sees first (and what Lighthouse measures as LCP): load it
+            // now, not lazily after layout. Everything below the fold stays lazy.
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : undefined}
             decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -103,7 +107,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
               </span>
             ))}
             {product.varieties.length > 3 && (
-              <span className="text-xs text-earth-400 px-1 font-body self-center">
+              <span className="text-xs text-earth-500 px-1 font-body self-center">
                 +{product.varieties.length - 3}
               </span>
             )}
@@ -131,7 +135,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
         {inStock && firstPkg ? (
           <div className="flex gap-1.5">
             <button onClick={onQuickAdd} disabled={adding}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl
                 text-sm font-body font-semibold transition-all duration-200 ${
                   added
                     ? 'bg-green-500 text-white'
@@ -143,7 +147,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
               }
             </button>
             <button onClick={onAddToList} title="Save to list"
-              className="flex-shrink-0 w-10 flex items-center justify-center rounded-xl
+              className="flex-shrink-0 w-11 flex items-center justify-center rounded-xl
                 border border-earth-200 text-earth-500 hover:border-brand-300
                 hover:text-brand-700 hover:bg-brand-50 transition-all">
               <List size={15} />
@@ -151,7 +155,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
           </div>
         ) : (
           <div className="w-full py-2.5 rounded-xl text-sm font-body font-medium text-center
-            bg-earth-50 text-earth-400 border border-earth-100">
+            bg-earth-50 text-earth-500 border border-earth-100">
             Out of Stock
           </div>
         )}
@@ -161,7 +165,7 @@ function FullCard({ product, firstVariety, firstPkg, imageURL, inStock, stockSta
 }
 
 // ── COMPACT CARD (2-column grid) ──────────────────────────────────────────────
-function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, onAddToList, adding, added, priceChange }) {
+function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stockStatus, onQuickAdd, onAddToList, adding, added, priceChange, priority }) {
   const cfg = stockConfig[stockStatus] || stockConfig.out
 
   return (
@@ -174,9 +178,11 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
         {imageURL ? (
           <img src={getOptimizedImageUrl(imageURL, { width: 420, height: 420 })}
             alt={product.name}
+            width="420" height="420"
             className="w-full h-full object-cover group-hover:scale-105
               transition-transform duration-700 ease-out"
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchpriority={priority ? 'high' : undefined}
             decoding="async" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -202,7 +208,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
           <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1
             translate-y-full group-hover:translate-y-0 transition-transform duration-200">
             <button onClick={onQuickAdd} disabled={adding}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 min-h-[44px] rounded-xl
                 text-xs font-body font-semibold transition-all ${
                   added
                     ? 'bg-green-500 text-white'
@@ -214,7 +220,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
               }
             </button>
             <button onClick={onAddToList} title="Save to list"
-              className="flex-shrink-0 w-8 flex items-center justify-center rounded-xl
+              className="flex-shrink-0 w-11 flex items-center justify-center rounded-xl
                 bg-white/90 backdrop-blur-sm text-earth-600 hover:bg-white hover:text-brand-700
                 transition-all">
               <List size={13} />
@@ -231,7 +237,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
 
         {/* First variety only */}
         {product.varieties?.length > 0 && (
-          <p className="text-xs text-earth-400 font-body mb-2 truncate">
+          <p className="text-xs text-earth-500 font-body mb-2 truncate">
             {product.varieties[0].varietyName}
             {product.varieties.length > 1 && ` +${product.varieties.length - 1} more`}
           </p>
@@ -254,7 +260,7 @@ function CompactCard({ product, firstVariety, firstPkg, imageURL, inStock, stock
 }
 
 // ── MAIN EXPORT ───────────────────────────────────────────────────────────────
-function ProductCardInner({ product, compact = false, priceChange }) {
+function ProductCardInner({ product, compact = false, priceChange, priority = false }) {
   const { addItem } = useCart()
   const { user } = useAuth()
   const [adding, setAdding] = useState(false)
@@ -295,7 +301,7 @@ function ProductCardInner({ product, compact = false, priceChange }) {
 
   const props = {
     product, firstVariety, firstPkg, imageURL, inStock, stockStatus,
-    onQuickAdd: handleQuickAdd, onAddToList: handleAddToList, adding, added, priceChange,
+    onQuickAdd: handleQuickAdd, onAddToList: handleAddToList, adding, added, priceChange, priority,
   }
 
   return (

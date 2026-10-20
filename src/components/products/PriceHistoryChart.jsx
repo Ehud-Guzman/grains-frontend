@@ -104,16 +104,16 @@ export default function PriceHistoryChart({ priceHistory, priceRange, onRangeCha
 
         {/* Legend */}
         <div className="flex items-center gap-4 mb-3">
-          <span className="flex items-center gap-1.5 text-xs font-body text-earth-400">
+          <span className="flex items-center gap-1.5 text-xs font-body text-earth-500">
             <span className="w-2 h-2 rounded-full bg-green-500" /> Price fell
           </span>
-          <span className="flex items-center gap-1.5 text-xs font-body text-earth-400">
+          <span className="flex items-center gap-1.5 text-xs font-body text-earth-500">
             <span className="w-2 h-2 rounded-full bg-red-500" /> Price rose
           </span>
           {seasonBands.length > 0 && Object.entries(SEASON_STYLE)
             .filter(([tag]) => seasonBands.some(b => b.tag === tag))
             .map(([tag, { label, fill }]) => (
-              <span key={tag} className="flex items-center gap-1.5 text-xs font-body text-earth-400">
+              <span key={tag} className="flex items-center gap-1.5 text-xs font-body text-earth-500">
                 <span className="w-3 h-2.5 rounded-sm border border-earth-200" style={{ background: fill }} />
                 {label}
               </span>
@@ -166,7 +166,7 @@ export default function PriceHistoryChart({ priceHistory, priceRange, onRangeCha
         </ResponsiveContainer>
 
         {bestTime && (
-          <p className="mt-3 text-xs font-body text-earth-400 text-right">
+          <p className="mt-3 text-xs font-body text-earth-500 text-right">
             90-day avg · {formatKES(bestTime.avg90d)}
           </p>
         )}

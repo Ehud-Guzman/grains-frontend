@@ -13,6 +13,7 @@ import { useBranch } from '../../context/BranchContext'
 import { getOptimizedImageUrl } from '../../utils/image'
 import { promotionService } from '../../services/promotion.service'
 import { formatKES } from '../../utils/helpers'
+import { safeStorage } from '../../utils/safeStorage'
 
 const FEATURED_LIMIT = 8
 const SECONDARY_LIMIT = 6
@@ -240,7 +241,7 @@ function FeaturedPromoCards({ promos, allProducts }) {
     <section className="py-8 bg-white border-b border-earth-100">
       <div className="container-page">
         <div className="flex items-center gap-3 mb-4">
-          <Star size={16} className="text-brand-500" />
+          <Star size={16} className="text-brand-600" />
           <h2 className="font-display text-lg font-bold text-earth-900">Staff Picks</h2>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -479,13 +480,13 @@ export default function HomePage() {
 
   // Persist grid preference (default true = 2-col mobile)
   useEffect(() => {
-    const saved = localStorage.getItem('gridCompact')
+    const saved = safeStorage.get('gridCompact')
     if (saved !== null) setCompact(saved === 'true')
   }, [])
 
   const handleGridChange = (val) => {
     setCompact(val)
-    localStorage.setItem('gridCompact', String(val))
+    safeStorage.set('gridCompact', String(val))
   }
 
   useEffect(() => {
@@ -511,7 +512,12 @@ export default function HomePage() {
       }
 
 
-    }).finally(() => setLoading(false))
+    })
+      // A failed catalogue request (offline, backend waking up) used to escape as an unhandled promise
+      // rejection. The shelves just stay empty; the hero and calls to action still work, and the API
+      // layer has already reported unexpected failures.
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const tips    = promotions.filter(p => p.type === 'tip')
@@ -614,10 +620,12 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-2.5">
                 {[
                   // boost: lifts the washed-out grey-sky field shot until a real farm photo replaces it
-                  { src: '/maize%20farm.webp',              num: '01', label: 'Grown',          position: 'center 30%', boost: true },
-                  { src: '/wheat-1188x792-1024x683.webp',   num: '02', label: 'Harvested',      position: 'center top' },
-                  { src: '/beans.webp',                     num: '03', label: 'Sorted & Dried', position: 'center'     },
-                  { src: '/mixedcereals.webp',              num: '04', label: 'Packed for You', position: 'center'     },
+                  // 480px copies: the tiles are ~160px wide, and the 900-1,024px originals (kept for the full-size
+                  // story section below) cost ~400 KB for the four (2026-10 audit, F-26).
+                  { src: '/maize-farm-480.webp',            num: '01', label: 'Grown',          position: 'center 30%', boost: true },
+                  { src: '/wheat-480.webp',                 num: '02', label: 'Harvested',      position: 'center top' },
+                  { src: '/beans-480.webp',                 num: '03', label: 'Sorted & Dried', position: 'center'     },
+                  { src: '/mixedcereals-480.webp',          num: '04', label: 'Packed for You', position: 'center'     },
                 ].map(({ src, num, label, position, boost }, i) => (
                   <a
                     key={i}
@@ -736,8 +744,8 @@ export default function HomePage() {
                 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
                 : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
             }`}>
-              {featured.map(product => (
-                <ProductCard key={product._id} product={product} compact={compact} priceChange={priceChanges[product._id]} />
+              {featured.map((product, i) => (
+                <ProductCard key={product._id} product={product} compact={compact} priceChange={priceChanges[product._id]} priority={i < 4} />
               ))}
             </div>
           )}

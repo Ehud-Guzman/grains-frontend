@@ -24,7 +24,7 @@ export default function CartDrawer() {
     >
       <div className="flex items-center justify-between p-5 border-b border-earth-100 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <ShoppingCart size={20} className="text-brand-500" aria-hidden="true" />
+          <ShoppingCart size={20} className="text-brand-600" aria-hidden="true" />
           <h2 className="font-display font-semibold text-earth-900">
             Your Cart {items.length > 0 && `(${items.length})`}
           </h2>
@@ -42,7 +42,7 @@ export default function CartDrawer() {
               <ShoppingCart size={48} className="text-earth-200" />
               <div>
                 <p className="font-display text-earth-700 text-lg">Your cart is empty</p>
-                <p className="text-earth-400 text-sm mt-1">Browse our products and add items to get started</p>
+                <p className="text-earth-500 text-sm mt-1">Browse our products and add items to get started</p>
               </div>
               <Link to="/shop" onClick={closeCart} className="btn-primary text-sm">Browse Products</Link>
             </div>
@@ -76,7 +76,7 @@ export default function CartDrawer() {
                     />
                     <button type="button" onClick={() => removeItem(item.key)}
                       aria-label={`Remove ${item.productName} from cart`}
-                      className="ml-auto p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-red-50 text-earth-400 hover:text-red-500 transition-colors">
+                      className="ml-auto p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-red-50 text-earth-500 hover:text-red-500 transition-colors">
                       <Trash2 size={16} aria-hidden="true" />
                     </button>
                   </div>
@@ -92,7 +92,7 @@ export default function CartDrawer() {
               <span className="font-body text-earth-600">Subtotal</span>
               <span className="font-display font-semibold text-earth-900 text-lg">{formatKES(subtotal)}</span>
             </div>
-            <p className="text-xs text-earth-400">Delivery fee calculated at checkout</p>
+            <p className="text-xs text-earth-500">Delivery fee calculated at checkout</p>
             <MinimumOrderNotice subtotal={subtotal}
               quantity={items.reduce((s, i) => s + i.quantity, 0)} compact />
             <Link to="/checkout" onClick={closeCart} className="btn-primary w-full justify-center">

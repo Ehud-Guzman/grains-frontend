@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { publicSettingsService } from '../services/admin/settings.service'
 import { productService } from '../services/product.service'
 import { DEFAULT_SHOP_INFO } from '../utils/constants'
@@ -32,7 +32,15 @@ const DEFAULT_SETTINGS = {
   loyaltyGoldThreshold: 75000,
 }
 
-const normalizeSettings = (settings = {}) => {
+// 0 is a real VAT rate (zero-rated). Only a missing or garbled value falls back to the standard 16% -
+// `Number(rate) || 16` turned a branch's 0% into 16% on the cart and checkout while the server charged 0%.
+export const parseVatRate = (value) => {
+  if (value === null || value === undefined || value === '') return 16
+  const n = Number(value)
+  return Number.isFinite(n) && n >= 0 ? n : 16
+}
+
+export const normalizeSettings = (settings = {}) => {
   const merged = { ...DEFAULT_SETTINGS, ...settings }
 
   return {
@@ -60,7 +68,7 @@ const normalizeSettings = (settings = {}) => {
       hasDeliveryZones: merged.hasDeliveryZones === true,
       // Tax
       vatEnabled: merged.vatEnabled === true,
-      vatRate: Number(merged.vatRate) || 16,
+      vatRate: parseVatRate(merged.vatRate),
     },
   }
 }
@@ -77,11 +85,16 @@ export function AppSettingsProvider({ children }) {
   const [loadFailed, setLoadFailed] = useState(false)
   const [categories, setCategories] = useState([])
   const { branchId } = useBranch()
+  // The branch the settings on screen belong to (the server says so in every public settings answer).
+  // When geolocation later resolves to that same branch there is nothing to re-fetch - the second round trip
+  // for settings and categories used to happen on every first visit.
+  const loadedBranchRef = useRef(null)
 
   const refreshSettings = async () => {
     setIsLoading(true)
     try {
       const res = await publicSettingsService.get()
+      loadedBranchRef.current = res.data?.data?.branchId ? String(res.data.data.branchId) : null
       const nextSettings = normalizeSettings(res.data?.data)
       setSettings(nextSettings)
       setHasLoaded(true)
@@ -108,6 +121,7 @@ export function AppSettingsProvider({ children }) {
   // automatically via the api.js request interceptor; force bypasses the
   // module-level categories cache which is keyed per session, not per branch.
   useEffect(() => {
+    if (branchId && loadedBranchRef.current === String(branchId)) return   // already showing this branch
     refreshSettings()
     productService.getCategories({ force: true })
       .then(res => setCategories(res.data?.data || []))

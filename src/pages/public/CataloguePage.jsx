@@ -11,6 +11,7 @@ import SkeletonCard from '../../components/ui/SkeletonCard'
 import GridToggle from '../../components/ui/GridToggle'
 import MinimumOrderNotice from '../../components/ui/MinimumOrderNotice'
 import { getOptimizedImageUrl } from '../../utils/image'
+import { safeStorage } from '../../utils/safeStorage'
 
 // ── FILTER CHIP ───────────────────────────────────────────────────────────────
 function FilterChip({ label, onRemove }) {
@@ -18,7 +19,7 @@ function FilterChip({ label, onRemove }) {
     <span className="inline-flex items-center gap-1.5 bg-brand-50 border border-brand-200
       text-brand-700 text-xs font-body font-semibold px-3 py-1.5 rounded-full">
       {label}
-      <button onClick={onRemove}
+      <button onClick={onRemove} aria-label={`Remove filter: ${label}`}
         className="hover:text-brand-900 transition-colors ml-0.5">
         <X size={11} />
       </button>
@@ -93,7 +94,7 @@ export default function CataloguePage() {
   const [searchInput, setSearchInput]   = useState(searchParams.get('search') || '')
   const [search, setSearch]             = useState(searchParams.get('search') || '')
   const [filtersOpen, setFiltersOpen]   = useState(false)
-  const [compact, setCompact]           = useState(() => localStorage.getItem('gridCompact') !== 'false')
+  const [compact, setCompact]           = useState(() => safeStorage.get('gridCompact') !== 'false')
 
   const filters = {
     category:      searchParams.get('category')     || '',
@@ -163,7 +164,7 @@ export default function CataloguePage() {
 
   const handleGridChange = (val) => {
     setCompact(val)
-    localStorage.setItem('gridCompact', String(val))
+    safeStorage.set('gridCompact', String(val))
   }
 
   const changePage = (nextPage) => {
@@ -243,6 +244,8 @@ export default function CataloguePage() {
           {/* Mobile filter button */}
           <button
             onClick={() => setFiltersOpen(true)}
+            aria-label="Filters"
+            aria-expanded={filtersOpen}
             className={`md:hidden flex items-center gap-2 px-4 py-3 rounded-xl border
               text-sm font-body font-semibold transition-all shadow-sm ${
                 hasFilters
@@ -268,7 +271,7 @@ export default function CataloguePage() {
                 onRemove={chip.onRemove || (() => removeFilter(chip.key))} />
             ))}
             <button onClick={clearAll}
-              className="text-xs text-earth-400 hover:text-red-500 font-body font-medium
+              className="text-xs text-earth-500 hover:text-red-500 font-body font-medium
                 underline transition-colors ml-1">
               Clear all
             </button>
@@ -331,7 +334,7 @@ export default function CataloguePage() {
                 <h3 className="font-display text-xl text-earth-700 font-semibold mb-2">
                   No products found
                 </h3>
-                <p className="text-earth-400 text-sm font-body mb-6">
+                <p className="text-earth-500 text-sm font-body mb-6">
                   Try adjusting your search or filters
                 </p>
                 <button onClick={clearAll}
@@ -343,8 +346,8 @@ export default function CataloguePage() {
             ) : (
               <>
                 <div className={`grid gap-4 ${gridClass}`}>
-                  {products.map(p => (
-                    <ProductCard key={p._id} product={p} compact={compact} />
+                  {products.map((p, i) => (
+                    <ProductCard key={p._id} product={p} compact={compact} priority={i < 4} />
                   ))}
                 </div>
 
@@ -370,7 +373,7 @@ export default function CataloguePage() {
                         }, [])
                         .map((p, i) => p === '…' ? (
                           <span key={`e-${i}`}
-                            className="w-9 h-9 flex items-center justify-center text-earth-400 text-sm">
+                            className="w-9 h-9 flex items-center justify-center text-earth-500 text-sm">
                             …
                           </span>
                         ) : (

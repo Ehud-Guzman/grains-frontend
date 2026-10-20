@@ -92,6 +92,16 @@ export default defineConfig({
     restoreMocks: true,
     // The PWA plugin rewrites the HTML entry; irrelevant and slow in tests.
     // (vitest ignores it for non-HTML transforms, so no extra config needed.)
+
+    // `npm run test:coverage`. Measured on purpose against ALL source files (not only the ones tests
+    // happen to import) so untested screens show up as 0% instead of being invisible.
+    coverage: {
+      provider: 'v8',
+      all: true,
+      include: ['src/**/*.{js,jsx}'],
+      exclude: ['src/**/*.test.{js,jsx}', 'src/test/**', 'src/main.jsx'],
+      reporter: ['text-summary', 'html'],
+    },
   },
 
   plugins: [
@@ -193,6 +203,16 @@ export default defineConfig({
           // ── Vendor chunks ─────────────────────────────────────────────────
           // Heavy third-party libs are split out so they can be cached
           // independently and don't bloat the app entry point.
+
+          // Vite's tiny dynamic-import helper (\0vite/preload-helper) is not in node_modules, so without
+          // this rule Rollup tucks it into whichever manual chunk is built first - here vendor-pdf - and
+          // the ENTRY then statically imports that chunk to reach one helper function. Result (2026-10
+          // audit): the 165KB jsPDF + html2canvas bundle was downloaded on every page, 60% of first-load
+          // JS, although the app only ever import()s it from Receipt and ReportsPage. Keep it with React.
+          // `npm run check:bundle` fails the build if vendor-pdf ever gets back into the first-load graph.
+          if (id.includes('vite/preload-helper')) {
+            return 'vendor-react';
+          }
 
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3')) {
             return 'vendor-charts';

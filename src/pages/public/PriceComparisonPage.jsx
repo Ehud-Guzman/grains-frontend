@@ -133,7 +133,7 @@ export default function PriceComparisonPage() {
         {selected.length < MAX_PRODUCTS && (
           <div className="relative mb-4">
             <div className="relative">
-              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-earth-400" />
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-earth-500" />
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
@@ -148,7 +148,7 @@ export default function PriceComparisonPage() {
                 {suggestions.map(s => (
                   <button key={s._id} onClick={() => addProduct(s)}
                     className="w-full text-left px-4 py-2.5 text-sm font-body text-earth-700 hover:bg-earth-50 transition-colors">
-                    {s.name} <span className="text-earth-400 text-xs">· {s.category}</span>
+                    {s.name} <span className="text-earth-500 text-xs">· {s.category}</span>
                   </button>
                 ))}
               </div>

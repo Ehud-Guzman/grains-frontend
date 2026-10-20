@@ -94,7 +94,7 @@ function AllCategoriesMenu({ categories }) {
           animate-in fade-in slide-in-from-top-1 duration-150">
 
           {categories.length === 0 ? (
-            <p className="px-4 py-4 text-sm text-earth-400 font-body">Loading…</p>
+            <p className="px-4 py-4 text-sm text-earth-500 font-body">Loading…</p>
           ) : (
             <div className="py-1.5">
               {categories.map((cat, i) => (
@@ -198,9 +198,9 @@ function BranchSwitcher({ inline = false }) {
 
   const list = (
     branches === null ? (
-      <p className="px-3 py-2 text-xs text-earth-400 font-body">Loading…</p>
+      <p className="px-3 py-2 text-xs text-earth-500 font-body">Loading…</p>
     ) : branches.length === 0 ? (
-      <p className="px-3 py-2 text-xs text-earth-400 font-body">No branches available</p>
+      <p className="px-3 py-2 text-xs text-earth-500 font-body">No branches available</p>
     ) : (
       branches.map(b => (
         <button
@@ -213,9 +213,9 @@ function BranchSwitcher({ inline = false }) {
                 : 'text-earth-700 hover:bg-earth-100'
             }`}
         >
-          <MapPin size={13} className={b._id === branch?._id ? 'text-brand-500' : 'text-earth-400'} />
+          <MapPin size={13} className={b._id === branch?._id ? 'text-brand-600' : 'text-earth-500'} />
           <span className="flex-1 truncate">{b.name}</span>
-          {b.location && <span className="text-[10px] text-earth-400 truncate max-w-[90px]">{b.location}</span>}
+          {b.location && <span className="text-[10px] text-earth-500 truncate max-w-[90px]">{b.location}</span>}
         </button>
       ))
     )
@@ -231,9 +231,9 @@ function BranchSwitcher({ inline = false }) {
           aria-label="Change shop branch"
           className="flex items-center gap-2 w-full text-left text-sm font-body font-medium text-earth-700"
         >
-          <MapPin size={15} className="text-brand-500 flex-shrink-0" />
+          <MapPin size={15} className="text-brand-600 flex-shrink-0" />
           <span className="flex-1 truncate">{label}</span>
-          <ChevronDown size={14} className={`text-earth-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+          <ChevronDown size={14} className={`text-earth-500 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
         {open && <div className="mt-2 rounded-xl border border-earth-200 overflow-hidden">{list}</div>}
       </div>
@@ -389,7 +389,8 @@ export default function Navbar() {
               <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
                 <div className="w-11 h-11 flex-shrink-0">
                   <img
-                    src="/Vittorios-logo.jpeg"
+                    src="/Vittorios-logo-96.jpeg"
+                    width="96" height="96"
                     alt={shopInfo.name}
                     className="w-full h-full object-cover rounded-xl border-2 border-earth-200
                       group-hover:border-brand-400 transition-colors shadow-sm"
@@ -493,7 +494,7 @@ export default function Navbar() {
                               </div>
                               <div>
                                 <p className="text-sm text-earth-800 font-semibold leading-tight">{item.label}</p>
-                                <p className="text-xs text-earth-400 mt-0.5">{item.sub}</p>
+                                <p className="text-xs text-earth-500 mt-0.5">{item.sub}</p>
                               </div>
                             </Link>
                           ))}
@@ -655,7 +656,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between px-4 py-4 border-b border-brand-700
               bg-brand-800">
               <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3">
-                <img src="/Vittorios-logo.jpeg" alt={shopInfo.name}
+                <img src="/Vittorios-logo-96.jpeg" width="96" height="96" alt={shopInfo.name}
                   className="w-10 h-10 rounded-xl object-cover border-2 border-brand-400 shadow-sm" />
                 <div>
                   <p className="font-display font-bold text-white text-sm leading-tight">{shopInfo.name}</p>
@@ -699,7 +700,7 @@ export default function Navbar() {
 
             {/* Categories */}
             <div className="px-4 pt-4 pb-2">
-              <p className="text-[10px] font-body font-bold text-earth-400 uppercase tracking-widest mb-2">
+              <p className="text-[10px] font-body font-bold text-earth-500 uppercase tracking-widest mb-2">
                 Shop by Category
               </p>
               <div className="space-y-0.5">
@@ -731,7 +732,7 @@ export default function Navbar() {
                 }>
                 {({ isActive }) => (
                   <>
-                    <Home size={16} className={isActive ? 'text-white' : 'text-earth-400'} />
+                    <Home size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
                     Home
                   </>
                 )}
@@ -744,7 +745,7 @@ export default function Navbar() {
                 }>
                 {({ isActive }) => (
                   <>
-                    <ShoppingBag size={16} className={isActive ? 'text-white' : 'text-earth-400'} />
+                    <ShoppingBag size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
                     Shop All Products
                   </>
                 )}
@@ -757,7 +758,7 @@ export default function Navbar() {
                 }>
                 {({ isActive }) => (
                   <>
-                    <MapPin size={16} className={isActive ? 'text-white' : 'text-earth-400'} />
+                    <MapPin size={16} className={isActive ? 'text-white' : 'text-earth-500'} />
                     Track My Order
                   </>
                 )}
@@ -772,13 +773,13 @@ export default function Navbar() {
                   <Link to="/dashboard" onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body
                       text-earth-700 hover:text-earth-900 hover:bg-earth-100 transition-all">
-                    <Package size={16} className="text-earth-400 flex-shrink-0" />
+                    <Package size={16} className="text-earth-500 flex-shrink-0" />
                     My Orders
                   </Link>
                   <Link to="/profile" onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-body
                       text-earth-700 hover:text-earth-900 hover:bg-earth-100 transition-all">
-                    <UserCircle size={16} className="text-earth-400 flex-shrink-0" />
+                    <UserCircle size={16} className="text-earth-500 flex-shrink-0" />
                     My Profile
                   </Link>
                 </div>

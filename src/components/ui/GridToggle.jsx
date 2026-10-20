@@ -9,7 +9,7 @@ export default function GridToggle({ compact, onChange }) {
         className={`p-2 rounded-lg transition-all ${
           !compact
             ? 'bg-white text-earth-900 shadow-sm'
-            : 'text-earth-400 hover:text-earth-600'
+            : 'text-earth-500 hover:text-earth-600'
         }`}
       >
         <Rows size={16} />
@@ -20,7 +20,7 @@ export default function GridToggle({ compact, onChange }) {
         className={`p-2 rounded-lg transition-all ${
           compact
             ? 'bg-white text-earth-900 shadow-sm'
-            : 'text-earth-400 hover:text-earth-600'
+            : 'text-earth-500 hover:text-earth-600'
         }`}
       >
         <LayoutGrid size={16} />

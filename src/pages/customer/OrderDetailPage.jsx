@@ -16,6 +16,7 @@ import OrderTotals from '../../components/orders/OrderTotals'
 import { paymentStatusDisplay } from '../../utils/orderDisplay'
 import WhatsAppButton from '../../components/ui/WhatsAppButton'
 import { shopOrderMessage } from '../../utils/whatsapp'
+import { startVisiblePolling } from '../../utils/visiblePolling'
 
 const STATUS_STEPS = ['pending', 'approved', 'preparing', 'out_for_delivery', 'completed']
 
@@ -65,8 +66,7 @@ export default function CustomerOrderDetailPage() {
     // Poll for status updates while the page is open — this page previously had
     // zero live refresh (load-once), unlike the admin orders list which already
     // polls every 60s. Silent: no spinner flash over a page the customer is reading.
-    const interval = setInterval(() => load(true), 60000)
-    return () => clearInterval(interval)
+    return startVisiblePolling(() => load(true), 60000)
   }, [id, reloadKey])
 
   const handleCancel = async () => {
@@ -243,9 +243,9 @@ export default function CustomerOrderDetailPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-2.5">
               {order.deliveryMethod === 'pickup' ? (
-                <Store size={15} className="text-earth-400 mt-0.5 flex-shrink-0" />
+                <Store size={15} className="text-earth-500 mt-0.5 flex-shrink-0" />
               ) : (
-                <Truck size={15} className="text-earth-400 mt-0.5 flex-shrink-0" />
+                <Truck size={15} className="text-earth-500 mt-0.5 flex-shrink-0" />
               )}
               <div>
                 <p className="text-xs text-earth-600 font-body mb-0.5">Delivery</p>
@@ -264,14 +264,14 @@ export default function CustomerOrderDetailPage() {
                   </p>
                 )}
                 {order.deliveryMethod === 'delivery' && !order.driverId && order.preferredDriverId?.name && (
-                  <p className="text-xs text-earth-400 font-body mt-1">
+                  <p className="text-xs text-earth-500 font-body mt-1">
                     Requested rider: {order.preferredDriverId.name} (not yet confirmed)
                   </p>
                 )}
               </div>
             </div>
             <div className="flex items-start gap-2.5">
-              <CreditCard size={15} className="text-earth-400 mt-0.5 flex-shrink-0" />
+              <CreditCard size={15} className="text-earth-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-earth-600 font-body mb-0.5">Payment</p>
                 <p className="text-sm font-body font-semibold text-earth-800">

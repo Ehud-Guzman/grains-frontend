@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import toast from 'react-hot-toast'
 import { branchService } from '../services/branch.service'
 import { setShopBranchId } from '../services/api'
+import { safeStorage } from '../utils/safeStorage'
 
 // Location-driven branch resolution for the storefront:
 //   1. A manual pick (header switcher) always wins and persists.
@@ -17,16 +18,11 @@ const GEO_TIMEOUT_MS = 6000
 const BranchContext = createContext(null)
 
 const readStored = () => {
-  try {
-    const stored = JSON.parse(localStorage.getItem(BRANCH_KEY))
-    if (stored?.branch?._id) return stored
-  } catch { /* corrupted — ignore */ }
-  return null
+  const stored = safeStorage.getJSON(BRANCH_KEY) // corrupted / blocked → null
+  return stored?.branch?._id ? stored : null
 }
 
-const persist = (state) => {
-  try { localStorage.setItem(BRANCH_KEY, JSON.stringify(state)) } catch { /* quota — ignore */ }
-}
+const persist = (state) => { safeStorage.setJSON(BRANCH_KEY, state) }
 
 export function BranchProvider({ children }) {
   // Seed synchronously from storage so the first render (and the very first
@@ -53,7 +49,7 @@ export function BranchProvider({ children }) {
 
   // Revert to automatic (geo/default) resolution
   const useAutomaticBranch = useCallback(() => {
-    localStorage.removeItem(BRANCH_KEY)
+    safeStorage.remove(BRANCH_KEY)
     setShopBranchId(null)
     setState(null)
     window.location.reload() // simplest way to re-run full resolution + refetch
@@ -76,7 +72,7 @@ export function BranchProvider({ children }) {
           if (stillActive) {
             setResolving(false)
           } else {
-            localStorage.removeItem(BRANCH_KEY)
+            safeStorage.remove(BRANCH_KEY)
             setShopBranchId(null)
             toast(`${stored.branch.name} is no longer available — switching branches`, { icon: '⚠️' })
             window.location.reload() // re-run full resolution (geo/default) from a clean slate

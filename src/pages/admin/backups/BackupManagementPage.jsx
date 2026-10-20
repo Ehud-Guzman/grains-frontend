@@ -181,6 +181,7 @@ export default function BackupManagementPage() {
   const [creating, setCreating]         = useState(false)
   const [refreshing, setRefreshing]     = useState(false)
   const [restoring, setRestoring]       = useState(false)
+  const [progressLabel, setProgressLabel] = useState('')
   const [deletingId, setDeletingId]     = useState(null)
   const [downloadingId, setDownloadingId] = useState(null)
 
@@ -208,16 +209,27 @@ export default function BackupManagementPage() {
 
   useEffect(() => { loadBackups() }, [])
 
+  // What the server is doing right now, in words ("orders", "Saving a safety backup first"...).
+  const describeProgress = (p = {}) => {
+    if (p.phase === 'safety-backup') return 'Saving a safety backup of the current data first…'
+    if (p.phase === 'restore') return p.collection ? `Restoring ${p.collection}…` : 'Restoring…'
+    if (p.phase === 'backup') return p.collection ? `Backed up ${p.collection}` : 'Backing up…'
+    return 'Working…'
+  }
+
   const handleCreate = async () => {
     setCreating(true)
+    setProgressLabel('Starting backup…')
     try {
-      await adminBackupService.create()
+      const started = await adminBackupService.startCreate()
+      await adminBackupService.waitForJob(started.data.data.id, (p) => setProgressLabel(describeProgress(p)))
       toast.success('Backup created successfully')
       await loadBackups(true)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create backup')
+      toast.error(err.response?.data?.message || err.message || 'Failed to create backup')
     } finally {
       setCreating(false)
+      setProgressLabel('')
     }
   }
 
@@ -269,10 +281,12 @@ export default function BackupManagementPage() {
   const handleRestoreConfirm = async (confirmation) => {
     if (!restoreFile) return
     setRestoring(true)
+    setProgressLabel('Uploading the file…')
     try {
-      const res = await adminBackupService.restore(restoreFile, confirmation)
-      const preRestoreId = res.data?.data?.preRestoreBackup?.id
-      const writeErrors = res.data?.data?.writeErrors || []
+      const started = await adminBackupService.startRestore(restoreFile, confirmation)
+      const result = await adminBackupService.waitForJob(started.data.data.id, (p) => setProgressLabel(describeProgress(p)))
+      const preRestoreId = result?.preRestoreBackup?.id
+      const writeErrors = result?.writeErrors || []
       if (writeErrors.length > 0) {
         const summary = writeErrors.map(e => `${e.collection} (${e.failed}/${e.total} rows lost)`).join(', ')
         toast.error(
@@ -288,9 +302,10 @@ export default function BackupManagementPage() {
       setRestoreFile(null)
       await loadBackups(true)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to restore backup')
+      toast.error(err.response?.data?.message || err.message || 'Failed to restore backup')
     } finally {
       setRestoring(false)
+      setProgressLabel('')
     }
   }
 
@@ -371,6 +386,14 @@ export default function BackupManagementPage() {
           </button>
         </div>
       </div>
+
+      {(creating || restoring) && progressLabel && (
+        <div role="status" aria-live="polite"
+          className="mb-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-admin text-amber-800">
+          <Spinner size="sm" />
+          <span>{progressLabel} Please keep this page open.</span>
+        </div>
+      )}
 
       {/* ── Stats ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

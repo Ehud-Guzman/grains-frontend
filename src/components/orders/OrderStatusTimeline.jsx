@@ -11,7 +11,7 @@ export function OrderStatusTimeline({ history = [], currentStatus, deliveryMetho
               ${i === 0 ? 'bg-brand-500' : 'bg-earth-100'}`}>
               {i === 0
                 ? <Check size={13} className="text-white" />
-                : <Clock size={13} className="text-earth-400" />
+                : <Clock size={13} className="text-earth-500" />
               }
             </div>
             {i < history.length - 1 && (
@@ -23,7 +23,7 @@ export function OrderStatusTimeline({ history = [], currentStatus, deliveryMetho
               {getStatusLabel(entry.status, deliveryMethod)}
             </p>
             {entry.note && <p className="text-xs text-earth-500 mt-0.5">{entry.note}</p>}
-            <p className="text-xs text-earth-400 mt-0.5">{formatDateTime(entry.changedAt)}</p>
+            <p className="text-xs text-earth-500 mt-0.5">{formatDateTime(entry.changedAt)}</p>
           </div>
         </div>
       ))}

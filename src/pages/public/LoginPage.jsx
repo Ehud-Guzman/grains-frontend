@@ -351,7 +351,7 @@ export default function LoginPage() {
                 <div className="pt-4 pb-3 px-6 text-center border-b border-earth-100">
                   <div className="w-10 h-10 rounded-xl mx-auto mb-2 overflow-hidden
                     ring-2 ring-earth-100 shadow-sm">
-                    <img src="/Vittorios-logo.jpeg" alt="Vittorios" className="w-full h-full object-cover"
+                    <img src="/Vittorios-logo-96.jpeg" width="96" height="96" alt="Vittorios" className="w-full h-full object-cover"
                       onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
                     <div className="w-full h-full bg-brand-700 items-center justify-center hidden">
                       <span className="text-white font-display font-bold text-base">V</span>

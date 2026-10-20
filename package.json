@@ -9,8 +9,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:bundle": "node scripts/check-first-load.mjs",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "audit": "npm audit --audit-level=high",
     "lint": "eslint .",
@@ -38,6 +40,7 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.4.17",
     "eslint": "^9.39.5",
     "eslint-plugin-jsx-a11y": "^6.10.2",

@@ -1,11 +1,19 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { authService } from '../services/auth.service'
 import { setToken, clearToken } from '../services/api'
+import { safeStorage } from '../utils/safeStorage'
 
 const AuthContext = createContext(null)
 
 const ADMIN_ROLES = ['staff', 'supervisor', 'admin', 'superadmin']
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 minutes in ms
+
+// All browser storage goes through safeStorage: a browser that blocks storage must not be able to crash
+// sign-in (2026-10 audit). Blocked storage only means the session is not remembered across a reload.
+const clearStoredSession = () => {
+  safeStorage.remove('user')
+  safeStorage.remove('currentBranch')
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser]           = useState(null)
@@ -18,8 +26,7 @@ export const AuthProvider = ({ children }) => {
     // Try to restore the session via the HttpOnly refreshToken cookie.
     // If the cookie is present and valid the server returns a fresh access token.
     const restore = async () => {
-      const stored       = localStorage.getItem('user')
-      const storedBranch = localStorage.getItem('currentBranch')
+      const stored = safeStorage.get('user')
       if (!stored) {
         setIsLoading(false)
         return
@@ -39,18 +46,20 @@ export const AuthProvider = ({ children }) => {
         }
         const { accessToken, user: freshUser } = res.data.data
         setToken(accessToken)
-        const userData = freshUser || JSON.parse(stored)
-        localStorage.setItem('user', JSON.stringify(userData))
-        setUser(userData)
-        if (storedBranch) setCurrentBranch(JSON.parse(storedBranch))
+        const userData = freshUser || safeStorage.getJSON('user')
+        if (userData) {
+          safeStorage.setJSON('user', userData)
+          setUser(userData)
+          const storedBranch = safeStorage.getJSON('currentBranch')
+          if (storedBranch) setCurrentBranch(storedBranch)
+        }
       } catch (err) {
         // Only clear local state when the server actually rejected the cookie (401/403).
         // Network errors, timeouts, 429s and 5xx keep the stored session so the next
         // visit can retry the restore.
         if ([401, 403].includes(err.response?.status)) {
           clearToken()
-          localStorage.removeItem('user')
-          localStorage.removeItem('currentBranch')
+          clearStoredSession()
         }
       } finally {
         setIsLoading(false)
@@ -100,8 +109,7 @@ export const AuthProvider = ({ children }) => {
       // Cookie is sent automatically by the browser; no token arg needed
       try { await authService.logout() } catch {}
       clearToken()
-      localStorage.removeItem('user')
-      localStorage.removeItem('currentBranch')
+      clearStoredSession()
       setUser(null)
       setCurrentBranch(null)
       window.location.href = '/login?reason=inactivity'
@@ -124,11 +132,11 @@ export const AuthProvider = ({ children }) => {
   // refreshToken is stored as an HttpOnly cookie by the backend — never touch it here.
   const persistSession = (userData, accessToken, branch = null) => {
     setToken(accessToken)
-    localStorage.setItem('user', JSON.stringify(userData))
+    safeStorage.setJSON('user', userData)
     if (branch) {
-      localStorage.setItem('currentBranch', JSON.stringify(branch))
+      safeStorage.setJSON('currentBranch', branch)
     } else {
-      localStorage.removeItem('currentBranch')
+      safeStorage.remove('currentBranch')
     }
     setUser(userData)
     setCurrentBranch(branch)
@@ -147,8 +155,7 @@ export const AuthProvider = ({ children }) => {
       // Admin/superadmin — must verify an OTP before branch selection.
       // No session has been issued yet; clear any stale one before proceeding.
       clearToken()
-      localStorage.removeItem('user')
-      localStorage.removeItem('currentBranch')
+      clearStoredSession()
       setUser(null)
       setCurrentBranch(null)
       return { requiresTwoFactor: true, twoFactorToken: data.twoFactorToken }
@@ -162,8 +169,7 @@ export const AuthProvider = ({ children }) => {
 
     // Admin — clear any stale session before branch selection completes
     clearToken()
-    localStorage.removeItem('user')
-    localStorage.removeItem('currentBranch')
+    clearStoredSession()
     setUser(null)
     setCurrentBranch(null)
 
@@ -212,9 +218,9 @@ export const AuthProvider = ({ children }) => {
     setToken(data.accessToken)
     const branch = data.branch || null
     if (branch) {
-      localStorage.setItem('currentBranch', JSON.stringify(branch))
+      safeStorage.setJSON('currentBranch', branch)
     } else {
-      localStorage.removeItem('currentBranch')
+      safeStorage.remove('currentBranch')
     }
     setCurrentBranch(branch)
     return data
@@ -234,8 +240,7 @@ export const AuthProvider = ({ children }) => {
     } catch {}
     clearInactivityTimer()
     clearToken()
-    localStorage.removeItem('user')
-    localStorage.removeItem('currentBranch')
+    clearStoredSession()
     setUser(null)
     setCurrentBranch(null)
   }, [clearInactivityTimer])
@@ -243,7 +248,7 @@ export const AuthProvider = ({ children }) => {
   const updateUser = useCallback((updates) => {
     setUser(prev => {
       const updated = { ...prev, ...updates }
-      localStorage.setItem('user', JSON.stringify(updated))
+      safeStorage.setJSON('user', updated)
       return updated
     })
   }, [])

@@ -11,6 +11,7 @@ import { adminLogService } from '../../../services/admin/log.service'
 import { adminBranchService } from '../../../services/admin/branch.service'
 import { formatDateTime, timeAgo } from '../../../utils/helpers'
 import Spinner from '../../../components/ui/Spinner'
+import { startVisiblePolling } from '../../../utils/visiblePolling'
 
 // ── ACTION CONFIG ─────────────────────────────────────────────────────────────
 const ACTION_CONFIG = {
@@ -297,8 +298,7 @@ export default function ActivityLogPage() {
 
   useEffect(() => {
     if (!autoRefresh) return
-    const interval = setInterval(fetchLogs, 30000)
-    return () => clearInterval(interval)
+    return startVisiblePolling(fetchLogs, 30000)
   }, [autoRefresh, fetchLogs])
 
   const clearFilters = () => {

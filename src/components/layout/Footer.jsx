@@ -29,7 +29,7 @@ export default function Footer() {
             <Link to="/" className="flex items-center gap-3 mb-5 group w-fit">
               <div className="w-11 h-11 flex-shrink-0 rounded-xl overflow-hidden
                 border border-earth-200 group-hover:border-brand-500 transition-colors shadow-sm">
-                <img src="/Vittorios-logo.jpeg" alt="Vittorios"
+                <img src="/Vittorios-logo-96.jpeg" width="96" height="96" alt="Vittorios" loading="lazy"
                   className="w-full h-full object-cover" />
               </div>
               <div>
@@ -191,7 +191,7 @@ export default function Footer() {
           <p className="text-earth-500 text-xs font-body">
             Designed & maintained by{' '}
             <a href="https://glimmerink.co.ke/" target="_blank" rel="noopener noreferrer"
-              className="text-brand-500 hover:text-brand-600 transition-colors font-semibold">
+              className="text-brand-600 hover:text-brand-600 transition-colors font-semibold">
               GlimmerInk Creations
             </a>
           </p>

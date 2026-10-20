@@ -10,6 +10,8 @@ export const productService = {
   // navigation away mid-request leaked a live promise into setState.
   getAll: (params, config = {}) => api.get('/products', { params, ...config }),
   getById: (id, config = {}) => api.get(`/products/${id}`, config),
+  // Several products in ONE request (cart price refresh). noCache: the whole point is fresh prices and stock.
+  getMany: (ids) => api.get('/products/batch', { params: { ids: ids.join(',') }, noCache: true }),
   getCategories: ({ force = false, signal } = {}) => {
     if (force) {
       categoriesCache = null

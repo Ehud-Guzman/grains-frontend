@@ -14,8 +14,8 @@ function FilterSection({ title, children, defaultOpen = true }) {
           {title}
         </span>
         {open
-          ? <ChevronUp size={14} className="text-earth-400 group-hover:text-earth-700 transition-colors" />
-          : <ChevronDown size={14} className="text-earth-400 group-hover:text-earth-700 transition-colors" />
+          ? <ChevronUp size={14} className="text-earth-500 group-hover:text-earth-700 transition-colors" />
+          : <ChevronDown size={14} className="text-earth-500 group-hover:text-earth-700 transition-colors" />
         }
       </button>
       {open && <div className="animate-in fade-in duration-150">{children}</div>}
@@ -110,7 +110,7 @@ export default function ProductFilters({ filters, onChange, onClose }) {
             </button>
           )}
           {onClose && (
-            <button onClick={onClose}
+            <button onClick={onClose} aria-label="Close filters"
               className="p-1.5 rounded-lg hover:bg-earth-100 text-earth-500
                 hover:text-earth-700 transition-colors md:hidden">
               <X size={18} />
@@ -200,7 +200,7 @@ export default function ProductFilters({ filters, onChange, onClose }) {
     {(filters.minPrice || filters.maxPrice) && (
       <button
         onClick={() => onChange({ ...filters, minPrice: '', maxPrice: '' })}
-        className="text-xs text-earth-400 hover:text-red-500 font-medium transition-colors"
+        className="text-xs text-earth-500 hover:text-red-500 font-medium transition-colors"
       >
         Reset price filter
       </button>

@@ -560,6 +560,25 @@ export default function ReportsPage() {
                     <KpiTile label="Items Sold"      value={data.summary?.totalItems} />
                   </div>
 
+                  {/* What "Total Revenue" is made of. It is what customers paid, so it includes delivery fees and
+                      VAT; the category table below is NET goods sales. This card bridges the two. */}
+                  {data.summary?.breakdown && (
+                    <div className="bg-white rounded-2xl border border-admin-100 shadow-admin p-5">
+                      <h3 className="font-admin font-semibold text-admin-800 mb-3">How the total is made up</h3>
+                      <dl className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm font-admin">
+                        <div><dt className="text-admin-500">Goods sold</dt><dd className="font-semibold text-admin-900">{formatKES(data.summary.breakdown.goodsSubtotal)}</dd></div>
+                        <div><dt className="text-admin-500">Coupon discounts</dt><dd className="font-semibold text-admin-900">− {formatKES(data.summary.breakdown.couponDiscounts)}</dd></div>
+                        <div><dt className="text-admin-500">Delivery fees</dt><dd className="font-semibold text-admin-900">+ {formatKES(data.summary.breakdown.deliveryFees)}</dd></div>
+                        <div><dt className="text-admin-500">VAT collected</dt><dd className="font-semibold text-admin-900">+ {formatKES(data.summary.breakdown.vatCollected)}</dd></div>
+                        <div><dt className="text-admin-500">= Total revenue</dt><dd className="font-bold text-brand-700">{formatKES(data.summary.totalRevenue)}</dd></div>
+                      </dl>
+                      <p className="mt-3 text-xs text-admin-500">
+                        Net goods sales (what the category table adds up to): {formatKES(data.summary.breakdown.netGoods)}.
+                        Delivery fees and VAT are collected from customers but are not sales of goods.
+                      </p>
+                    </div>
+                  )}
+
                   <SalesLineChart data={data.byDay} />
 
                   {data.byCategory?.length > 0 && (
@@ -1075,6 +1094,14 @@ export default function ReportsPage() {
                     <OnboardingSummaryCard label="Ex-VAT Revenue" value={formatKES(data.summary?.totalExVat || 0)} accent="brand" />
                     <OnboardingSummaryCard label="VAT Collected" value={formatKES(data.summary?.totalVat || 0)} accent="blue" />
                     <OnboardingSummaryCard label="Incl. VAT Revenue" value={formatKES(data.summary?.totalInclVat || 0)} accent="green" />
+                  </div>
+
+                  {/* For the return: standard-rated vs exempt goods, and delivery fees (not included in the
+                      Ex-VAT figure). Ask your accountant how delivery fees should be treated. */}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    <OnboardingSummaryCard label="Taxable goods (before discount)" value={formatKES(data.summary?.taxableSales || 0)} accent="brand" />
+                    <OnboardingSummaryCard label="Exempt goods (before discount)" value={formatKES(data.summary?.exemptSales || 0)} accent="blue" />
+                    <OnboardingSummaryCard label="Delivery fees (not in Ex-VAT)" value={formatKES(data.summary?.deliveryFees || 0)} accent="green" />
                   </div>
 
                   <DataTable

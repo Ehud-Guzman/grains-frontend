@@ -200,7 +200,7 @@ export function ModalHeader({ title, subtitle, icon: Icon, onClose, titleId, ton
         )}
         <div className="min-w-0">
           <h3 id={titleId} className="font-display font-semibold text-earth-900 truncate">{title}</h3>
-          {subtitle && <p className="text-earth-400 text-xs font-body truncate">{subtitle}</p>}
+          {subtitle && <p className="text-earth-500 text-xs font-body truncate">{subtitle}</p>}
         </div>
       </div>
       {onClose && (
@@ -208,7 +208,7 @@ export function ModalHeader({ title, subtitle, icon: Icon, onClose, titleId, ton
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="p-2 -m-1 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-700 transition-colors flex-shrink-0"
+          className="p-2 -m-1 rounded-lg hover:bg-earth-100 text-earth-500 hover:text-earth-700 transition-colors flex-shrink-0"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth="2" strokeLinecap="round" aria-hidden="true">

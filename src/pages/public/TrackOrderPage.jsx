@@ -198,7 +198,7 @@ export default function TrackOrderPage() {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs font-body text-earth-400 mt-2">Tap one, then enter your phone number.</p>
+                <p className="text-xs font-body text-earth-500 mt-2">Tap one, then enter your phone number.</p>
               </div>
             )}
 
@@ -277,7 +277,7 @@ export default function TrackOrderPage() {
                         <p className="font-body font-medium text-earth-800 text-sm truncate">
                           {item.productName}
                         </p>
-                        <p className="text-earth-400 text-xs mt-0.5">
+                        <p className="text-earth-500 text-xs mt-0.5">
                           {item.variety} · {item.packaging} × {item.quantity}
                         </p>
                       </div>
@@ -329,7 +329,7 @@ export default function TrackOrderPage() {
               <div className="bg-earth-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div>
                   <p className="font-body font-medium text-earth-700 text-sm">Questions about your order?</p>
-                  <p className="text-earth-400 text-xs mt-0.5">Our team is available {shopInfo.hours}</p>
+                  <p className="text-earth-500 text-xs mt-0.5">Our team is available {shopInfo.hours}</p>
                 </div>
                 <WhatsAppButton phone={shopInfo.whatsapp || shopInfo.phone}
                   message={shopOrderMessage({ ref: order.orderRef, total: order.total })}
@@ -349,7 +349,7 @@ export default function TrackOrderPage() {
 
         {/* ── Help text (no order yet) ────────────────────────────────────── */}
         {!order && !loading && (
-          <div className="text-center text-earth-400 text-sm font-body space-y-1 mt-2">
+          <div className="text-center text-earth-500 text-sm font-body space-y-1 mt-2">
             <p>Your order reference was shown on the confirmation page when you placed the order.</p>
             <p>It looks like <span className="font-medium text-earth-600">NAI-2026-0001</span> (orders placed earlier look like ORD-2026-0001)</p>
           </div>

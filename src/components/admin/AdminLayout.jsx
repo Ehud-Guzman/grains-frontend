@@ -6,6 +6,7 @@ import Modal from '../ui/Modal'
 import AlertsBell from './AlertsBell'
 import useAdminAlerts from './useAdminAlerts'
 import { navGroupsFor, titleForPath, sectionLabelFor } from './adminNav'
+import { safeStorage } from '../../utils/safeStorage'
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const SIDEBAR_BG = '#0F172A'
@@ -27,12 +28,8 @@ const getGreeting = () => {
 
 // Browser storage can be unavailable (private windows, blocked site data) — the sidebar
 // must still work, just without remembering its width.
-const readCollapsed = () => {
-  try { return localStorage.getItem(COLLAPSE_KEY) === '1' } catch { return false }
-}
-const writeCollapsed = (value) => {
-  try { localStorage.setItem(COLLAPSE_KEY, value ? '1' : '0') } catch { /* not remembered */ }
-}
+const readCollapsed = () => safeStorage.get(COLLAPSE_KEY) === '1'
+const writeCollapsed = (value) => { safeStorage.set(COLLAPSE_KEY, value ? '1' : '0') }
 
 // Which count (if any) an item carries, and in what colour.
 const badgeFor = (item, alerts) => {
@@ -122,7 +119,7 @@ function Sidebar({ user, branch, groups, alerts, collapsed, onNavigate, onLogout
       <div className={`py-4 border-b border-slate-700/70 flex-shrink-0 ${collapsed ? 'px-3' : 'px-5'}`}>
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
           <div className="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700/80 shadow-sm">
-            <img src="/Vittorios-logo.jpeg" alt="Vittorios" className="w-full h-full object-cover" />
+            <img src="/Vittorios-logo-96.jpeg" width="96" height="96" alt="Vittorios" className="w-full h-full object-cover" />
           </div>
           {!collapsed && (
             <div className="min-w-0">

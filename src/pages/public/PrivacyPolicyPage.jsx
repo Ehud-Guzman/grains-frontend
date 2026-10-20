@@ -51,7 +51,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Account details</strong> — your name, phone number and, optionally, an email address and KRA PIN (used only on tax invoices you request).</li>
               <li><strong>Order details</strong> — the products you order, delivery addresses you save or enter, and your order history.</li>
               <li><strong>Guest orders</strong> — if you order without an account, we collect only your name, phone number and delivery details for that order.</li>
-              <li><strong>Location</strong> — only if you tap "detect my location". We use your coordinates once, to pick your nearest branch and calculate your delivery fee. We do not track your location in the background.</li>
+              <li><strong>Location</strong> — when you first visit, your browser asks whether we may use your location; if you allow it, we use your coordinates to pick your nearest branch, and again if you tap "detect my location" at checkout to calculate your delivery fee. Your coordinates are sent to our server for that lookup but are not stored unless they are part of an order's delivery details. You can decline, and choose a branch yourself from the header. We do not track your location in the background.</li>
               <li><strong>Payment confirmations</strong> — when you pay via M-Pesa we receive the transaction confirmation from Safaricom (amount, receipt number, phone number). We never see or store your M-Pesa PIN.</li>
             </ul>
           </Section>
@@ -73,7 +73,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>SMS and email providers</strong> — your phone number or email, to deliver the messages described above.</li>
               <li><strong>Kenya Revenue Authority (eTIMS)</strong> — invoice details where fiscal invoicing applies.</li>
               <li><strong>Our delivery drivers</strong> — your name, phone number and delivery address for orders assigned to them.</li>
-              <li><strong>Hosting and error-monitoring providers</strong> — our servers and databases are hosted with reputable cloud providers; error reports are scrubbed of personal details before being stored.</li>
+              <li><strong>Hosting and error-monitoring providers</strong> — our servers and databases are hosted with reputable cloud providers; error reports and server logs have phone numbers, locations, passwords and sign-in tokens removed before they are stored.</li>
             </ul>
           </Section>
 
@@ -119,7 +119,7 @@ export default function PrivacyPolicyPage() {
             </p>
           </Section>
 
-          <p className="text-xs text-earth-400 font-body pt-2 border-t border-earth-100">
+          <p className="text-xs text-earth-500 font-body pt-2 border-t border-earth-100">
             See also our <Link to="/terms" className="text-brand-600 hover:text-brand-700 font-semibold">Terms of Service</Link>.
           </p>
         </div>

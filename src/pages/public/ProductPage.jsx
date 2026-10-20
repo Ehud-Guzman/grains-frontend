@@ -387,7 +387,9 @@ export default function ProductPage() {
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img, i) => (
-                  <button key={i} onClick={() => setActiveImage(i)}
+                  <button key={i} type="button" onClick={() => setActiveImage(i)}
+                    aria-label={`Show photo ${i + 1} of ${images.length}`}
+                    aria-pressed={i === activeImage}
                     className={`w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2
                       transition-all ${i === activeImage
                         ? 'border-brand-500 scale-105'
@@ -569,7 +571,7 @@ export default function ProductPage() {
                       font-body font-semibold text-base transition-all active:scale-[0.98] ${
                         added ? 'bg-green-500 text-white'
                         : inStock ? 'bg-brand-700 text-white hover:bg-brand-800'
-                        : 'bg-earth-100 text-earth-400 cursor-not-allowed'}`}>
+                        : 'bg-earth-100 text-earth-500 cursor-not-allowed'}`}>
                     {added
                       ? <><Check size={18} /> Added to Cart!</>
                       : <><ShoppingCart size={18} /> {inStock ? 'Add to Cart' : 'Out of Stock'}</>
@@ -641,7 +643,7 @@ export default function ProductPage() {
             <div className="h-[200px] rounded-2xl border border-earth-100 bg-earth-50
               flex flex-col items-center justify-center gap-2">
               <TrendingDown size={28} className="text-earth-300" />
-              <p className="text-earth-400 text-sm font-body">No price history yet</p>
+              <p className="text-earth-500 text-sm font-body">No price history yet</p>
               <p className="text-earth-300 text-xs font-body">
                 Chart appears here once prices have been updated
               </p>
@@ -703,7 +705,7 @@ export default function ProductPage() {
                   hover:border-brand-300 hover:bg-brand-50 transition-all group">
                 <div className="w-10 h-10 bg-earth-100 group-hover:bg-brand-100 rounded-full
                   flex items-center justify-center mb-2 transition-colors">
-                  <ChevronRight size={18} className="text-earth-400 group-hover:text-brand-600 transition-colors" />
+                  <ChevronRight size={18} className="text-earth-500 group-hover:text-brand-600 transition-colors" />
                 </div>
                 <p className="text-xs font-body font-semibold text-earth-700
                   group-hover:text-brand-600 transition-colors text-center px-2">

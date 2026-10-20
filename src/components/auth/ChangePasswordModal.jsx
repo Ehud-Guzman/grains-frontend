@@ -68,7 +68,7 @@ export default function ChangePasswordModal({ onClose }) {
           <h3 id="change-password-title" className="font-display font-semibold text-earth-900">Change Password</h3>
         </div>
         <button type="button" onClick={onClose} aria-label="Close"
-          className="p-2 -m-1 rounded-lg hover:bg-earth-100 text-earth-400 hover:text-earth-800 transition-colors">
+          className="p-2 -m-1 rounded-lg hover:bg-earth-100 text-earth-500 hover:text-earth-800 transition-colors">
           <X size={16} aria-hidden="true" />
         </button>
       </div>
@@ -117,7 +117,7 @@ export default function ChangePasswordModal({ onClose }) {
                     <button type="button" onClick={() => toggle(key)}
                       aria-label={show[key] ? 'Hide password' : 'Show password'}
                       className="absolute right-1 top-1/2 -translate-y-1/2 p-2 min-w-[40px] min-h-[40px]
-                        flex items-center justify-center rounded-lg text-earth-400 hover:text-earth-700
+                        flex items-center justify-center rounded-lg text-earth-500 hover:text-earth-700
                         transition-colors">
                       {show[key] ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
                     </button>

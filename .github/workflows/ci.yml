@@ -1,0 +1,27 @@
+# Runs on every push and pull request to this repo. Netlify deploys on push; in Netlify's site settings
+# only build when checks pass (or protect the branch) so a red run cannot reach customers.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Lint, test, build, bundle budget, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -- --quiet          # errors fail the build; the warning backlog does not
+      - run: npm test
+      - run: npm run build
+      # Fails if the PDF/chart libraries (or admin/driver code) creep back into the first-load JS, or the
+      # first-load JS grows past its gzip budget.
+      - run: npm run check:bundle
+      - run: npm audit --omit=dev --audit-level=high

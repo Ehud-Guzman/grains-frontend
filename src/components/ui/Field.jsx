@@ -20,7 +20,7 @@ export function useField() {
 }
 
 const LABEL_CLASS = 'block text-xs font-body font-semibold text-earth-700 uppercase tracking-wide mb-1.5'
-const HINT_CLASS = 'text-earth-400 text-xs mt-1.5 font-body'
+const HINT_CLASS = 'text-earth-500 text-xs mt-1.5 font-body'
 const ERROR_CLASS = 'text-red-500 text-xs mt-1.5 flex items-center gap-1 font-body'
 
 export function Field({

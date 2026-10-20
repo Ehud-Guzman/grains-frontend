@@ -245,7 +245,7 @@ export default function RegisterPage() {
 
           {/* ── Trust badge ───────────────────────────────────────────────── */}
           <p className="text-center text-xs text-earth-500 font-body mt-3 flex items-center justify-center gap-1.5">
-            <Shield size={11} className="text-brand-500" />
+            <Shield size={11} className="text-brand-600" />
             Your data is safe and encrypted
           </p>
           <p className="text-center text-xs text-earth-500 font-body mt-2">

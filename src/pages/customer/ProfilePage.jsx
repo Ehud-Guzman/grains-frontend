@@ -163,7 +163,7 @@ function AddressCard({ address, onRemove, onSetDefault }) {
         </span>
       )}
       <div className="flex items-start gap-2.5 pr-14">
-        <MapPin size={13} className="text-earth-400 mt-0.5 flex-shrink-0" />
+        <MapPin size={13} className="text-earth-500 mt-0.5 flex-shrink-0" />
         <div>
           <p className="text-sm font-body font-semibold text-earth-800">{address.label}</p>
           <p className="text-earth-500 text-xs mt-0.5 font-body leading-relaxed">{address.value}</p>
@@ -179,7 +179,7 @@ function AddressCard({ address, onRemove, onSetDefault }) {
               Yes
             </button>
             <button onClick={() => setConfirming(false)}
-              className="text-xs text-earth-400 font-body px-2 py-1
+              className="text-xs text-earth-500 font-body px-2 py-1
                 rounded-lg hover:bg-earth-100 transition-colors">
               No
             </button>
@@ -379,7 +379,7 @@ export default function CustomerProfilePage() {
               </div>
 
               {profile?.email && (
-                <p className="text-earth-400 text-xs font-body mt-0.5 truncate max-w-full">
+                <p className="text-earth-500 text-xs font-body mt-0.5 truncate max-w-full">
                   {profile.email}
                 </p>
               )}
@@ -406,13 +406,13 @@ export default function CustomerProfilePage() {
               <Link to="/dashboard"
                 className="flex items-center gap-2.5 px-4 py-3 text-sm font-body text-earth-700
                   hover:bg-earth-50 transition-colors">
-                <Package size={14} className="text-earth-400" />
+                <Package size={14} className="text-earth-500" />
                 My Orders
               </Link>
               <Link to="/shop"
                 className="flex items-center gap-2.5 px-4 py-3 text-sm font-body text-earth-700
                   hover:bg-earth-50 transition-colors">
-                <svg className="w-3.5 h-3.5 text-earth-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 text-earth-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 Browse Shop
@@ -420,14 +420,14 @@ export default function CustomerProfilePage() {
               <Link to="/alerts"
                 className="flex items-center gap-2.5 px-4 py-3 text-sm font-body text-earth-700
                   hover:bg-earth-50 transition-colors">
-                <Bell size={14} className="text-earth-400" />
+                <Bell size={14} className="text-earth-500" />
                 My Alerts
               </Link>
             </div>
 
             {/* Contact */}
             <div className="border-t border-earth-100 px-4 py-3 bg-earth-50/50">
-              <p className="text-xs text-earth-400 font-body mb-0.5">Need help?</p>
+              <p className="text-xs text-earth-500 font-body mb-0.5">Need help?</p>
               <a href={`tel:${shopInfo.phone}`}
                 className="text-xs font-body font-semibold text-brand-600 hover:text-brand-700 transition-colors">
                 {shopInfo.phone}
@@ -453,7 +453,7 @@ export default function CustomerProfilePage() {
                   </button>
                 ) : (
                   <button onClick={() => { setEditing(false); setErrors({}) }}
-                    className="text-xs text-earth-400 hover:text-earth-600 font-body transition-colors px-2.5 py-1.5">
+                    className="text-xs text-earth-500 hover:text-earth-600 font-body transition-colors px-2.5 py-1.5">
                     Cancel
                   </button>
                 )
@@ -502,10 +502,10 @@ export default function CustomerProfilePage() {
                   {/* Name */}
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-earth-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <User size={13} className="text-earth-400" />
+                      <User size={13} className="text-earth-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-earth-400 font-body uppercase tracking-wide">Full Name</p>
+                      <p className="text-xs text-earth-500 font-body uppercase tracking-wide">Full Name</p>
                       <p className="text-sm font-body font-semibold text-earth-800 mt-0.5">{profile?.name}</p>
                     </div>
                   </div>
@@ -513,10 +513,10 @@ export default function CustomerProfilePage() {
                   {/* Phone */}
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-earth-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Phone size={13} className="text-earth-400" />
+                      <Phone size={13} className="text-earth-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-earth-400 font-body uppercase tracking-wide">Phone</p>
+                      <p className="text-xs text-earth-500 font-body uppercase tracking-wide">Phone</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <p className="text-sm font-body font-semibold text-earth-800">{profile?.phone}</p>
                         <span className="text-xs text-green-600 font-body bg-green-50 px-1.5 py-px rounded-full flex items-center gap-0.5">
@@ -536,10 +536,10 @@ export default function CustomerProfilePage() {
                   {/* Email — full width */}
                   <div className="flex items-start gap-3 sm:col-span-2">
                     <div className="w-8 h-8 bg-earth-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Mail size={13} className="text-earth-400" />
+                      <Mail size={13} className="text-earth-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-earth-400 font-body uppercase tracking-wide">Email Address</p>
+                      <p className="text-xs text-earth-500 font-body uppercase tracking-wide">Email Address</p>
                       {profile?.email ? (
                         <p className="text-sm font-body font-semibold text-earth-800 mt-0.5">{profile.email}</p>
                       ) : (
@@ -555,10 +555,10 @@ export default function CustomerProfilePage() {
                   {/* KRA PIN — full width */}
                   <div className="flex items-start gap-3 sm:col-span-2">
                     <div className="w-8 h-8 bg-earth-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Receipt size={13} className="text-earth-400" />
+                      <Receipt size={13} className="text-earth-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-earth-400 font-body uppercase tracking-wide">KRA PIN</p>
+                      <p className="text-xs text-earth-500 font-body uppercase tracking-wide">KRA PIN</p>
                       {profile?.kraPin ? (
                         <p className="text-sm font-body font-semibold text-earth-800 mt-0.5">{profile.kraPin}</p>
                       ) : (
@@ -600,7 +600,7 @@ export default function CustomerProfilePage() {
                     <MapPin size={18} className="text-amber-400" />
                   </div>
                   <p className="text-earth-700 text-sm font-body font-semibold">No saved addresses</p>
-                  <p className="text-earth-400 text-xs font-body mt-1 mb-3">Save addresses to speed up checkout</p>
+                  <p className="text-earth-500 text-xs font-body mt-1 mb-3">Save addresses to speed up checkout</p>
                   <button onClick={() => setShowAddAddress(true)}
                     className="inline-flex items-center gap-1.5 text-sm text-brand-600 font-body
                       font-semibold hover:text-brand-700 bg-brand-50 px-4 py-2 rounded-xl transition-colors">
@@ -657,7 +657,7 @@ export default function CustomerProfilePage() {
             <div className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-sm font-body text-earth-700">Change your account password</p>
-                <p className="text-xs text-earth-400 font-body mt-0.5">
+                <p className="text-xs text-earth-500 font-body mt-0.5">
                   Last changed: {profile?.passwordChangedAt ? formatDate(profile.passwordChangedAt) : 'Never'}
                 </p>
               </div>
@@ -691,7 +691,7 @@ export default function CustomerProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-body font-semibold text-earth-800">Promotional SMS</p>
-                  <p className="text-earth-400 text-xs font-body mt-0.5 leading-relaxed">
+                  <p className="text-earth-500 text-xs font-body mt-0.5 leading-relaxed">
                     Offers and announcements — sent only with your consent. Order updates are always sent regardless of this setting.
                   </p>
                 </div>

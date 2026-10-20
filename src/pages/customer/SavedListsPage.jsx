@@ -166,12 +166,12 @@ export default function SavedListsPage() {
               maxLength={80}
               className="flex-1 text-sm font-body border-none outline-none text-earth-900 placeholder-earth-300"
             />
-            <button onClick={handleCreate}
+            <button onClick={handleCreate} aria-label="Create list"
               className="p-1.5 rounded-lg bg-brand-700 text-white hover:bg-brand-800 transition-colors">
               <Check size={15} />
             </button>
-            <button onClick={() => { setCreating(false); setNewName('') }}
-              className="p-1.5 rounded-lg text-earth-400 hover:text-earth-700 hover:bg-earth-100 transition-colors">
+            <button onClick={() => { setCreating(false); setNewName('') }} aria-label="Cancel"
+              className="p-1.5 rounded-lg text-earth-500 hover:text-earth-700 hover:bg-earth-100 transition-colors">
               <X size={15} />
             </button>
           </div>
@@ -210,7 +210,7 @@ export default function SavedListsPage() {
                         <Check size={14} />
                       </button>
                       <button onClick={() => setEditingId(null)}
-                        className="p-1 text-earth-400 hover:bg-earth-100 rounded-lg transition-colors">
+                        className="p-1 text-earth-500 hover:bg-earth-100 rounded-lg transition-colors">
                         <X size={14} />
                       </button>
                     </>
@@ -220,7 +220,7 @@ export default function SavedListsPage() {
                         className="flex-1 text-left"
                         onClick={() => setExpanded(expanded === list._id ? null : list._id)}>
                         <p className="font-body font-semibold text-earth-900 text-sm">{list.name}</p>
-                        <p className="text-earth-400 text-xs font-body mt-0.5">
+                        <p className="text-earth-500 text-xs font-body mt-0.5">
                           {list.items?.length || 0} item{list.items?.length !== 1 ? 's' : ''}
                         </p>
                       </button>
@@ -256,7 +256,7 @@ export default function SavedListsPage() {
                         className="px-4 py-2.5 flex items-center justify-between gap-2 border-b border-earth-50 last:border-0">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-body font-semibold text-earth-800 truncate">{item.productName}</p>
-                          <p className="text-xs font-body text-earth-400">{item.variety} · {item.packaging}</p>
+                          <p className="text-xs font-body text-earth-500">{item.variety} · {item.packaging}</p>
                         </div>
                         <span className="text-xs font-body font-semibold text-earth-700 flex-shrink-0">
                           × {item.quantity}
@@ -274,7 +274,7 @@ export default function SavedListsPage() {
                 )}
                 {expanded === list._id && (!list.items || list.items.length === 0) && (
                   <div className="border-t border-earth-100 px-4 py-4 text-center">
-                    <p className="text-xs font-body text-earth-400">
+                    <p className="text-xs font-body text-earth-500">
                       This list is empty — add products from the shop.
                     </p>
                   </div>

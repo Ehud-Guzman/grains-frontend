@@ -97,7 +97,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
                 <p className="font-body font-bold text-earth-900 text-sm sm:text-base truncate">
                   {isAdmin ? 'Order Receipt' : 'Your Receipt'}
                 </p>
-                <p className="text-earth-400 text-xs font-body mt-0.5 truncate">{order.orderRef}</p>
+                <p className="text-earth-500 text-xs font-body mt-0.5 truncate">{order.orderRef}</p>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 <button
@@ -116,8 +116,8 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
                     transition-all active:scale-[0.97]">
                   <Printer size={14} /> <span className="hidden sm:inline">Print</span>
                 </button>
-                <button onClick={onClose}
-                  className="p-2 sm:p-2.5 rounded-xl hover:bg-earth-100 text-earth-400
+                <button onClick={onClose} aria-label="Close receipt"
+                  className="p-2 sm:p-2.5 rounded-xl hover:bg-earth-100 text-earth-500
                     hover:text-earth-700 transition-colors">
                   <X size={18} />
                 </button>

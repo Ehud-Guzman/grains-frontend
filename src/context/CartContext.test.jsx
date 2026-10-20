@@ -13,7 +13,7 @@ vi.mock('react-hot-toast', () => {
   return { default: toast }
 })
 vi.mock('../services/product.service', () => ({
-  productService: { getById: vi.fn() },
+  productService: { getById: vi.fn(), getMany: vi.fn() },
 }))
 vi.mock('../utils/analytics', () => ({ trackAddToCart: vi.fn() }))
 
@@ -466,5 +466,52 @@ describe('CartContext — unreliable browser storage', () => {
     await act(async () => { await api.refreshPrices() })
 
     expect(readItems()[0].priceKES).toBe(120)
+  })
+})
+
+
+describe('CartContext - refreshPrices via the batch endpoint', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+    useBranch.mockReturnValue({ branch: { _id: 'branch-A', name: 'Nairobi' }, branchId: 'branch-A' })
+  })
+
+  const live = (pkg) => product({
+    varieties: [{ varietyName: 'Grade 1', packaging: [{ size: '50kg', ...pkg }] }],
+  })
+
+  it('asks for every product in ONE request and applies the new price', async () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging(), 2))
+    productService.getMany.mockResolvedValue({ data: { data: [live({ priceKES: 130, stock: 100 })] } })
+
+    await act(async () => { await api.refreshPrices() })
+
+    expect(productService.getMany).toHaveBeenCalledTimes(1)
+    expect(productService.getById).not.toHaveBeenCalled()
+    expect(readSubtotal()).toBe(260)
+  })
+
+  it('a product missing from a successful batch answer is gone and leaves the cart', async () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging(), 2))
+    productService.getMany.mockResolvedValue({ data: { data: [] } })
+
+    await act(async () => { await api.refreshPrices() })
+
+    expect(readItems()).toHaveLength(0)
+  })
+
+  it('if the batch call fails (older server / offline) it falls back to one request per product and never wipes the cart', async () => {
+    renderCart()
+    act(() => api.addItem(product(), variety, packaging(), 2))
+    productService.getMany.mockRejectedValue(new Error('offline'))
+    productService.getById.mockRejectedValue(new Error('offline'))
+
+    await act(async () => { await api.refreshPrices() })
+
+    expect(productService.getById).toHaveBeenCalledTimes(1)
+    expect(readItems()).toHaveLength(1)
   })
 })

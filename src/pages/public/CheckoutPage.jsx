@@ -53,14 +53,14 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disable
         : 'border-earth-200 hover:border-earth-300 bg-white cursor-pointer'
   }`}>
     <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-      disabled ? 'bg-earth-200 text-earth-400' : checked ? 'bg-brand-500 text-white' : 'bg-earth-100 text-earth-600'
+      disabled ? 'bg-earth-200 text-earth-500' : checked ? 'bg-brand-500 text-white' : 'bg-earth-100 text-earth-600'
     }`}>
       <Icon size={17} />
     </div>
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 flex-wrap">
         <p className={`font-body font-semibold text-sm ${
-          disabled ? 'text-earth-400' : checked ? 'text-brand-800' : 'text-earth-800'
+          disabled ? 'text-earth-500' : checked ? 'text-brand-800' : 'text-earth-800'
         }`}>{label}</p>
         {badge && !disabled && (
           <span className="text-xs bg-green-100 text-green-700 font-body font-semibold
@@ -75,7 +75,7 @@ const OptionCard = ({ icon: Icon, label, desc, checked, onChange, badge, disable
           </span>
         )}
       </div>
-      <p className={`text-xs mt-0.5 font-body leading-relaxed ${disabled ? 'text-earth-400' : 'text-earth-600'}`}>
+      <p className={`text-xs mt-0.5 font-body leading-relaxed ${disabled ? 'text-earth-500' : 'text-earth-600'}`}>
         {disabled && disabledReason ? disabledReason : desc}
       </p>
     </div>
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
         <div className="text-center">
           <div className="w-16 h-16 bg-earth-100 rounded-2xl flex items-center justify-center
             mx-auto mb-4">
-            <ShoppingBag size={28} className="text-earth-400" />
+            <ShoppingBag size={28} className="text-earth-500" />
           </div>
           <h2 className="font-display text-xl text-earth-800 mb-2">Your cart is empty</h2>
           <p className="text-earth-600 text-sm font-body mb-6">
@@ -520,6 +520,8 @@ export default function CheckoutPage() {
         preferredDeliveryDate: form.preferredDeliveryDate || undefined,
         preferredDriverId:   (form.deliveryMethod === 'delivery' && form.preferredDriverId) || undefined,
         couponCode: couponData?.code || undefined,
+        // What this screen is showing: the server refuses (409 PRICE_CHANGED) if a price moved meanwhile.
+        expectedTotal: Math.round(orderTotal * 100) / 100,
         deliveryCoordinates: deliveryCoordinates ?? undefined,
         orderItems: items.map(i => ({
           productId: i.productId,
@@ -584,6 +586,10 @@ export default function CheckoutPage() {
           'We could not confirm whether your order went through. Please check "Track Order" with your phone number before trying again, to avoid placing it twice.',
           { duration: 9000 }
         )
+      } else if (err.response?.data?.error === 'PRICE_CHANGED') {
+        // A price moved while the customer was on this screen: show the new total and re-price the cart.
+        toast.error(err.response.data.message, { duration: 9000 })
+        refreshPrices()
       } else {
         toast.error(err.response?.data?.message || 'Something went wrong. Please try again.')
       }
@@ -791,7 +797,7 @@ export default function CheckoutPage() {
                               <button
                                 type="button"
                                 onClick={clearLocation}
-                                className="p-1.5 text-earth-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                                className="p-1.5 text-earth-500 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
                                 title="Clear location"
                               >
                                 <X size={14} />
@@ -816,7 +822,7 @@ export default function CheckoutPage() {
                                 }
                               </button>
                               {orderSettings.deliveryFee > 0 && (
-                                <p className="text-xs font-body text-earth-400">
+                                <p className="text-xs font-body text-earth-500">
                                   Or skip — standard fee of {formatKES(orderSettings.deliveryFee)} applies
                                 </p>
                               )}
@@ -1085,7 +1091,7 @@ export default function CheckoutPage() {
                         <span className="text-earth-600">
                           Delivery Fee
                           {locationFeeData?.distanceKm != null && (
-                            <span className="text-earth-400 text-xs ml-1">
+                            <span className="text-earth-500 text-xs ml-1">
                               (~{locationFeeData.distanceKm} km)
                             </span>
                           )}
@@ -1225,7 +1231,7 @@ export default function CheckoutPage() {
                       <p className="text-xs font-body font-semibold text-earth-800">
                         {formatKES(getCartUnitPrice(item) * item.quantity)}
                       </p>
-                      <p className="text-xs text-earth-400">×{item.quantity}</p>
+                      <p className="text-xs text-earth-500">×{item.quantity}</p>
                     </div>
                   </div>
                 ))}
@@ -1242,12 +1248,12 @@ export default function CheckoutPage() {
                     <span className="font-body text-earth-600">
                       Delivery
                       {locationFeeData?.distanceKm != null && (
-                        <span className="text-earth-400 text-xs ml-1">~{locationFeeData.distanceKm} km</span>
+                        <span className="text-earth-500 text-xs ml-1">~{locationFeeData.distanceKm} km</span>
                       )}
                     </span>
                     <span className="font-body text-earth-700">
                       {locating
-                        ? <span className="text-earth-400 text-xs">detecting…</span>
+                        ? <span className="text-earth-500 text-xs">detecting…</span>
                         : formatKES(deliveryFee)
                       }
                     </span>
@@ -1291,7 +1297,7 @@ export default function CheckoutPage() {
                       <span className="font-body font-bold text-green-700 text-xs">
                         −{formatKES(couponData.discountAmount)}
                       </span>
-                      <button onClick={removeCoupon}
+                      <button onClick={removeCoupon} aria-label="Remove coupon"
                         className="text-green-600 hover:text-red-500 transition-colors p-0.5">
                         <X size={12} />
                       </button>

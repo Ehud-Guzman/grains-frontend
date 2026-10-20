@@ -146,7 +146,7 @@ export function OrderConfirmPage() {
                 )}
               </button>
 
-              <p className="text-center text-earth-400 text-xs font-body mt-2.5">
+              <p className="text-center text-earth-500 text-xs font-body mt-2.5">
                 Screenshot this page to keep your reference safe
               </p>
             </div>
@@ -230,7 +230,7 @@ export function OrderConfirmPage() {
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
-                    <CreditCard size={13} className="text-earth-400" />
+                    <CreditCard size={13} className="text-earth-500" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Total Amount</span>
                 </div>
@@ -241,7 +241,7 @@ export function OrderConfirmPage() {
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
-                    <CreditCard size={13} className="text-earth-400" />
+                    <CreditCard size={13} className="text-earth-500" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Payment</span>
                 </div>
@@ -254,7 +254,7 @@ export function OrderConfirmPage() {
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
-                    <Truck size={13} className="text-earth-400" />
+                    <Truck size={13} className="text-earth-500" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Delivery</span>
                 </div>
@@ -267,7 +267,7 @@ export function OrderConfirmPage() {
               <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-earth-100 rounded-lg flex items-center justify-center">
-                    <Phone size={13} className="text-earth-400" />
+                    <Phone size={13} className="text-earth-500" />
                   </div>
                   <span className="text-sm font-body text-earth-700">Contact</span>
                 </div>

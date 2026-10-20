@@ -13,6 +13,7 @@ import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingE
 import { formatKES, timeAgo, getStatusLabel } from '../../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../../utils/constants'
 import toast from 'react-hot-toast'
+import { startVisiblePolling } from '../../../utils/visiblePolling'
 
 const STATUS_FILTERS = [
   { value: '',                label: 'All'         },
@@ -153,6 +154,9 @@ export default function OrderListPage() {
   const [searchInput, setSearchInput]   = useState(searchParams.get('search') || '')
   const [pendingTotal, setPendingTotal] = useState(0)
   const searchDebounce = useRef(null)
+  // Only the newest request may update the list: a slow response for an old filter/page must never
+  // overwrite the one the admin is now looking at (2026-10 audit, F-34).
+  const fetchSeq = useRef(0)
 
   const statusFilter  = searchParams.get('status') || ''
   const paymentFilter = searchParams.get('payment') || ''
@@ -161,6 +165,7 @@ export default function OrderListPage() {
 
   // ── FETCH ─────────────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async (silent = false) => {
+    const mySeq = ++fetchSeq.current
     if (!silent) setLoading(true)
     else setRefreshing(true)
     try {
@@ -169,6 +174,7 @@ export default function OrderListPage() {
       if (paymentFilter) params.paymentStatus = paymentFilter
       if (searchQuery)   params.search = searchQuery
       const res = await adminOrderService.getAll(params)
+      if (mySeq !== fetchSeq.current) return
       const data = res.data.data || []
       setOrders(data)
       setPagination(res.data.pagination || { page: 1, pages: 1, total: 0 })
@@ -176,9 +182,9 @@ export default function OrderListPage() {
       // poll — only drop ids that are no longer in the visible list.
       setSelected(prev => prev.filter(id => data.some(o => o._id === id)))
     } catch {
-      if (!silent) toast.error('Failed to load orders')
+      if (mySeq === fetchSeq.current && !silent) toast.error('Failed to load orders')
     }
-    finally { setLoading(false); setRefreshing(false) }
+    finally { if (mySeq === fetchSeq.current) { setLoading(false); setRefreshing(false) } }
   }, [page, statusFilter, paymentFilter, searchQuery])
 
   // Fetch pending total separately for accurate badge
@@ -195,8 +201,7 @@ export default function OrderListPage() {
   }, [fetchOrders, fetchPendingTotal])
 
   useEffect(() => {
-    const t = setInterval(() => { fetchOrders(true); fetchPendingTotal() }, 60000)
-    return () => clearInterval(t)
+    return startVisiblePolling(() => { fetchOrders(true); fetchPendingTotal() }, 60000)
   }, [fetchOrders, fetchPendingTotal])
 
   // ── SEARCH DEBOUNCE ───────────────────────────────────────────────────────
