@@ -1,372 +1,147 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   Download, TrendingUp, TrendingDown, Package, Users, ShoppingCart, BarChart3, Printer, LifeBuoy,
-  Percent, Bike, Receipt, RefreshCw, History, AlertCircle, FileDown, Wallet
+  Percent, Bike, Receipt, RefreshCw, History, AlertCircle, FileDown, Wallet,
 } from 'lucide-react'
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Cell
-} from 'recharts'
-import { useAdminTheme, runInLightTheme } from '../../../components/admin/adminTheme'
+import { runInLightTheme } from '../../../components/admin/adminTheme'
 import { adminReportService } from '../../../services/admin/report.service'
-import { formatKES } from '../../../utils/helpers'
 import { useShopInfo } from '../../../context/AppSettingsContext'
 import { useAuth } from '../../../context/AuthContext'
 import { OnboardingReturnLink } from '../../../components/onboarding/OnboardingEnhancements'
 import Spinner from '../../../components/ui/Spinner'
 import CashUpTab from './CashUpTab'
+import { ReportViewContext } from './ReportTable'
+import { PRINT_STYLES, PrintHeader, PrintFooter } from './reportUi'
+import { SalesTab, ProductsTab, OrdersTab, CustomersTab } from './SalesTabs'
+import { StockTab, TurnoverTab, SlowMoversTab, MovementTab } from './StockTabs'
+import { MarginsTab, VatTab, RidersTab, OnboardingTab } from './MoneyTabs'
+import { PERIODS, isRolling, periodParams, periodLabel, eatToday } from './reportPeriods'
 import toast from 'react-hot-toast'
 
 const EXPORT_ROLES = ['admin', 'superadmin'] // must mirror requireMinRole('admin') on /export/:type
 
-const TABS = [
-  { key: 'sales',     label: 'Sales',     icon: TrendingUp   },
-  { key: 'products',  label: 'Products',  icon: Package      },
-  { key: 'stock',     label: 'Stock',     icon: BarChart3    },
-  { key: 'turnover',  label: 'Turnover',  icon: RefreshCw    },
-  { key: 'slow-movers', label: 'Slow Movers', icon: TrendingDown },
-  { key: 'stock-movement', label: 'Stock Movement', icon: History },
-  { key: 'customers', label: 'Customers', icon: Users        },
-  { key: 'orders',    label: 'Orders',    icon: ShoppingCart },
-  { key: 'margins',   label: 'Margins',   icon: Percent      },
-  { key: 'riders',    label: 'Riders',    icon: Bike         },
-  { key: 'cash-up',   label: 'Cash-up',   icon: Wallet       },
-  { key: 'onboarding', label: 'Onboarding', icon: LifeBuoy   },
-  { key: 'vat',        label: 'VAT',        icon: Receipt    },
+// Every report, once. `period: false` marks the reports that are a snapshot or all-time rather than a window.
+const TAB_META = {
+  sales:            { label: 'Sales',          icon: TrendingUp,   period: true,  csv: 'sales' },
+  products:         { label: 'Products',       icon: Package,      period: true,  csv: 'best-sellers' },
+  customers:        { label: 'Customers',      icon: Users,        period: false, csv: 'customers' },
+  orders:           { label: 'Orders',         icon: ShoppingCart, period: true,  csv: 'orders' },
+  riders:           { label: 'Riders',         icon: Bike,         period: true,  csv: 'riders' },
+  stock:            { label: 'Stock value',    icon: BarChart3,    period: false, csv: 'stock-valuation' },
+  turnover:         { label: 'Turnover',       icon: RefreshCw,    period: true,  csv: 'stock-turnover' },
+  'slow-movers':    { label: 'Slow movers',    icon: TrendingDown, period: false, csv: 'slow-movers' },
+  'stock-movement': { label: 'Stock movement', icon: History,      period: true,  csv: 'stock-movement' },
+  margins:          { label: 'Margins',        icon: Percent,      period: true,  csv: 'margins' },
+  'cash-up':        { label: 'Cash-up',        icon: Wallet,       period: true },
+  vat:              { label: 'VAT',            icon: Receipt,      period: true,  csv: 'vat' },
+  onboarding:       { label: 'Onboarding',     icon: LifeBuoy,     period: false, csv: 'onboarding' },
+}
+
+// Thirteen reports in one strip did not fit a screen and hid the last ones. Grouped by the question they answer.
+const GROUPS = [
+  { key: 'sales',      label: 'Sales',               tabs: ['sales', 'products', 'customers'] },
+  { key: 'operations', label: 'Orders & deliveries', tabs: ['orders', 'riders'] },
+  { key: 'stock',      label: 'Stock',               tabs: ['stock', 'turnover', 'slow-movers', 'stock-movement'] },
+  { key: 'money',      label: 'Money & tax',         tabs: ['margins', 'cash-up', 'vat'] },
+  // Training analytics for the owner, not a business report: kept out of everyone else's way.
+  { key: 'system',     label: 'System',              tabs: ['onboarding'], superadminOnly: true },
 ]
+const groupOf = (tab) => GROUPS.find(g => g.tabs.includes(tab))
 
-const PERIODS = [
-  { value: 'today', label: 'Today'     },
-  { value: 'week',  label: '7 Days'    },
-  { value: 'month', label: '30 Days'   },
-  { value: 'year',  label: '12 Months' },
-]
+// Two frames: one for React to render, one for the browser to paint.
+const nextPaint = () => new Promise(resolve => (typeof requestAnimationFrame === 'function'
+  ? requestAnimationFrame(() => requestAnimationFrame(resolve))
+  : setTimeout(resolve, 50)))
 
-const BRAND = '#C8912A'
-
-// Chart grid and axis text are SVG literals, so they follow the admin theme through this hook.
-const useChartInk = () => (
-  useAdminTheme().resolved === 'dark'
-    ? { grid: '#26382F', tick: '#94A69A' }
-    : { grid: '#F1EDE6', tick: '#9E8E7A' }
-)
-
-const STATUS_COLORS = {
-  pending:          '#F59E0B',
-  approved:         '#22C55E',
-  preparing:        '#3B82F6',
-  out_for_delivery: '#8B5CF6',
-  completed:        '#14B8A6',
-  rejected:         '#EF4444',
-  cancelled:        '#9CA3AF',
-}
-
-// ── PRINT-ONLY STYLES ─────────────────────────────────────────────────────────
-const PRINT_STYLES = `
-  @media screen { .print-only { display: none !important; } }
-  @media print  { .print-only { display: block !important; } }
-`
-
-// ── PRINT HEADER ──────────────────────────────────────────────────────────────
-const PrintHeader = ({ shopInfo, tab, period }) => {
-  const periodLabel = PERIODS.find(p => p.value === period)?.label ?? ''
-  const NO_PERIOD_TABS = ['stock', 'customers', 'onboarding', 'slow-movers']
-  const periodText  = !NO_PERIOD_TABS.includes(tab) ? `Period: ${periodLabel}` : 'All time'
-  const today       = new Date().toLocaleDateString('en-KE', {
-    day: 'numeric', month: 'long', year: 'numeric'
-  })
-
-  return (
-    <div className="print-only mb-8 pb-6 border-b-2 border-admin-200">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <img
-            src="/Vittorios-logo.jpeg"
-            alt="Vittorios"
-            style={{ width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover' }}
-          />
-          <div>
-            <h1 className="text-xl font-bold text-admin-900" style={{ fontFamily: 'Georgia, serif' }}>
-              {shopInfo.name}
-            </h1>
-            <p className="text-admin-500 text-xs mt-0.5">{shopInfo.tagline}</p>
-            <div className="flex items-center gap-4 mt-1 text-xs text-admin-500">
-              <span>📞 {shopInfo.phone}</span>
-              <span>✉ {shopInfo.email}</span>
-            </div>
-          </div>
-        </div>
-        <div className="text-right text-sm text-admin-500 space-y-0.5">
-          <p className="font-semibold text-admin-800 capitalize text-base">{tab} Report</p>
-          <p>{periodText}</p>
-          <p>Generated: {today}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── PRINT FOOTER ──────────────────────────────────────────────────────────────
-const PrintFooter = ({ shopInfo }) => (
-  <div className="print-only mt-10 pt-5 border-t border-admin-200">
-    <div className="flex items-center justify-between text-xs text-admin-500">
-      <div className="flex items-center gap-5">
-        <span>📞 {shopInfo.phone}</span>
-        <span>✉ {shopInfo.email}</span>
-        <span>🕐 {shopInfo.hours}</span>
-      </div>
-      <span>📍 {shopInfo.location}</span>
-    </div>
-  </div>
-)
-
-// ── KPI TILE ──────────────────────────────────────────────────────────────────
-const KpiTile = ({ label, value }) => (
-  <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-    <p className="text-admin-500 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
-    <p className="text-2xl font-admin font-bold text-admin-900 leading-tight">{value ?? '—'}</p>
-  </div>
-)
-
-const OnboardingSummaryCard = ({ label, value, accent = 'brand' }) => (
-  <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-    <p className="text-admin-500 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
-    <p className={`text-2xl font-admin font-bold leading-tight ${
-      accent === 'brand' ? 'text-brand-700' :
-      accent === 'blue' ? 'text-blue-700' :
-      accent === 'green' ? 'text-green-700' :
-      'text-admin-900'
-    }`}>
-      {value ?? '—'}
-    </p>
-  </div>
-)
-
-// ── CUSTOM CHART TOOLTIP ──────────────────────────────────────────────────────
-const ChartTooltip = ({ active, payload, label, valueFormatter }) => {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="bg-white border border-admin-200 rounded-xl shadow-admin p-3 text-sm font-admin">
-      <p className="text-admin-500 text-xs mb-2 capitalize">{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} className="font-semibold" style={{ color: p.color || BRAND }}>
-          {p.name}: {valueFormatter ? valueFormatter(p.value) : p.value}
-        </p>
-      ))}
-    </div>
-  )
-}
-
-// ── SALES LINE CHART ──────────────────────────────────────────────────────────
-const SalesLineChart = ({ data }) => {
-  const ink = useChartInk()
-  if (!data?.length) return null
-
-  const formatted = data.map(d => ({
-    date: new Date(d.date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }),
-    revenue: Math.round(d.revenue),
-    orders: d.orders,
-  }))
-
-  return (
-    <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-      <h3 className="font-admin font-bold text-admin-900 mb-5">Revenue Over Time</h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={formatted} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={ink.grid} vertical={false} />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
-            axisLine={false} tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
-            axisLine={false} tickLine={false}
-            tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : `${v}`}
-          />
-          <Tooltip
-            content={<ChartTooltip valueFormatter={v => formatKES(v)} />}
-          />
-          <Line
-            type="monotone" dataKey="revenue" name="Revenue"
-            stroke={BRAND} strokeWidth={2.5}
-            dot={{ r: 3, fill: BRAND, strokeWidth: 0 }}
-            activeDot={{ r: 5, fill: BRAND }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-// ── TOP PRODUCTS HORIZONTAL BAR CHART ────────────────────────────────────────
-const TopProductsChart = ({ data }) => {
-  const ink = useChartInk()
-  if (!data?.length) return null
-
-  const top5 = data.slice(0, 5).map(p => ({
-    name: p.productName.length > 22 ? p.productName.slice(0, 22) + '…' : p.productName,
-    units: p.unitsSold,
-  }))
-
-  return (
-    <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-      <h3 className="font-admin font-bold text-admin-900 mb-5">Top 5 Products by Units Sold</h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={top5} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={ink.grid} horizontal={false} />
-          <XAxis
-            type="number"
-            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
-            axisLine={false} tickLine={false}
-          />
-          <YAxis
-            type="category" dataKey="name" width={148}
-            tick={{ fontSize: 10, fill: ink.tick, fontFamily: 'Outfit' }}
-            axisLine={false} tickLine={false}
-          />
-          <Tooltip content={<ChartTooltip />} />
-          <Bar dataKey="units" name="Units Sold" fill={BRAND} radius={[0, 6, 6, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-// ── ORDERS STATUS BAR CHART ───────────────────────────────────────────────────
-const OrdersBarChart = ({ data }) => {
-  const ink = useChartInk()
-  if (!data?.length) return null
-
-  const formatted = data.map(d => ({
-    status: d._id.replace(/_/g, ' '),
-    count: d.count,
-    fill: STATUS_COLORS[d._id] || BRAND,
-  }))
-
-  return (
-    <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-      <h3 className="font-admin font-bold text-admin-900 mb-5">Orders by Status</h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={formatted} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={ink.grid} vertical={false} />
-          <XAxis
-            dataKey="status"
-            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit', textTransform: 'capitalize' }}
-            axisLine={false} tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
-            axisLine={false} tickLine={false}
-          />
-          <Tooltip content={<ChartTooltip />} />
-          <Bar dataKey="count" name="Orders" radius={[6, 6, 0, 0]}>
-            {formatted.map((entry, i) => (
-              <Cell key={i} fill={entry.fill} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-// ── DATA TABLE ────────────────────────────────────────────────────────────────
-const DataTable = ({ title, headers, rows, renderRow, emptyMessage = 'No data for this period' }) => (
-  <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
-    {title && (
-      <div className="px-5 py-4 border-b border-admin-100">
-        <h3 className="font-admin font-bold text-admin-900">{title}</h3>
-      </div>
-    )}
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm font-admin">
-        <thead>
-          <tr className="bg-admin-50/60 border-b border-admin-100">
-            {headers.map(h => (
-              <th scope="col" key={h.label}
-                className={`px-5 py-3.5 text-xs text-admin-500 font-semibold uppercase tracking-wide
-                  ${h.right ? 'text-right' : 'text-left'}`}>
-                {h.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-admin-50">
-          {!rows?.length ? (
-            <tr>
-              <td colSpan={headers.length}
-                className="px-5 py-10 text-center text-admin-500 font-admin text-sm">
-                {emptyMessage}
-              </td>
-            </tr>
-          ) : (
-            rows.map((row, i) => renderRow(row, i))
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)
-
-// ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ReportsPage() {
   const shopInfo = useShopInfo()
   const { user } = useAuth()
   const canExport = EXPORT_ROLES.includes(user?.role)
-  const [tab,       setTab]       = useState('sales')
-  const [period,    setPeriod]    = useState('month')
-  const [data,      setData]      = useState(null)
-  const [loading,   setLoading]   = useState(true)
-  const [loadError, setLoadError] = useState(false)
+  const isSuper = user?.role === 'superadmin'
+
+  const [tab, setTab] = useState('sales')
+  const [period, setPeriod] = useState('month')
+  const [custom, setCustom] = useState({ from: '', to: '' })
+  const [slowDays, setSlowDays] = useState(30)
+  const [segment, setSegment] = useState('all')
+  const [custPage, setCustPage] = useState(1)
+  const [reloads, setReloads] = useState(0)
   const [exporting, setExporting] = useState(false)
-  const [pdfBusy,   setPdfBusy]   = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [expandAll, setExpandAll] = useState(false)
+  // What the last request brought back, stamped with the question it answered. The page only shows it
+  // while that stamp still matches what is asked for now, so a slow answer to an earlier tab or period can
+  // never appear under the wrong heading (and nothing has to be reset by hand when the choice changes).
+  const [loaded, setLoaded] = useState({ key: null, data: null, error: false })
   const reportRef = useRef(null)
+  const latestKey = useRef(null)
 
-  const fetchData = async () => {
-    setLoading(true)
-    setData(null)
-    setLoadError(false)
-    try {
-      const params = { period }
-      let res
-      if      (tab === 'sales')     res = await adminReportService.getSales(params)
-      else if (tab === 'products')  res = await adminReportService.getBestSellers({ ...params, limit: 20 })
-      else if (tab === 'stock')     res = await adminReportService.getStockValuation()
-      else if (tab === 'turnover')  res = await adminReportService.getStockTurnover(params)
-      else if (tab === 'slow-movers')    res = await adminReportService.getSlowMovers()
-      else if (tab === 'stock-movement') res = await adminReportService.getStockMovement(params)
-      else if (tab === 'customers') res = await adminReportService.getCustomers()
-      else if (tab === 'orders')    res = await adminReportService.getOrders(params)
-      else if (tab === 'margins')   res = await adminReportService.getMargins(params)
-      else if (tab === 'riders')    res = await adminReportService.getRiders(params)
-      else if (tab === 'cash-up')   res = await adminReportService.getCashUp(params)
-      else if (tab === 'onboarding') res = await adminReportService.getOnboarding()
-      else if (tab === 'vat')        res = await adminReportService.getVat(params)
-      setData(res.data.data)
-    } catch { setLoadError(true) /* toast already shown by api interceptor */ }
-    finally { setLoading(false) }
+  const meta = TAB_META[tab]
+  const params = useMemo(() => periodParams(period, custom, eatToday()), [period, custom])
+  const needsDates = meta.period && !params
+
+  // The question being asked: everything that changes the answer.
+  const key = useMemo(() => JSON.stringify([
+    tab, meta.period ? params : null, tab === 'slow-movers' ? slowDays : null,
+    tab === 'customers' ? [segment, custPage] : null, reloads,
+  ]), [tab, meta.period, params, slowDays, segment, custPage, reloads])
+
+  useEffect(() => {
+    latestKey.current = key
+    if (needsDates) return
+    let request
+    if (tab === 'sales')               request = adminReportService.getSales(params)
+    else if (tab === 'products')       request = adminReportService.getBestSellers({ ...params, limit: 20 })
+    else if (tab === 'stock')          request = adminReportService.getStockValuation()
+    else if (tab === 'turnover')       request = adminReportService.getStockTurnover(params)
+    else if (tab === 'slow-movers')    request = adminReportService.getSlowMovers({ days: slowDays })
+    else if (tab === 'stock-movement') request = adminReportService.getStockMovement(params)
+    else if (tab === 'customers')      request = adminReportService.getCustomers({ segment, page: custPage })
+    else if (tab === 'orders')         request = adminReportService.getOrders(params)
+    else if (tab === 'margins')        request = adminReportService.getMargins(params)
+    else if (tab === 'riders')         request = adminReportService.getRiders(params)
+    else if (tab === 'cash-up')        request = adminReportService.getCashUp(params)
+    else if (tab === 'onboarding')     request = adminReportService.getOnboarding()
+    else if (tab === 'vat')            request = adminReportService.getVat(params)
+    else return
+    const asked = key
+    request
+      .then(res => { if (latestKey.current === asked) setLoaded({ key: asked, data: res.data.data, error: false }) })
+      // The API interceptor has already shown a toast; here the page just offers a retry.
+      .catch(() => { if (latestKey.current === asked) setLoaded({ key: asked, data: null, error: true }) })
+  }, [key, tab, params, needsDates, slowDays, segment, custPage])
+
+  const ready = loaded.key === key
+  const data = ready ? loaded.data : null
+  const loading = !needsDates && !ready
+  const loadError = ready && loaded.error
+
+  // ── choices ───────────────────────────────────────────────────────────────
+  const selectTab = (next) => {
+    setTab(next)
+    // The VAT return is monthly: a rolling window would hand back two part-months.
+    if (next === 'vat' && isRolling(period)) setPeriod('last-month')
   }
+  const selectGroup = (g) => { if (!g.tabs.includes(tab)) selectTab(g.tabs[0]) }
+  const selectSegment = (s) => { setSegment(s); setCustPage(1) }
 
-  useEffect(() => { fetchData() }, [tab, period])
+  // Part of the file name: the dates, the window, or "all-time" for a snapshot report with no period.
+  const slug = !meta.period ? 'all-time' : params?.from ? `${params.from}_to_${params.to}` : (params?.period || 'all-time')
+  const periodText = tab === 'slow-movers' ? `No sale in ${slowDays} days`
+    : meta.period ? periodLabel(period, custom, eatToday()) : 'All time'
 
+  // ── export / print ──────────────────────────────────────────────────────────
   const handleExport = async () => {
     if (!canExport) return
+    if (!meta.csv) { toast('Use Print or PDF for this report'); return }
     setExporting(true)
     try {
-      const typeMap = {
-        sales: 'sales', products: 'best-sellers',
-        stock: 'stock-valuation', turnover: 'stock-turnover',
-        'slow-movers': 'slow-movers', 'stock-movement': 'stock-movement',
-        customers: 'customers', orders: 'orders', onboarding: 'onboarding',
-        vat: 'vat', margins: 'margins', riders: 'riders'
-      }
-      if (!typeMap[tab]) { toast('Use Print or PDF for this report'); return }
-      const res = await adminReportService.exportCSV(typeMap[tab], { period })
+      const query = meta.period ? params : tab === 'slow-movers' ? { days: slowDays } : {}
+      const res = await adminReportService.exportCSV(meta.csv, query)
       const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }))
-      const a   = document.createElement('a')
-      a.href     = url
-      a.download = `vittorios-${tab}-${period}.csv`
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `vittorios-${tab}-${slug}.csv`
       a.click()
       URL.revokeObjectURL(url)
       toast.success('CSV downloaded')
@@ -374,13 +149,18 @@ export default function ReportsPage() {
     finally { setExporting(false) }
   }
 
-  const handlePrint = () => window.print()
+  // The tables show 25 rows at a time on screen, but a printed or downloaded report must carry every row, so
+  // they are all opened first and put back afterwards.
+  const handlePrint = async () => {
+    setExpandAll(true)
+    await nextPaint()
+    window.addEventListener('afterprint', () => setExpandAll(false), { once: true })
+    window.print()
+  }
 
-  // ── PDF EXPORT ──────────────────────────────────────────────────────────────
-  // Same html2canvas + jsPDF stack the receipt uses, so a downloaded report
-  // matches the printed one rather than being a second rendering path. Unlike the
-  // receipt this paginates onto standard A4: reports run to many pages, and one
-  // very tall custom-size page is useless to anyone printing or filing it.
+  // Same html2canvas + jsPDF stack the receipt uses, so a downloaded report matches the printed one rather than
+  // being a second rendering path. Unlike the receipt this paginates onto standard A4: reports run to many pages,
+  // and one very tall custom-size page is useless to anyone printing or filing it.
   const handlePdf = async () => {
     const el = reportRef.current
     if (!el || pdfBusy) return
@@ -389,30 +169,34 @@ export default function ReportsPage() {
     document.body.style.overflow = 'hidden' // keep sticky admin chrome from shifting the capture
     try {
       const html2canvas = (await import('html2canvas')).default
-      const { jsPDF }   = await import('jspdf')
+      const { jsPDF } = await import('jspdf')
 
+      setExpandAll(true)
+      await nextPaint()
       // Captured in light colours whatever the screen theme: the sheet is white paper.
       const canvas = await runInLightTheme(() => html2canvas(el, {
         scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
-        // The letterhead and footer are .print-only, i.e. display:none on screen.
-        // Force them on inside the clone so the PDF carries the same header and
-        // footer as the printed copy.
+        // The letterhead and footer are .print-only, i.e. display:none on screen: force them on inside the
+        // clone so the PDF carries the same header and footer as the printed copy. The screen rule is
+        // `display: none !important`, which a plain inline style cannot beat, so this one is !important too.
+        // Search boxes, filters and pagers are screen controls and stay out of the sheet.
         onclone: (doc) => {
-          doc.querySelectorAll('.print-only').forEach(n => { n.style.display = 'block' })
+          doc.querySelectorAll('.print-only').forEach(n => { n.style.setProperty('display', 'block', 'important') })
+          doc.querySelectorAll('[data-no-print]').forEach(n => { n.style.display = 'none' })
         },
       }))
 
       const PAGE_W = 210, PAGE_H = 297, MARGIN = 10
       const contentW = PAGE_W - MARGIN * 2
       const contentH = PAGE_H - MARGIN * 2
-      const pxPerMm  = canvas.width / contentW
+      const pxPerMm = canvas.width / contentW
       const maxSlice = Math.floor(contentH * pxPerMm)
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-      // Prefer to break on a fully white row, so a page break lands between table
-      // rows instead of bisecting one (or a totals block). Best-effort: if the
-      // pixels can't be read this way the ideal cut still yields a valid page.
+      // Prefer to break on a fully white row, so a page break lands between table rows instead of bisecting
+      // one (or a totals block). Best-effort: if the pixels can't be read this way the ideal cut still yields
+      // a valid page.
       let ctx = null
       try { ctx = canvas.getContext('2d', { willReadFrequently: true }) } catch { ctx = null }
       const isBlankRow = (y) => {
@@ -426,7 +210,7 @@ export default function ReportsPage() {
         } catch { return false }
       }
 
-      const slice    = document.createElement('canvas')
+      const slice = document.createElement('canvas')
       const sliceCtx = slice.getContext('2d')
       let y = 0
       let page = 0
@@ -439,7 +223,7 @@ export default function ReportsPage() {
             if (isBlankRow(y + probe)) { h = probe; break }
           }
         }
-        slice.width  = canvas.width
+        slice.width = canvas.width
         slice.height = h
         sliceCtx.fillStyle = '#ffffff'
         sliceCtx.fillRect(0, 0, slice.width, slice.height)
@@ -450,703 +234,167 @@ export default function ReportsPage() {
         y += h
       }
 
-      pdf.save(`vittorios-${tab}-${period}.pdf`)
+      pdf.save(`vittorios-${tab}-${slug}.pdf`)
       toast.success('PDF downloaded')
     } catch {
       toast.error('PDF export failed — use Print instead')
     } finally {
       document.body.style.overflow = prevOverflow
+      setExpandAll(false)
       setPdfBusy(false)
     }
   }
+
+  const visibleGroups = GROUPS.filter(g => !g.superadminOnly || isSuper)
+  const currentGroup = groupOf(tab)
+  const today = eatToday()
 
   return (
     <>
       <style>{PRINT_STYLES}</style>
 
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto">
 
         {/* ── Page header ─────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6" data-no-print>
           <div>
-            <div className="mb-3">
-              <OnboardingReturnLink />
-            </div>
+            <div className="mb-3"><OnboardingReturnLink /></div>
             <h1 className="text-2xl font-admin font-bold text-admin-900">Reports</h1>
             <p className="text-admin-500 text-xs font-admin mt-0.5">Analytics and data exports</p>
           </div>
-          {/* Wraps on narrow phones — the title plus three actions do not fit on
-              a single row at 360px. */}
+          {/* Wraps on narrow phones — the title plus three actions do not fit on a single row at 360px. */}
           <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={handlePdf} disabled={pdfBusy || loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-admin-200
-                text-admin-700 rounded-xl text-sm font-admin font-semibold
-                hover:bg-admin-50 disabled:opacity-50 transition-colors shadow-admin">
-              <FileDown size={15} />
-              {pdfBusy ? 'Generating…' : 'PDF'}
+            <button type="button" onClick={handlePdf} disabled={pdfBusy || loading || !data}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-admin-200 text-admin-700 rounded-xl text-sm font-admin font-semibold hover:bg-admin-50 disabled:opacity-50 transition-colors shadow-admin">
+              <FileDown size={15} aria-hidden="true" /> {pdfBusy ? 'Generating…' : 'PDF'}
             </button>
-            <button onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-admin-200
-                text-admin-700 rounded-xl text-sm font-admin font-semibold
-                hover:bg-admin-50 transition-colors shadow-admin">
-              <Printer size={15} />
-              Print
+            <button type="button" onClick={handlePrint} disabled={!data}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-admin-200 text-admin-700 rounded-xl text-sm font-admin font-semibold hover:bg-admin-50 disabled:opacity-50 transition-colors shadow-admin">
+              <Printer size={15} aria-hidden="true" /> Print
             </button>
             {canExport && (
-              <button onClick={handleExport} disabled={exporting || loading}
-                className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl
-                  text-sm font-admin font-semibold hover:bg-brand-600 disabled:opacity-50
-                  transition-colors shadow-admin">
-                <Download size={15} />
-                {exporting ? 'Exporting…' : 'Export CSV'}
+              <button type="button" onClick={handleExport} disabled={exporting || loading || !data}
+                className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-admin font-semibold hover:bg-brand-600 disabled:opacity-50 transition-colors shadow-admin">
+                <Download size={15} aria-hidden="true" /> {exporting ? 'Exporting…' : 'Export CSV'}
               </button>
             )}
           </div>
         </div>
 
-        {/* ── Tabs ────────────────────────────────────────────────── */}
-        <div className="flex gap-1 bg-admin-100 p-1 rounded-xl mb-5 overflow-x-auto" data-no-print>
-          {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-admin
-                font-semibold transition-all whitespace-nowrap ${
-                  tab === t.key
-                    ? 'bg-white text-admin-900 shadow-admin'
-                    : 'text-admin-500 hover:text-admin-700'
-                }`}>
-              <t.icon size={14} />
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {/* ── Report picker: what are you trying to find out? ─────── */}
+        <nav aria-label="Report sections" className="mb-5 space-y-2" data-no-print>
+          <div className="flex gap-1 bg-admin-100 p-1 rounded-xl overflow-x-auto">
+            {visibleGroups.map(g => {
+              const on = g.key === currentGroup?.key
+              return (
+                <button key={g.key} type="button" onClick={() => selectGroup(g)} aria-current={on ? 'true' : undefined}
+                  className={`px-4 py-2 rounded-lg text-sm font-admin font-semibold whitespace-nowrap transition-all ${
+                    on ? 'bg-white text-admin-900 shadow-admin' : 'text-admin-500 hover:text-admin-700'}`}>
+                  {g.label}
+                </button>
+              )
+            })}
+          </div>
+          {currentGroup && currentGroup.tabs.length > 1 && (
+            <div role="tablist" aria-label={`${currentGroup.label} reports`} className="flex gap-1 overflow-x-auto border-b border-admin-200">
+              {currentGroup.tabs.map(k => {
+                const m = TAB_META[k]
+                const on = k === tab
+                return (
+                  <button key={k} type="button" role="tab" aria-selected={on} onClick={() => selectTab(k)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 -mb-px text-sm font-admin font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                      on ? 'border-shell-600 text-admin-900' : 'border-transparent text-admin-500 hover:text-admin-700'}`}>
+                    <m.icon size={14} aria-hidden="true" /> {m.label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </nav>
 
-        {/* ── Period filter ────────────────────────────────────────── */}
-        {!['stock', 'customers', 'onboarding', 'slow-movers'].includes(tab) && (
-          <div className="flex gap-2 mb-5" data-no-print>
-            {PERIODS.map(p => (
-              <button key={p.value} onClick={() => setPeriod(p.value)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-admin font-semibold
-                  transition-all border ${
+        {/* ── Period ───────────────────────────────────────────────── */}
+        {meta.period && (
+          <div className="mb-5 space-y-3" data-no-print>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Period">
+              {PERIODS.map(p => (
+                <button key={p.value} type="button" onClick={() => setPeriod(p.value)} aria-pressed={period === p.value}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-admin font-semibold transition-all border ${
                     period === p.value
                       ? 'bg-shell-800 text-white border-shell-800 shadow-sm'
-                      : 'bg-white border-admin-200 text-admin-600 hover:border-admin-400'
-                  }`}>
-                {p.label}
-              </button>
-            ))}
+                      : 'bg-white border-admin-200 text-admin-600 hover:border-admin-400'}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {period === 'custom' && (
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="text-xs font-admin font-semibold text-admin-600">
+                  From
+                  <input type="date" value={custom.from} max={custom.to || today}
+                    onChange={(e) => setCustom(c => ({ ...c, from: e.target.value }))}
+                    className="block mt-1 px-3 py-2 min-h-[40px] rounded-lg border border-admin-200 bg-white text-sm font-admin text-admin-800 focus:outline-none focus:border-shell-400" />
+                </label>
+                <label className="text-xs font-admin font-semibold text-admin-600">
+                  To
+                  <input type="date" value={custom.to} min={custom.from || undefined} max={today}
+                    onChange={(e) => setCustom(c => ({ ...c, to: e.target.value }))}
+                    className="block mt-1 px-3 py-2 min-h-[40px] rounded-lg border border-admin-200 bg-white text-sm font-admin text-admin-800 focus:outline-none focus:border-shell-400" />
+                </label>
+                {custom.from && custom.to && custom.from > custom.to && (
+                  <p role="alert" className="text-xs font-admin font-semibold text-red-600 pb-2.5">The start date is after the end date.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {/* ── Print area (wraps all reportable content) ─────────────── */}
-        <div className="print-area" ref={reportRef}>
+        <ReportViewContext.Provider value={{ expandAll }}>
+          <div className="print-area" ref={reportRef}>
+            <PrintHeader shopInfo={shopInfo} tabLabel={meta.label} periodText={periodText} />
 
-          <PrintHeader shopInfo={shopInfo} tab={tab} period={period} />
+            {needsDates ? (
+              <div className="bg-white rounded-xl border border-admin-200 p-12 text-center">
+                <BarChart3 size={28} className="text-admin-300 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-admin-600 font-admin font-medium">Pick a start and an end date to see this report.</p>
+              </div>
+            ) : loading ? (
+              <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+            ) : loadError ? (
+              <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
+                <AlertCircle size={28} className="text-red-300 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-admin-600 font-admin font-medium mb-3">Couldn&apos;t load this report</p>
+                <button type="button" onClick={() => setReloads(n => n + 1)}
+                  className="px-4 py-2 bg-shell-800 text-white rounded-lg text-sm font-admin font-semibold hover:bg-shell-700 transition-colors">
+                  Retry
+                </button>
+              </div>
+            ) : !data ? (
+              <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
+                <BarChart3 size={28} className="text-admin-300 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-admin-600 font-admin font-medium">No data available for this period</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {tab === 'sales' && <SalesTab data={data} />}
+                {tab === 'products' && <ProductsTab data={data} />}
+                {tab === 'customers' && <CustomersTab data={data} segment={segment} onSegment={selectSegment} onPage={setCustPage} />}
+                {tab === 'orders' && <OrdersTab data={data} />}
+                {tab === 'riders' && <RidersTab data={data} />}
+                {tab === 'stock' && <StockTab data={data} />}
+                {tab === 'turnover' && <TurnoverTab data={data} />}
+                {tab === 'slow-movers' && <SlowMoversTab data={data} days={slowDays} onDays={setSlowDays} />}
+                {tab === 'stock-movement' && <MovementTab data={data} />}
+                {tab === 'margins' && <MarginsTab data={data} />}
+                {tab === 'cash-up' && <CashUpTab data={data} />}
+                {tab === 'vat' && <VatTab data={data} rolling={isRolling(period)} />}
+                {tab === 'onboarding' && <OnboardingTab data={data} />}
+              </div>
+            )}
 
-          {loading ? (
-            <div className="flex justify-center py-16"><Spinner size="lg" /></div>
-          ) : loadError ? (
-            <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
-              <AlertCircle size={28} className="text-red-300 mx-auto mb-3" />
-              <p className="text-admin-500 font-admin font-medium mb-3">Couldn't load this report</p>
-              <button onClick={fetchData}
-                className="px-4 py-2 bg-shell-800 text-white rounded-lg text-sm font-admin font-semibold
-                  hover:bg-shell-700 transition-colors">
-                Retry
-              </button>
-            </div>
-          ) : !data ? (
-            <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
-              <BarChart3 size={28} className="text-admin-300 mx-auto mb-3" />
-              <p className="text-admin-500 font-admin font-medium">No data available for this period</p>
-            </div>
-          ) : (
-            <div className="space-y-5">
-
-              {/* ── SALES ──────────────────────────────────────────── */}
-              {tab === 'sales' && (
-                <>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <KpiTile label="Total Revenue"   value={formatKES(data.summary?.totalRevenue)} />
-                    <KpiTile label="Total Orders"    value={data.summary?.totalOrders} />
-                    <KpiTile label="Avg Order Value" value={formatKES(data.summary?.avgOrderValue)} />
-                    <KpiTile label="Items Sold"      value={data.summary?.totalItems} />
-                  </div>
-
-                  {/* What "Total Revenue" is made of. It is what customers paid, so it includes delivery fees and
-                      VAT; the category table below is NET goods sales. This card bridges the two. */}
-                  {data.summary?.breakdown && (
-                    <div className="bg-white rounded-2xl border border-admin-100 shadow-admin p-5">
-                      <h3 className="font-admin font-semibold text-admin-800 mb-3">How the total is made up</h3>
-                      <dl className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm font-admin">
-                        <div><dt className="text-admin-500">Goods sold</dt><dd className="font-semibold text-admin-900">{formatKES(data.summary.breakdown.goodsSubtotal)}</dd></div>
-                        <div><dt className="text-admin-500">Coupon discounts</dt><dd className="font-semibold text-admin-900">− {formatKES(data.summary.breakdown.couponDiscounts)}</dd></div>
-                        <div><dt className="text-admin-500">Delivery fees</dt><dd className="font-semibold text-admin-900">+ {formatKES(data.summary.breakdown.deliveryFees)}</dd></div>
-                        <div><dt className="text-admin-500">VAT collected</dt><dd className="font-semibold text-admin-900">+ {formatKES(data.summary.breakdown.vatCollected)}</dd></div>
-                        <div><dt className="text-admin-500">= Total revenue</dt><dd className="font-bold text-brand-700">{formatKES(data.summary.totalRevenue)}</dd></div>
-                      </dl>
-                      <p className="mt-3 text-xs text-admin-500">
-                        Net goods sales (what the category table adds up to): {formatKES(data.summary.breakdown.netGoods)}.
-                        Delivery fees and VAT are collected from customers but are not sales of goods.
-                      </p>
-                    </div>
-                  )}
-
-                  <SalesLineChart data={data.byDay} />
-
-                  {data.byCategory?.length > 0 && (
-                    <DataTable
-                      title="Revenue by Category"
-                      headers={[
-                        { label: 'Category' },
-                        { label: 'Units Sold', right: true },
-                        { label: 'Revenue',    right: true },
-                      ]}
-                      rows={data.byCategory}
-                      renderRow={(c, i) => (
-                        <tr key={i} className="hover:bg-admin-50 transition-colors">
-                          <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">
-                            {c._id || 'Uncategorized'}
-                          </td>
-                          <td className="px-5 py-3.5 text-right text-admin-600 font-admin">{c.unitsSold}</td>
-                          <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                            {formatKES(c.revenue)}
-                          </td>
-                        </tr>
-                      )}
-                    />
-                  )}
-
-                  {data.byPaymentMethod?.length > 0 && (
-                    <DataTable
-                      title="Revenue by Payment Method"
-                      headers={[
-                        { label: 'Method' },
-                        { label: 'Orders',  right: true },
-                        { label: 'Revenue', right: true },
-                      ]}
-                      rows={data.byPaymentMethod}
-                      renderRow={(m, i) => (
-                        <tr key={i} className="hover:bg-admin-50 transition-colors">
-                          <td className="px-5 py-3.5 font-admin font-semibold text-admin-800 capitalize">
-                            {m._id?.replace(/_/g, ' ') || '—'}
-                          </td>
-                          <td className="px-5 py-3.5 text-right text-admin-600 font-admin">{m.count}</td>
-                          <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                            {formatKES(m.revenue)}
-                          </td>
-                        </tr>
-                      )}
-                    />
-                  )}
-                </>
-              )}
-
-              {/* ── PRODUCTS ───────────────────────────────────────── */}
-              {tab === 'products' && data.products && (
-                <>
-                  <TopProductsChart data={data.products} />
-
-                  <DataTable
-                    title="Best Selling Products"
-                    headers={[
-                      { label: '#' }, { label: 'Product' },
-                      { label: 'Units Sold', right: true },
-                      { label: 'Revenue',    right: true },
-                    ]}
-                    rows={data.products}
-                    renderRow={(p, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center
-                            text-xs font-admin font-bold ${
-                              i === 0 ? 'bg-amber-100 text-amber-700' :
-                              i === 1 ? 'bg-admin-100 text-admin-600' :
-                              i === 2 ? 'bg-orange-100 text-orange-600' :
-                              'text-admin-500'
-                            }`}>
-                            {i + 1}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-admin font-semibold text-admin-800">{p.productName}</p>
-                          <p className="text-admin-500 text-xs font-admin">{p.variety} · {p.packaging}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin font-semibold text-admin-700">
-                          {p.unitsSold}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                          {formatKES(p.revenue)}
-                        </td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── STOCK ──────────────────────────────────────────── */}
-              {tab === 'stock' && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <KpiTile label="Stock Value (Cost Price)" value={formatKES(data.totalStockValueKES)} />
-                    <KpiTile label="Line Items"        value={data.itemCount} />
-                  </div>
-                  {data.rowsMissingCostPrice > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm font-admin text-amber-700">
-                      {data.rowsMissingCostPrice} line{data.rowsMissingCostPrice === 1 ? '' : 's'} have no cost price set
-                      and fall back to selling price — those figures overstate true cost value. Set a cost price on
-                      each packaging size for an accurate total.
-                    </div>
-                  )}
-
-                  <DataTable
-                    title="Stock Valuation"
-                    headers={[
-                      { label: 'Product' },
-                      { label: 'Stock',   right: true },
-                      { label: 'Unit Value',   right: true },
-                      { label: 'Value',   right: true },
-                    ]}
-                    rows={data.rows?.slice(0, 50) || []}
-                    renderRow={(r, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
-                          <p className="text-admin-500 text-xs font-admin">
-                            {r.varietyName} · {r.packagingSize}
-                          </p>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.stock}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-500">
-                          {formatKES(r.unitValueKES)}
-                          {r.usedRetailFallback && (
-                            <span className="ml-1 text-amber-600" title="No cost price set — using selling price">*</span>
-                          )}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                          {formatKES(r.totalValueKES)}
-                        </td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── STOCK TURNOVER ─────────────────────────────────── */}
-              {tab === 'turnover' && (
-                <>
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm font-admin text-blue-700">
-                    Turnover ratio = units sold ÷ current stock over the selected period. Higher is better
-                    (stock is moving); a low ratio with high stock signals excess/slow-moving inventory.
-                  </div>
-
-                  <DataTable
-                    title="Stock Turnover by SKU"
-                    headers={[
-                      { label: 'Product' },
-                      { label: 'Units Sold',    right: true },
-                      { label: 'Current Stock', right: true },
-                      { label: 'Turnover Ratio', right: true },
-                      { label: 'Days of Supply', right: true },
-                    ]}
-                    rows={data.rows?.slice(0, 50) || []}
-                    renderRow={(r, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
-                          <p className="text-admin-500 text-xs font-admin">{r.varietyName} · {r.packagingSize}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.unitsSold}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.currentStock}</td>
-                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.turnoverRatio == null ? 'text-admin-500' :
-                          r.turnoverRatio >= 1 ? 'text-green-700' :
-                          r.turnoverRatio >= 0.3 ? 'text-amber-600' : 'text-red-600'
-                        }`}>
-                          {r.turnoverRatio != null ? r.turnoverRatio : '—'}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-600">
-                          {r.daysOfSupply != null ? `${r.daysOfSupply}d` : '—'}
-                        </td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── SLOW MOVERS ────────────────────────────────────── */}
-              {tab === 'slow-movers' && (
-                <>
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm font-admin text-blue-700">
-                    Products with no orders (approved or beyond) in the last {data.days} days.
-                    {' '}{data.count} product{data.count === 1 ? '' : 's'} found.
-                  </div>
-
-                  <DataTable
-                    title="Slow-Moving Products"
-                    headers={[
-                      { label: 'Product' },
-                      { label: 'Category' },
-                      { label: 'Varieties',          right: true },
-                      { label: 'Days Without Sale',  right: true },
-                    ]}
-                    rows={data.slowMovers || []}
-                    emptyMessage="No slow-moving products — everything has sold recently"
-                    renderRow={(r, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">{r.name}</td>
-                        <td className="px-5 py-3.5 font-admin text-admin-600">{r.category || '—'}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.varietyCount}</td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-amber-600">{r.daysWithoutSale}d</td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── STOCK MOVEMENT ─────────────────────────────────── */}
-              {tab === 'stock-movement' && (
-                <>
-                  {data.truncated && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm font-admin text-amber-700">
-                      Showing the most recent {data.count.toLocaleString()} movements — narrow the period to see all activity in this range.
-                    </div>
-                  )}
-
-                  {Object.keys(data.summary || {}).length > 0 && (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      {Object.entries(data.summary).map(([type, qty]) => (
-                        <KpiTile key={type} label={type.replace(/_/g, ' ')} value={qty} />
-                      ))}
-                    </div>
-                  )}
-
-                  <DataTable
-                    title="Stock Movement Log"
-                    headers={[
-                      { label: 'Date' },
-                      { label: 'Product' },
-                      { label: 'Type' },
-                      { label: 'Qty Change',     right: true },
-                      { label: 'Balance After',  right: true },
-                      { label: 'By' },
-                    ]}
-                    rows={data.logs?.slice(0, 100) || []}
-                    emptyMessage="No stock movements in this period"
-                    renderRow={(r, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 font-admin text-admin-600 text-xs">
-                          {new Date(r.timestamp).toLocaleString('en-KE')}
-                        </td>
-                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">
-                          {r.productId?.name || '—'}
-                        </td>
-                        <td className="px-5 py-3.5 font-admin text-admin-600 capitalize">
-                          {r.changeType?.replace(/_/g, ' ')}
-                        </td>
-                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.quantityChange >= 0 ? 'text-green-700' : 'text-red-600'
-                        }`}>
-                          {r.quantityChange > 0 ? '+' : ''}{r.quantityChange}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.balanceAfter}</td>
-                        <td className="px-5 py-3.5 font-admin text-admin-600 text-xs">{r.performedBy?.name || '—'}</td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── CUSTOMERS ──────────────────────────────────────── */}
-              {tab === 'customers' && (
-                <>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      { label: 'Repeat Buyers',   value: data.repeat,    color: 'blue'  },
-                      { label: 'High Value',       value: data.highValue, color: 'brand' },
-                      { label: 'Inactive (30d+)', value: data.inactive,  color: 'red'   },
-                    ].map(({ label, value, color }) => (
-                      <div key={label}
-                        className="bg-white rounded-xl border border-admin-200 shadow-admin p-5 text-center">
-                        <p className={`text-3xl font-admin font-bold mb-1 ${
-                          color === 'blue'  ? 'text-blue-700'    :
-                          color === 'brand' ? 'text-brand-700'   : 'text-red-700'
-                        }`}>{value}</p>
-                        <p className="text-admin-500 text-xs font-admin uppercase tracking-wide">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <DataTable
-                    title="Top Customers by Spend"
-                    headers={[
-                      { label: '#' }, { label: 'Customer' },
-                      { label: 'Orders',      right: true },
-                      { label: 'Total Spend', right: true },
-                    ]}
-                    rows={data.customers?.slice(0, 20) || []}
-                    renderRow={(c, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 text-admin-500 font-admin font-medium">{i + 1}</td>
-                        <td className="px-5 py-3.5">
-                          <p className="font-admin font-semibold text-admin-800">{c.name}</p>
-                          <p className="text-admin-500 text-xs font-admin">{c.phone}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{c.totalOrders}</td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                          {formatKES(c.totalSpend)}
-                        </td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── ORDERS ─────────────────────────────────────────── */}
-              {tab === 'orders' && data.byStatus && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <KpiTile label="Avg Order Value" value={formatKES(data.avgOrderValue)} />
-                    <KpiTile label="Total Orders"
-                      value={data.byStatus.reduce((a, s) => a + s.count, 0)} />
-                  </div>
-
-                  <OrdersBarChart data={data.byStatus} />
-
-                  <DataTable
-                    title="Orders by Status"
-                    headers={[
-                      { label: 'Status' },
-                      { label: 'Count',       right: true },
-                      { label: 'Total Value', right: true },
-                    ]}
-                    rows={data.byStatus}
-                    renderRow={(s, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: STATUS_COLORS[s._id] || BRAND }}
-                            />
-                            <span className="font-admin font-semibold text-admin-800 capitalize">
-                              {s._id?.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{s.count}</td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                          {formatKES(s.totalValue)}
-                        </td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── GROSS MARGINS ──────────────────────────────────── */}
-              {tab === 'margins' && (
-                <>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <KpiTile label="Total Revenue (all SKUs)"        value={formatKES(data.summary?.totalRevenue)} />
-                    <KpiTile label="Estimated Cost (costed SKUs)"    value={formatKES(data.summary?.totalCost)} />
-                    <KpiTile label="Gross Profit (costed SKUs)"      value={formatKES(data.summary?.totalGrossProfit)} />
-                    <KpiTile label="Overall Margin"
-                      value={data.summary?.overallMarginPct != null ? `${data.summary.overallMarginPct}%` : '—'} />
-                  </div>
-
-                  {data.summary?.skusWithCostData < data.summary?.totalSkus && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm font-admin text-amber-700">
-                      Margin data is available for {data.summary.skusWithCostData} of {data.summary.totalSkus} SKUs.
-                      Add <strong>Cost Price</strong> to products to improve coverage.
-                    </div>
-                  )}
-
-                  <DataTable
-                    title="Gross Margin by SKU"
-                    headers={[
-                      { label: 'Product' },
-                      { label: 'Units',    right: true },
-                      { label: 'Revenue',  right: true },
-                      { label: 'Cost',     right: true },
-                      { label: 'Profit',   right: true },
-                      { label: 'Margin %', right: true },
-                    ]}
-                    rows={data.rows || []}
-                    emptyMessage="No completed orders in this period"
-                    renderRow={(r, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
-                          <p className="text-admin-500 text-xs font-admin">{r.variety} · {r.packaging}</p>
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-600">{r.unitsSold}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-800">{formatKES(r.revenue)}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-500">
-                          {r.estimatedCost != null ? formatKES(r.estimatedCost) : '—'}
-                        </td>
-                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.grossProfit == null ? 'text-admin-500' :
-                          r.grossProfit >= 0 ? 'text-green-700' : 'text-red-600'
-                        }`}>
-                          {r.grossProfit != null ? formatKES(r.grossProfit) : '—'}
-                        </td>
-                        <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.marginPct == null ? 'text-admin-500' :
-                          r.marginPct >= 20 ? 'text-green-700' :
-                          r.marginPct >= 0 ? 'text-amber-600' : 'text-red-600'
-                        }`}>
-                          {r.marginPct != null ? `${r.marginPct}%` : '—'}
-                        </td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {/* ── RIDER PERFORMANCE ──────────────────────────────── */}
-              {tab === 'riders' && (
-                <>
-                  {(!data.riders || data.riders.length === 0) ? (
-                    <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
-                      <Bike size={28} className="text-admin-300 mx-auto mb-3" />
-                      <p className="text-admin-500 font-admin font-medium">
-                        No completed delivery orders with driver assignments in this period.
-                      </p>
-                      <p className="text-admin-500 text-xs font-admin mt-1">
-                        Delivery time is tracked from order creation to status → completed.
-                      </p>
-                    </div>
-                  ) : (
-                    <DataTable
-                      title="Rider Performance"
-                      headers={[
-                        { label: 'Driver' },
-                        { label: 'Deliveries',    right: true },
-                        { label: 'Avg Time',      right: true },
-                        { label: 'Fastest',       right: true },
-                        { label: 'Slowest',       right: true },
-                        { label: 'Total Revenue', right: true },
-                      ]}
-                      rows={data.riders}
-                      renderRow={(r, i) => {
-                        const fmtMins = (m) => m == null ? '—'
-                          : m < 60 ? `${m}m`
-                          : `${Math.floor(m / 60)}h ${m % 60}m`
-                        return (
-                          <tr key={i} className="hover:bg-admin-50 transition-colors">
-                            <td className="px-5 py-3.5">
-                              <p className="font-admin font-semibold text-admin-800">{r.driverName || 'Unknown'}</p>
-                              <p className="text-admin-500 text-xs font-admin">{r.driverPhone}</p>
-                            </td>
-                            <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                              {r.deliveries}
-                            </td>
-                            <td className="px-5 py-3.5 text-right font-admin text-admin-700">
-                              {fmtMins(r.avgDeliveryMinutes)}
-                            </td>
-                            <td className="px-5 py-3.5 text-right font-admin text-green-700">
-                              {fmtMins(r.minDeliveryMinutes)}
-                            </td>
-                            <td className="px-5 py-3.5 text-right font-admin text-amber-600">
-                              {fmtMins(r.maxDeliveryMinutes)}
-                            </td>
-                            <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
-                              {formatKES(r.totalRevenue)}
-                            </td>
-                          </tr>
-                        )
-                      }}
-                    />
-                  )}
-                </>
-              )}
-
-              {tab === 'cash-up' && <CashUpTab data={data} />}
-
-              {tab === 'onboarding' && (
-                <>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <OnboardingSummaryCard label="Tracked Users" value={data.totals?.users || 0} />
-                    <OnboardingSummaryCard label="Completed Tours" value={data.totals?.completedTours || 0} accent="brand" />
-                    <OnboardingSummaryCard label="Help Center Opens" value={data.totals?.helpCenterOpens || 0} accent="blue" />
-                    <OnboardingSummaryCard label="Milestones Reached" value={data.totals?.milestonesReached || 0} accent="green" />
-                  </div>
-
-                  <DataTable
-                    title="Onboarding Adoption by Role"
-                    headers={[
-                      { label: 'Role' },
-                      { label: 'Users', right: true },
-                      { label: 'Completed Tours', right: true },
-                      { label: 'Avg Checklist %', right: true },
-                      { label: 'Help Opens', right: true },
-                      { label: 'Milestones', right: true },
-                    ]}
-                    rows={data.rows || []}
-                    renderRow={(row, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800 capitalize">
-                          {row.role}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.userCount}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.completedTours}</td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-brand-700">{row.avgChecklistCompletion}%</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.helpCenterOpens}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.milestonesReached}</td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-              {tab === 'vat' && (
-                <>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <KpiTile label="Total Orders (VAT)" value={data.summary?.totalOrders || 0} />
-                    <OnboardingSummaryCard label="Ex-VAT Revenue" value={formatKES(data.summary?.totalExVat || 0)} accent="brand" />
-                    <OnboardingSummaryCard label="VAT Collected" value={formatKES(data.summary?.totalVat || 0)} accent="blue" />
-                    <OnboardingSummaryCard label="Incl. VAT Revenue" value={formatKES(data.summary?.totalInclVat || 0)} accent="green" />
-                  </div>
-
-                  {/* For the return: standard-rated vs exempt goods, and delivery fees (not included in the
-                      Ex-VAT figure). Ask your accountant how delivery fees should be treated. */}
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                    <OnboardingSummaryCard label="Taxable goods (before discount)" value={formatKES(data.summary?.taxableSales || 0)} accent="brand" />
-                    <OnboardingSummaryCard label="Exempt goods (before discount)" value={formatKES(data.summary?.exemptSales || 0)} accent="blue" />
-                    <OnboardingSummaryCard label="Delivery fees (not in Ex-VAT)" value={formatKES(data.summary?.deliveryFees || 0)} accent="green" />
-                  </div>
-
-                  <DataTable
-                    title="Monthly VAT Summary (KRA Filing)"
-                    headers={[
-                      { label: 'Month' },
-                      { label: 'Orders', right: true },
-                      { label: 'Ex-VAT (KES)', right: true },
-                      { label: `VAT (KES)`, right: true },
-                      { label: 'Incl. VAT (KES)', right: true },
-                    ]}
-                    rows={data.rows || []}
-                    renderRow={(row, i) => (
-                      <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 font-admin font-semibold text-admin-800">
-                          {new Date(row.year, row.month - 1).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{row.orders}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-700">{formatKES(row.totalExVat)}</td>
-                        <td className="px-5 py-3.5 text-right font-admin font-bold text-brand-700">{formatKES(row.totalVat)}</td>
-                        <td className="px-5 py-3.5 text-right font-admin text-admin-900 font-semibold">{formatKES(row.totalInclVat)}</td>
-                      </tr>
-                    )}
-                  />
-                </>
-              )}
-
-            </div>
-          )}
-
-          {data && <PrintFooter shopInfo={shopInfo} />}
-
-        </div>{/* end .print-area */}
+            {data && <PrintFooter shopInfo={shopInfo} />}
+          </div>
+        </ReportViewContext.Provider>
       </div>
     </>
   )

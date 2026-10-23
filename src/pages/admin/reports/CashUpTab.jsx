@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Wallet, Smartphone, Banknote, AlertTriangle, CheckCircle } from 'lucide-react'
-import { formatKES, formatDate } from '../../../utils/helpers'
+import { formatDate } from '../../../utils/helpers'
+import { money } from './reportFormat'
 
 // Close-of-day view: what came in, what each driver still has to account for, and the payments
 // that need a person. Data comes from GET /admin/reports/cash-up.
@@ -9,7 +10,7 @@ const Tile = ({ icon: Icon, label, amount, sub, tone = 'text-admin-800' }) => (
     <div className="flex items-center gap-2 text-admin-500 text-xs font-admin font-semibold uppercase tracking-wide">
       <Icon size={14} aria-hidden="true" /> {label}
     </div>
-    <p className={`font-display text-2xl font-bold mt-2 ${tone}`}>{formatKES(amount)}</p>
+    <p className={`font-admin text-2xl font-bold mt-2 tabular-nums ${tone}`}>{money(amount)}</p>
     {sub && <p className="text-xs font-admin text-admin-500 mt-0.5">{sub}</p>}
   </div>
 )
@@ -73,10 +74,10 @@ export default function CashUpTab({ data }) {
                   <tr key={String(d.driverId)}>
                     <td className="px-5 py-3 font-semibold text-admin-800">{d.driverName || 'Unknown driver'}</td>
                     <td className="px-5 py-3 text-right">{d.deliveries}</td>
-                    <td className="px-5 py-3 text-right">{formatKES(d.due)}</td>
-                    <td className="px-5 py-3 text-right text-green-700">{formatKES(d.confirmed)}</td>
+                    <td className="px-5 py-3 text-right">{money(d.due)}</td>
+                    <td className="px-5 py-3 text-right text-green-700">{money(d.confirmed)}</td>
                     <td className={`px-5 py-3 text-right font-bold ${d.outstanding ? 'text-amber-600' : 'text-admin-500'}`}>
-                      {formatKES(d.outstanding)}{d.unconfirmedOrders ? ` (${d.unconfirmedOrders})` : ''}
+                      {money(d.outstanding)}{d.unconfirmedOrders ? ` (${d.unconfirmedOrders})` : ''}
                     </td>
                   </tr>
                 ))}
@@ -95,7 +96,7 @@ export default function CashUpTab({ data }) {
                   <Link to={`/admin/orders/${o._id}`} className="font-semibold text-brand-700 hover:underline">{o.orderRef}</Link>
                   <p className="text-xs text-admin-500">{o.driverId?.name ? `${o.driverId.name} · ` : ''}{o.deliveredAt ? formatDate(o.deliveredAt) : ''}</p>
                 </div>
-                <span className="font-bold text-amber-600">{formatKES(o.total)}</span>
+                <span className="font-bold text-amber-600">{money(o.total)}</span>
               </li>
             ))}
           </ul>
@@ -108,13 +109,13 @@ export default function CashUpTab({ data }) {
             {lateSuccess.map(p => (
               <li key={`l-${p.paymentId}`} className="px-5 py-3 text-sm font-admin">
                 <span className="font-semibold text-red-600">Late payment</span> · {p.orderRef} ·{' '}
-                {p.lateSuccessMeta?.mpesaTransactionId} · {formatKES(p.lateSuccessMeta?.paidAmount || p.amount)}
+                {p.lateSuccessMeta?.mpesaTransactionId} · {money(p.lateSuccessMeta?.paidAmount || p.amount)}
                 <p className="text-xs text-admin-500">Money was received but the order was already marked failed. Reconcile by hand.</p>
               </li>
             ))}
             {stuckPending.map(p => (
               <li key={`s-${p.paymentId}`} className="px-5 py-3 text-sm font-admin">
-                <span className="font-semibold text-amber-600">No answer</span> · {p.orderRef} · {formatKES(p.amount)}
+                <span className="font-semibold text-amber-600">No answer</span> · {p.orderRef} · {money(p.amount)}
                 <p className="text-xs text-admin-500">Prompt sent {formatDate(p.createdAt)}{p.mpesaPhone ? ` to ${p.mpesaPhone}` : ''} and never completed.</p>
               </li>
             ))}
@@ -128,7 +129,7 @@ export default function CashUpTab({ data }) {
             {cashByCollector.map(c => (
               <li key={String(c.userId)} className="px-5 py-3 flex items-center justify-between text-sm font-admin">
                 <span>{c.name || 'Unknown'}{c.role ? <span className="text-admin-500"> · {c.role}</span> : null}</span>
-                <span className="font-bold text-admin-800">{formatKES(c.amount)} <span className="font-normal text-admin-500">({c.count})</span></span>
+                <span className="font-bold text-admin-800">{money(c.amount)} <span className="font-normal text-admin-500">({c.count})</span></span>
               </li>
             ))}
           </ul>
