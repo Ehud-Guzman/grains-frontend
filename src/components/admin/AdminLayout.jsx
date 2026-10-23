@@ -5,28 +5,22 @@ import { useAuth } from '../../context/AuthContext'
 import Modal from '../ui/Modal'
 import AlertsBell from './AlertsBell'
 import useAdminAlerts from './useAdminAlerts'
-import { navGroupsFor, titleForPath, sectionLabelFor } from './adminNav'
+import { navGroupsFor, titleForPath, sectionLabelFor, getGreeting } from './adminNav'
 import { safeStorage } from '../../utils/safeStorage'
 
 // Loaded on first open: most sessions never ask for help, so it stays out of the admin bundle.
 const AssistantPanel = lazy(() => import('./AssistantPanel'))
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
-const SIDEBAR_BG = '#0F172A'
+// Sidebar surface = tailwind `shell-950`; kept as a literal because the drawer paints it inline.
+const SIDEBAR_BG = '#0E2218'
 const COLLAPSE_KEY = 'admin.sidebarCollapsed'
 
 const ROLE_COLORS = {
-  superadmin: 'bg-red-500/20 text-red-300 border border-red-500/30',
-  admin:      'bg-brand-500/20 text-brand-300 border border-brand-500/30',
-  supervisor: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-  staff:      'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-}
-
-const getGreeting = () => {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
+  superadmin: 'bg-rose-400/15 text-rose-200 border border-rose-300/25',
+  admin:      'bg-brand-400/15 text-brand-200 border border-brand-300/25',
+  supervisor: 'bg-violet-400/15 text-violet-200 border border-violet-300/25',
+  staff:      'bg-sky-400/15 text-sky-200 border border-sky-300/25',
 }
 
 // Browser storage can be unavailable (private windows, blocked site data) — the sidebar
@@ -46,7 +40,7 @@ const badgeFor = (item, alerts) => {
 
 function Avatar({ user, size = 'w-8 h-8', ring = 'border-2 border-admin-100' }) {
   return (
-    <div className={`${size} bg-brand-500 rounded-full flex items-center justify-center flex-shrink-0
+    <div className={`${size} bg-shell-600 rounded-full flex items-center justify-center flex-shrink-0
       overflow-hidden ${ring}`}>
       {user?.avatarURL ? (
         <img src={user.avatarURL} alt="" className="w-full h-full object-cover" />
@@ -68,18 +62,18 @@ function NavItem({ item, alerts, collapsed, onNavigate }) {
     <NavLink to={item.to} end={item.end} onClick={onNavigate}
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
-        `relative flex items-center rounded-xl text-sm font-admin font-medium transition-all duration-150 group
-        min-h-[44px] ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} ${
+        `relative flex items-center rounded-lg text-[13.5px] font-admin font-medium transition-colors duration-150 group
+        min-h-[42px] ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} ${
           isActive
-            ? 'bg-white/[.11] text-white ring-1 ring-inset ring-white/[.08]'
-            : 'text-slate-400 hover:text-white hover:bg-white/[.07]'
+            ? 'bg-shell-700/70 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,.07)]'
+            : 'text-shell-200/70 hover:text-white hover:bg-white/[.06]'
         }`
       }>
       {({ isActive }) => (
         <>
-          {isActive && <span aria-hidden="true" className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full bg-brand-400" />}
+          {isActive && <span aria-hidden="true" className="absolute -left-2 top-2 bottom-2 w-[3px] rounded-r-full bg-brand-400" />}
           <span className="relative flex-shrink-0">
-            <item.icon size={17} className={`transition-colors ${isActive ? 'text-brand-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
+            <item.icon size={17} strokeWidth={isActive ? 2.2 : 1.9} className={`transition-colors ${isActive ? 'text-brand-300' : 'text-shell-300/70 group-hover:text-shell-100'}`} />
             {showBadge && collapsed && (
               <span aria-hidden="true" className={`absolute -top-1.5 -right-2 ${badgeCls} text-white text-[9px] font-bold
                 min-w-[15px] h-[15px] rounded-full flex items-center justify-center px-0.5 leading-none`}>
@@ -99,7 +93,7 @@ function NavItem({ item, alerts, collapsed, onNavigate }) {
                   <span className="sr-only">{count} need attention</span>
                 </span>
               )}
-              {item.viewOnly && <Eye size={11} aria-label="View only" className="text-white/25 flex-shrink-0" />}
+              {item.viewOnly && <Eye size={12} aria-label="View only" className="text-shell-300/50 flex-shrink-0" />}
             </>
           )}
         </>
@@ -118,31 +112,32 @@ function Sidebar({ user, branch, groups, alerts, collapsed, onNavigate, onLogout
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: SIDEBAR_BG }}>
-      {/* Logo */}
-      <div className={`py-4 border-b border-slate-700/70 flex-shrink-0 ${collapsed ? 'px-3' : 'px-5'}`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700/80 shadow-sm">
-            <img src="/Vittorios-logo-96.jpeg" width="96" height="96" alt="Vittorios" className="w-full h-full object-cover" />
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-white font-admin font-semibold text-sm leading-tight">Vittorios</p>
-              <p className={`text-xs leading-tight font-admin truncate ${isSuper ? 'text-red-400/70' : 'text-white/40'}`}>
-                {subtitle}
-              </p>
-            </div>
-          )}
+      {/* Brand */}
+      <div className={`h-16 flex items-center border-b border-white/[.07] flex-shrink-0 ${collapsed ? 'justify-center px-3' : 'gap-3 px-4'}`}>
+        <div className="w-9 h-9 flex-shrink-0 rounded-xl overflow-hidden ring-1 ring-white/15 shadow-sm">
+          <img src="/Vittorios-logo-96.jpeg" width="96" height="96" alt="Vittorios" className="w-full h-full object-cover" />
         </div>
+        {!collapsed && (
+          <div className="min-w-0 pr-8 lg:pr-0">
+            <p className="text-white font-admin font-semibold text-[15px] leading-tight tracking-tight">Vittorios</p>
+            <p className="flex items-center gap-1.5 text-[11px] leading-tight font-admin truncate mt-0.5 text-shell-200/70">
+              <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isSuper ? 'bg-rose-300' : 'bg-emerald-400'}`} />
+              <span className="truncate">{subtitle}</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Nav */}
-      <nav aria-label="Admin" className={`flex-1 py-3 overflow-y-auto ${collapsed ? 'px-2 space-y-3' : 'px-3 space-y-4'}`}>
+      <nav aria-label="Admin"
+        className={`flex-1 py-4 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.14)_transparent]
+          ${collapsed ? 'px-2 space-y-3' : 'px-3 space-y-5'}`}>
         {groups.map(group => (
           <div key={group.group}>
             {collapsed ? (
-              <div aria-hidden="true" className="mx-3 mb-2 border-t border-slate-700/60 first:hidden" />
+              <div aria-hidden="true" className="mx-3 mb-2 border-t border-white/[.07] first:hidden" />
             ) : (
-              <p className="text-slate-500 text-[10px] font-admin font-semibold uppercase tracking-widest px-3 mb-1.5">
+              <p className="text-shell-300/60 text-[10.5px] font-admin font-semibold uppercase tracking-[.14em] px-3 mb-1.5">
                 {group.group}
               </p>
             )}
@@ -156,39 +151,47 @@ function Sidebar({ user, branch, groups, alerts, collapsed, onNavigate, onLogout
       </nav>
 
       {/* User + controls */}
-      <div className={`pb-4 pt-3 border-t border-slate-700/70 flex-shrink-0 ${collapsed ? 'px-2' : 'px-3'}`}>
+      <div className={`pb-3 pt-3 border-t border-white/[.07] flex-shrink-0 space-y-1.5 ${collapsed ? 'px-2' : 'px-3'}`}>
+        <div className={`flex items-center rounded-xl bg-white/[.05] ring-1 ring-inset ring-white/[.06]
+          ${collapsed ? 'justify-center p-2' : 'gap-2.5 pl-2.5 pr-1.5 py-2'}`}
+          title={collapsed ? `${user?.name} (${user?.role})` : undefined}>
+          <Avatar user={user} ring="border border-white/15" />
+          {!collapsed && (
+            <>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-[13px] font-admin font-medium leading-tight truncate">{user?.name}</p>
+                <span className={`inline-block text-[10.5px] px-1.5 py-px rounded-full font-admin font-medium mt-1 capitalize
+                  ${ROLE_COLORS[user?.role] || ROLE_COLORS.staff}`}>
+                  {user?.role}
+                </span>
+              </div>
+              <button type="button" onClick={onLogout} aria-label="Sign out" title="Sign out"
+                className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-shell-300/70
+                  hover:text-rose-300 hover:bg-rose-400/10 transition-colors flex-shrink-0">
+                <LogOut size={16} aria-hidden="true" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {collapsed && (
+          <button type="button" onClick={onLogout} aria-label="Sign out" title="Sign out"
+            className="flex items-center justify-center rounded-lg text-shell-300/70 hover:text-rose-300 hover:bg-rose-400/10
+              w-full min-h-[40px] transition-colors">
+            <LogOut size={16} aria-hidden="true" />
+          </button>
+        )}
+
         {onToggleCollapsed && (
           <button type="button" onClick={onToggleCollapsed}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`hidden lg:flex items-center rounded-xl text-sm font-admin font-medium text-slate-500
-              hover:text-white hover:bg-white/[.07] w-full min-h-[40px] mb-2 transition-colors
-              ${collapsed ? 'justify-center' : 'gap-3 px-3'}`}>
-            {collapsed ? <ChevronsRight size={16} /> : <><ChevronsLeft size={16} /> Collapse</>}
+            className={`hidden lg:flex items-center rounded-lg text-xs font-admin font-medium text-shell-300/60
+              hover:text-white hover:bg-white/[.06] w-full min-h-[36px] transition-colors
+              ${collapsed ? 'justify-center' : 'gap-2.5 px-3'}`}>
+            {collapsed ? <ChevronsRight size={15} /> : <><ChevronsLeft size={15} /> Collapse</>}
           </button>
         )}
-
-        <div className={`flex items-center rounded-xl mb-1 bg-slate-800/60 ${collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2.5'}`}
-          title={collapsed ? `${user?.name} (${user?.role})` : undefined}>
-          <Avatar user={user} ring="border border-white/10" />
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-admin font-medium leading-tight truncate">{user?.name}</p>
-              <span className={`inline-block text-xs px-1.5 py-0.5 rounded-full font-admin font-medium mt-0.5 capitalize
-                ${ROLE_COLORS[user?.role] || ROLE_COLORS.staff}`}>
-                {user?.role}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <button type="button" onClick={onLogout} title={collapsed ? 'Sign out' : undefined}
-          className={`flex items-center rounded-xl text-sm font-admin font-medium text-slate-500 hover:text-red-400
-            hover:bg-red-500/10 w-full min-h-[44px] transition-all duration-150 group mt-1
-            ${collapsed ? 'justify-center' : 'gap-3 px-3'}`}>
-          <LogOut size={16} className="flex-shrink-0 group-hover:text-red-400 transition-colors" />
-          {collapsed ? <span className="sr-only">Sign out</span> : 'Sign Out'}
-        </button>
       </div>
     </div>
   )
@@ -227,11 +230,11 @@ export default function AdminLayout() {
   const sidebarProps = { user, branch: currentBranch, groups, alerts, onLogout: handleLogout }
 
   return (
-    <div className="flex h-screen bg-admin-50 font-admin overflow-hidden">
+    <div className="flex h-screen bg-canvas font-admin overflow-hidden">
       <a href="#main" className="skip-link">Skip to content</a>
 
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex flex-col flex-shrink-0 border-r border-white/5 transition-[width] duration-200
+      <aside className={`hidden lg:flex flex-col flex-shrink-0 border-r border-black/20 transition-[width] duration-200
         ${collapsed ? 'w-[4.5rem]' : 'w-60'}`} style={{ backgroundColor: SIDEBAR_BG }}>
         <Sidebar {...sidebarProps} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       </aside>
@@ -240,12 +243,12 @@ export default function AdminLayout() {
           focus restore; choosing a page closes it. */}
       {drawerOpen && (
         <Modal onClose={() => setDrawerOpen(false)} label="Navigation menu" placement="left"
-          backdropClassName="bg-black/80 backdrop-blur-sm lg:hidden"
+          backdropClassName="bg-shell-950/70 backdrop-blur-sm lg:hidden"
           panelClassName="w-64 max-w-[85vw] border-r border-white/10 shadow-2xl pt-safe pb-safe pl-safe">
           <div className="flex-1 min-h-0 relative" style={{ backgroundColor: SIDEBAR_BG, animation: 'slideInLeft 0.22s ease-out' }}>
             <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Close navigation menu"
               className="absolute top-3 right-3 z-10 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center
-                rounded-xl text-slate-400 hover:text-white hover:bg-white/10">
+                rounded-xl text-shell-200/70 hover:text-white hover:bg-white/10">
               <X size={18} />
             </button>
             <Sidebar {...sidebarProps} collapsed={false} onNavigate={() => setDrawerOpen(false)} />
@@ -255,7 +258,7 @@ export default function AdminLayout() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white border-b border-admin-100 px-3 sm:px-4 lg:px-6 flex-shrink-0 flex items-center gap-2 sm:gap-3 h-14 lg:h-16">
+        <header className="bg-white border-b border-admin-200/70 px-3 sm:px-4 lg:px-6 flex-shrink-0 flex items-center gap-2 sm:gap-3 h-14 lg:h-16">
           <button type="button" onClick={() => setDrawerOpen(true)}
             aria-label="Open navigation menu" aria-haspopup="dialog"
             className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center
@@ -264,9 +267,8 @@ export default function AdminLayout() {
           </button>
 
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-1 h-8 bg-brand-600 rounded-full flex-shrink-0 hidden sm:block" />
             <div className="min-w-0">
-              <p className="text-[11px] text-admin-400 font-admin leading-tight truncate">
+              <p className="text-[11px] text-admin-500 font-admin font-medium leading-tight truncate">
                 {sectionLabelFor(user)}
                 {user?.role !== 'superadmin' && currentBranch?.name ? ` · ${currentBranch.name}` : ''}
               </p>
@@ -293,7 +295,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main id="main" ref={mainRef} className="flex-1 overflow-y-auto bg-brand-50 pb-20 sm:pb-0">
+        <main id="main" ref={mainRef} className="flex-1 overflow-y-auto bg-canvas pb-20 sm:pb-0">
           <Outlet />
         </main>
       </div>

@@ -123,3 +123,11 @@ export const SEES_KPIS = ['supervisor', 'admin']
 
 // Compact breadcrumb root shown above the page title on phones.
 export const sectionLabelFor = (user) => (user?.role === 'superadmin' ? 'Platform' : 'Admin')
+
+// "Good morning" / "Good afternoon" / "Good evening" for the topbar and the dashboard header.
+export const getGreeting = (date = new Date()) => {
+  const h = date.getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
+}

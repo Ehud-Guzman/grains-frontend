@@ -36,6 +36,24 @@ export default {
           800: '#622D12',
           900: '#42200D',
         },
+        // Admin shell (sidebar, drawer, dashboard accents) — deep field green. Terracotta
+        // `brand` stays the call-to-action colour on top of it. Swap this scale to re-skin
+        // the whole admin chrome; nothing else hard-codes the sidebar colour.
+        shell: {
+          50:  '#F1F7F3',
+          100: '#DDEBE2',
+          200: '#BCD8C7',
+          300: '#8FBBA4',
+          400: '#5E9C7D',
+          500: '#3F805F',
+          600: '#2E6649',
+          700: '#244F3A',
+          800: '#1A3B2B',
+          900: '#142E22',
+          950: '#0E2218',
+        },
+        // Admin page background: a barely-green off-white so white cards lift off it
+        canvas: '#F4F6F3',
         // Storefront neutral scale — white-based, one step lighter than `admin`
         earth: {
           50:  '#FFFFFF',

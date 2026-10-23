@@ -21,15 +21,15 @@ const REFRESH_MS = 60 * 1000
 // ── STAT CARD ─────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, tone = 'brand', link }) {
   const tones = {
-    brand:  { ring: 'border-brand-100',  icon: 'bg-brand-50 text-brand-600' },
-    green:  { ring: 'border-green-100',  icon: 'bg-green-50 text-green-600' },
-    blue:   { ring: 'border-blue-100',   icon: 'bg-blue-50 text-blue-600' },
+    brand:  { ring: 'border-admin-200/70', icon: 'bg-shell-50 text-shell-600' },
+    green:  { ring: 'border-admin-200/70', icon: 'bg-shell-50 text-shell-600' },
+    blue:   { ring: 'border-admin-200/70', icon: 'bg-sky-50 text-sky-700' },
     amber:  { ring: 'border-amber-200',  icon: 'bg-amber-50 text-amber-600' },
     red:    { ring: 'border-red-200',    icon: 'bg-red-50 text-red-600' },
   }[tone]
 
   const inner = (
-    <div className={`bg-white rounded-xl border shadow-admin p-4 h-full transition-all ${tones.ring}
+    <div className={`bg-white rounded-2xl border shadow-admin p-4 h-full transition-all ${tones.ring}
       ${link ? 'hover:shadow-admin-lg hover:-translate-y-0.5' : ''}`}>
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${tones.icon}`}>
         <Icon size={18} aria-hidden="true" />
@@ -43,23 +43,25 @@ function StatCard({ icon: Icon, label, value, sub, tone = 'brand', link }) {
 }
 
 function ActionCard({ icon: Icon, label, desc, to, color = 'brand' }) {
-  const colors = {
-    brand:  'bg-brand-500 hover:bg-brand-600',
-    red:    'bg-red-600 hover:bg-red-700',
-    blue:   'bg-blue-600 hover:bg-blue-700',
-    purple: 'bg-purple-600 hover:bg-purple-700',
-    amber:  'bg-amber-500 hover:bg-amber-600',
-    green:  'bg-green-600 hover:bg-green-700',
+  const chip = {
+    brand:  'bg-brand-50 text-brand-700',
+    red:    'bg-red-50 text-red-600',
+    blue:   'bg-sky-50 text-sky-700',
+    purple: 'bg-violet-50 text-violet-700',
+    amber:  'bg-amber-50 text-amber-700',
+    green:  'bg-shell-50 text-shell-600',
   }[color]
   return (
-    <Link to={to} className={`flex items-start gap-3 p-4 rounded-xl text-white transition-all active:scale-[0.98] ${colors}`}>
-      <div className="w-9 h-9 bg-white/15 rounded-lg flex items-center justify-center flex-shrink-0">
+    <Link to={to} className="group flex items-center gap-3 p-3.5 rounded-xl bg-white border border-admin-200/70 shadow-admin
+      hover:border-admin-300 hover:shadow-admin-lg transition-all">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${chip}`}>
         <Icon size={18} aria-hidden="true" />
       </div>
-      <div className="min-w-0">
-        <p className="font-admin font-bold text-sm leading-tight">{label}</p>
-        <p className="text-white/70 text-xs font-admin mt-0.5 leading-snug">{desc}</p>
+      <div className="min-w-0 flex-1">
+        <p className="font-admin font-semibold text-admin-900 text-sm leading-tight">{label}</p>
+        <p className="text-admin-500 text-xs font-admin mt-0.5 leading-snug">{desc}</p>
       </div>
+      <ArrowUpRight size={14} className="text-admin-300 group-hover:text-admin-500 flex-shrink-0 transition-colors" aria-hidden="true" />
     </Link>
   )
 }
@@ -141,7 +143,7 @@ export default function SuperAdminDashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className={`w-2 h-2 rounded-full ${attention.some(a => a.severity === 'high') ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-            <span className="text-xs font-admin font-bold text-red-600 uppercase tracking-widest">Superadmin</span>
+            <span className="text-xs font-admin font-bold text-shell-700 uppercase tracking-widest">Superadmin</span>
           </div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Platform Overview</h1>
           <p className="text-admin-400 text-xs font-admin mt-0.5">
@@ -150,7 +152,7 @@ export default function SuperAdminDashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link to="/admin/control-center"
-            className="flex items-center gap-2 px-3 py-2 bg-admin-900 text-white rounded-lg text-sm font-admin font-semibold hover:bg-admin-800 transition-colors shadow-admin">
+            className="flex items-center gap-2 px-3.5 py-2 min-h-[40px] bg-shell-800 text-white rounded-xl text-sm font-admin font-semibold hover:bg-shell-700 transition-colors shadow-admin">
             <Gauge size={14} aria-hidden="true" /> Control Center
           </Link>
           <button type="button" onClick={() => fetchAll(true)} disabled={refreshing} aria-label="Refresh overview"
@@ -230,18 +232,6 @@ export default function SuperAdminDashboardPage() {
           </>
         ) : null}
       </div>
-
-      {showChecklist && (
-        <div className="mb-6">
-          <OnboardingChecklistCard
-            eyebrow="Platform Setup"
-            title="Get familiar with the control center"
-            description="These steps cover the key areas of the superadmin workspace so you can manage the platform with confidence."
-            items={checklist}
-            theme="admin"
-          />
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
 
@@ -426,6 +416,19 @@ export default function SuperAdminDashboardPage() {
           </ul>
         )}
       </div>
+
+      {/* Setup guide last, so the live platform figures stay above the fold. */}
+      {showChecklist && (
+        <div className="mt-6">
+          <OnboardingChecklistCard
+            eyebrow="Platform Setup"
+            title="Get familiar with the control center"
+            description="These steps cover the key areas of the superadmin workspace so you can manage the platform with confidence."
+            items={checklist}
+            theme="admin"
+          />
+        </div>
+      )}
     </div>
   )
 }
