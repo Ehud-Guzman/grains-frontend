@@ -109,7 +109,7 @@ function BranchFilter({ branches, value, onChange }) {
         <span className="flex-1 text-left truncate text-xs">
           {selected ? selected.name : 'All Branches'}
         </span>
-        <ChevronDown size={12} className={`text-admin-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={12} className={`text-admin-500 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -193,12 +193,12 @@ function LogRow({ log }) {
             {config.label}
           </span>
           {detail && (
-            <span className="text-admin-400 text-xs font-admin truncate max-w-[200px]">
+            <span className="text-admin-500 text-xs font-admin truncate max-w-[200px]">
               {detail}
             </span>
           )}
         </div>
-        <p className="text-admin-400 text-xs font-admin mt-0.5">
+        <p className="text-admin-500 text-xs font-admin mt-0.5">
           By <span className="font-medium text-admin-600">{actorName}</span>
           {log.actorRole && (
             <span className="text-admin-300"> · {log.actorRole}</span>
@@ -218,7 +218,7 @@ function LogRow({ log }) {
       )}
 
       <div className="text-right flex-shrink-0 ml-2">
-        <p className="text-xs font-admin text-admin-400" title={formatDateTime(log.timestamp)}>
+        <p className="text-xs font-admin text-admin-500" title={formatDateTime(log.timestamp)}>
           {timeAgo(log.timestamp)}
         </p>
         <p className="text-xs font-admin text-admin-300 mt-0.5 hidden sm:block">
@@ -318,7 +318,7 @@ export default function ActivityLogPage() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Activity Log</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">
+          <p className="text-admin-500 text-xs font-admin mt-0.5">
             {pagination.total} events recorded · read-only audit trail
           </p>
         </div>
@@ -346,7 +346,7 @@ export default function ActivityLogPage() {
             className={`px-3.5 py-1.5 rounded-full text-xs font-admin font-semibold
               border transition-all ${
                 category === cat.value
-                  ? 'bg-admin-900 text-orange-500 border-admin-900 shadow-sm'
+                  ? 'bg-shell-800 text-white border-shell-800 shadow-sm'
                   : 'bg-white border-admin-200 text-admin-500 hover:border-admin-400 hover:text-admin-700'
               }`}>
             {cat.label}
@@ -409,7 +409,7 @@ export default function ActivityLogPage() {
         <div className="bg-white rounded-xl border border-admin-200 p-16 text-center">
           <Shield size={28} className="text-admin-300 mx-auto mb-3" />
           <p className="text-admin-600 font-admin font-semibold">No activity found</p>
-          <p className="text-admin-400 text-sm font-admin mt-1">
+          <p className="text-admin-500 text-sm font-admin mt-1">
             {hasFilters ? 'Try adjusting your filters' : 'Events appear here as the system is used'}
           </p>
         </div>

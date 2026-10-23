@@ -42,15 +42,15 @@ function RedemptionsModal({ coupon, onClose }) {
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-admin-lg border border-admin-100 max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Receipt size={15} className="text-brand-600" />
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              <Receipt size={15} className="text-shell-600" />
             </div>
             <div>
               <p className="font-admin font-bold text-admin-800 text-sm">Redemptions</p>
-              <p className="text-admin-400 text-xs font-admin tracking-wider">{coupon.code}</p>
+              <p className="text-admin-500 text-xs font-admin tracking-wider">{coupon.code}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-admin-400 hover:text-admin-700 p-1 rounded-lg hover:bg-admin-100">
+          <button onClick={onClose} className="text-admin-500 hover:text-admin-700 p-1 rounded-lg hover:bg-admin-100">
             <X size={16} />
           </button>
         </div>
@@ -88,7 +88,7 @@ function RedemptionsModal({ coupon, onClose }) {
                             : <UserRound size={11} className="text-admin-300 flex-shrink-0" />}
                           <span className="text-admin-800 font-medium truncate max-w-[140px]">{customer?.name || 'Unknown'}</span>
                         </div>
-                        <p className="text-admin-400 text-xs mt-0.5">{customer?.phone}</p>
+                        <p className="text-admin-500 text-xs mt-0.5">{customer?.phone}</p>
                       </td>
                       <td className="px-4 py-3 text-xs font-admin text-admin-600 whitespace-nowrap">{o.orderRef}</td>
                       <td className="px-4 py-3">
@@ -109,7 +109,7 @@ function RedemptionsModal({ coupon, onClose }) {
 
         {pagination && pagination.pages > 1 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-admin-100 flex-shrink-0">
-            <p className="text-xs font-admin text-admin-400">
+            <p className="text-xs font-admin text-admin-500">
               Page {pagination.page} of {pagination.pages} · {pagination.total} total
             </p>
             <div className="flex items-center gap-1.5">
@@ -177,14 +177,14 @@ function CouponModal({ coupon, onClose, onSaved }) {
       <div className="bg-white rounded-2xl w-full max-w-md shadow-admin-lg border border-admin-100">
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Tag size={15} className="text-brand-600" />
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              <Tag size={15} className="text-shell-600" />
             </div>
             <p className="font-admin font-bold text-admin-800 text-sm">
               {isEdit ? `Edit ${coupon.code}` : 'Create Coupon'}
             </p>
           </div>
-          <button onClick={onClose} className="text-admin-400 hover:text-admin-700 p-1 rounded-lg hover:bg-admin-100">
+          <button onClick={onClose} className="text-admin-500 hover:text-admin-700 p-1 rounded-lg hover:bg-admin-100">
             <X size={16} />
           </button>
         </div>
@@ -359,7 +359,7 @@ export default function CouponsPage() {
                     <td className="px-5 py-3.5">
                       <span className="font-admin font-bold text-admin-900 text-sm tracking-wider">{c.code}</span>
                       {c.assignedTo && (
-                        <p className="text-xs font-admin text-admin-400 mt-0.5">
+                        <p className="text-xs font-admin text-admin-500 mt-0.5">
                           For: {c.assignedTo.name || 'specific customer'}
                         </p>
                       )}
@@ -408,7 +408,7 @@ export default function CouponsPage() {
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1">
                         <button onClick={() => setModal({ type: 'edit', coupon: c })}
-                          className="p-1.5 rounded-lg text-admin-400 hover:text-admin-700 hover:bg-admin-100 transition-colors">
+                          className="p-1.5 rounded-lg text-admin-500 hover:text-admin-700 hover:bg-admin-100 transition-colors">
                           <Edit2 size={13} />
                         </button>
                         <button onClick={() => handleDelete(c._id)} disabled={deleting === c._id}

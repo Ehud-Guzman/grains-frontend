@@ -33,12 +33,12 @@ export default function CustomerListPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-admin font-bold text-admin-900">Customers</h1>
-        <span className="text-admin-400 text-sm font-admin">{pagination.total} total</span>
+        <span className="text-admin-500 text-sm font-admin">{pagination.total} total</span>
       </div>
 
       <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-4 mb-4">
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-500" />
           <input
             type="text"
             placeholder="Search by name, phone, or email…"
@@ -54,7 +54,7 @@ export default function CustomerListPage() {
       ) : customers.length === 0 ? (
         <div className="bg-white rounded-xl border border-admin-200 p-12 text-center">
           <Users size={32} className="text-admin-300 mx-auto mb-2" />
-          <p className="text-admin-400 font-admin">No customers found</p>
+          <p className="text-admin-500 font-admin">No customers found</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
@@ -80,7 +80,7 @@ export default function CustomerListPage() {
                         </div>
                         <div>
                           <p className="font-medium text-admin-800">{c.name}</p>
-                          {c.email && <p className="text-admin-400 text-xs">{c.email}</p>}
+                          {c.email && <p className="text-admin-500 text-xs">{c.email}</p>}
                         </div>
                       </div>
                     </td>
@@ -101,7 +101,7 @@ export default function CustomerListPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <Link to={`/admin/customers/${c._id}`}
-                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700 transition-colors block">
+                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-700 transition-colors block">
                         <ChevronRight size={16} />
                       </Link>
                     </td>

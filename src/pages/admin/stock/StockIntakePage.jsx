@@ -85,7 +85,7 @@ function ItemRow({ item, index, onChange, onRemove, canRemove, inputClass }) {
           type="button"
           onClick={() => onRemove(index)}
           disabled={!canRemove}
-          className="p-1.5 rounded-lg text-admin-400 hover:text-red-500 hover:bg-red-50
+          className="p-1.5 rounded-lg text-admin-500 hover:text-red-500 hover:bg-red-50
             disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           title="Remove item"
         >
@@ -170,18 +170,18 @@ function CreateModal({ onClose, onCreated }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-admin-100">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center">
-              <Truck size={17} className="text-brand-600" />
+            <div className="w-9 h-9 bg-shell-50 rounded-xl flex items-center justify-center">
+              <Truck size={17} className="text-shell-600" />
             </div>
             <div>
               <h2 className="font-admin font-bold text-admin-900 text-sm">Log Truck Arrival</h2>
-              <p className="text-xs font-admin text-admin-400 mt-0.5">
+              <p className="text-xs font-admin text-admin-500 mt-0.5">
                 Record raw goods received from supplier
               </p>
             </div>
           </div>
           <button onClick={onClose}
-            className="p-2 rounded-xl hover:bg-admin-100 text-admin-400
+            className="p-2 rounded-xl hover:bg-admin-100 text-admin-500
               hover:text-admin-700 transition-colors">
             <X size={17} />
           </button>
@@ -239,7 +239,7 @@ function CreateModal({ onClose, onCreated }) {
             {/* Column headers */}
             <div className="grid grid-cols-12 gap-2 mb-1 px-0.5 hidden sm:grid">
               {['Description', 'Qty', 'Unit', 'Notes', ''].map((h, i) => (
-                <div key={i} className={`text-xs font-admin font-semibold text-admin-400
+                <div key={i} className={`text-xs font-admin font-semibold text-admin-500
                   uppercase tracking-wide ${
                     i === 0 ? 'col-span-5' :
                     i === 1 ? 'col-span-2' :
@@ -335,7 +335,7 @@ function ProcessModal({ intake, onClose, onProcessed }) {
             <h3 className="font-admin font-bold text-admin-900 text-sm">
               Mark as Processed
             </h3>
-            <p className="text-xs font-admin text-admin-400 mt-0.5">
+            <p className="text-xs font-admin text-admin-500 mt-0.5">
               {intake.intakeRef} · {intake.supplier}
             </p>
           </div>
@@ -365,7 +365,7 @@ function ProcessModal({ intake, onClose, onProcessed }) {
           <div>
             <label className="block text-xs font-admin font-semibold text-admin-600
               uppercase tracking-wide mb-1.5">
-              Processing Notes <span className="text-admin-400 font-normal">(optional)</span>
+              Processing Notes <span className="text-admin-500 font-normal">(optional)</span>
             </label>
             <textarea
               rows={3}
@@ -419,7 +419,7 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
                     {item.description}
                   </p>
                   {item.notes && (
-                    <p className="text-xs font-admin text-admin-400 mt-0.5">{item.notes}</p>
+                    <p className="text-xs font-admin text-admin-500 mt-0.5">{item.notes}</p>
                   )}
                 </div>
                 <span className="text-sm font-admin font-bold text-admin-700 whitespace-nowrap flex-shrink-0">
@@ -447,13 +447,13 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white rounded-xl px-3 py-2 border border-admin-100">
-              <p className="text-xs font-admin text-admin-400">Logged by</p>
+              <p className="text-xs font-admin text-admin-500">Logged by</p>
               <p className="text-sm font-admin font-semibold text-admin-700 mt-0.5">
                 {intake.createdBy?.name || '—'}
               </p>
             </div>
             <div className="bg-white rounded-xl px-3 py-2 border border-admin-100">
-              <p className="text-xs font-admin text-admin-400">Logged at</p>
+              <p className="text-xs font-admin text-admin-500">Logged at</p>
               <p className="text-sm font-admin font-semibold text-admin-700 mt-0.5">
                 {formatDate(intake.createdAt)}
               </p>
@@ -513,16 +513,16 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
           }`}>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <div>
-                <p className="text-xs font-admin text-admin-400">Raw received</p>
+                <p className="text-xs font-admin text-admin-500">Raw received</p>
                 <p className="text-sm font-admin font-bold text-admin-800">{intake.reconciliation.rawTotal}</p>
               </div>
               <div>
-                <p className="text-xs font-admin text-admin-400">Packed into stock</p>
+                <p className="text-xs font-admin text-admin-500">Packed into stock</p>
                 <p className="text-sm font-admin font-bold text-admin-800">{intake.reconciliation.packedTotal}</p>
               </div>
               {intake.reconciliation.variancePct !== null && (
                 <div>
-                  <p className="text-xs font-admin text-admin-400">Variance</p>
+                  <p className="text-xs font-admin text-admin-500">Variance</p>
                   <p className={`text-sm font-admin font-bold ${
                     intake.reconciliation.highVariance ? 'text-red-600' : 'text-admin-800'
                   }`}>
@@ -538,13 +538,13 @@ function DetailPanel({ intake, onProcess, onDelete, canAct }) {
               )}
             </div>
             {intake.reconciliation.state === 'unlinked' && (
-              <p className="text-xs font-admin text-admin-400 mt-2">
+              <p className="text-xs font-admin text-admin-500 mt-2">
                 Nothing has been packed into stock against this intake yet, so there is
                 no variance to compare.
               </p>
             )}
             {!intake.reconciliation.unitsConsistent && (
-              <p className="text-xs font-admin text-admin-400 mt-2">
+              <p className="text-xs font-admin text-admin-500 mt-2">
                 Raw items use mixed units — totals above may not be directly comparable.
               </p>
             )}
@@ -591,7 +591,7 @@ function IntakeRow({ intake, onProcess, onDelete, canAct }) {
             </div>
             <div>
               <p className="text-sm font-admin font-bold text-admin-900">{intake.intakeRef}</p>
-              <p className="text-xs font-admin text-admin-400">{formatDate(intake.arrivedAt)}</p>
+              <p className="text-xs font-admin text-admin-500">{formatDate(intake.arrivedAt)}</p>
             </div>
           </div>
         </td>
@@ -599,13 +599,13 @@ function IntakeRow({ intake, onProcess, onDelete, canAct }) {
         <td className="px-5 py-4">
           <p className="text-sm font-admin font-semibold text-admin-800">{intake.supplier}</p>
           {intake.vehicleRef && (
-            <p className="text-xs font-admin text-admin-400 mt-0.5">{intake.vehicleRef}</p>
+            <p className="text-xs font-admin text-admin-500 mt-0.5">{intake.vehicleRef}</p>
           )}
         </td>
         {/* Items count */}
         <td className="px-5 py-4">
           <div className="flex items-center gap-1.5">
-            <Package size={13} className="text-admin-400" />
+            <Package size={13} className="text-admin-500" />
             <span className="text-sm font-admin text-admin-700">
               {intake.items.length} item{intake.items.length !== 1 ? 's' : ''}
             </span>
@@ -619,7 +619,7 @@ function IntakeRow({ intake, onProcess, onDelete, canAct }) {
         <td className="px-5 py-4 text-right">
           <button
             onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </button>
         </td>
@@ -738,7 +738,7 @@ export default function StockIntakePage() {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Stock Intake</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">
+          <p className="text-admin-500 text-xs font-admin mt-0.5">
             Truck arrivals &amp; raw goods received
             {pendingCount > 0 && !loading && (
               <span className="ml-2 text-amber-600 font-semibold">
@@ -780,7 +780,7 @@ export default function StockIntakePage() {
               </div>
               <div>
                 <p className="text-xl font-admin font-bold text-admin-900 leading-tight">{value}</p>
-                <p className="text-xs font-admin text-admin-400">{label}</p>
+                <p className="text-xs font-admin text-admin-500">{label}</p>
               </div>
             </div>
           ))}
@@ -792,7 +792,7 @@ export default function StockIntakePage() {
         <div className="flex items-center gap-3 flex-wrap">
           {/* Search */}
           <div className="relative flex-1 min-w-[180px]">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-500" />
             <input
               type="text"
               value={search}
@@ -805,7 +805,7 @@ export default function StockIntakePage() {
           </div>
           {/* Status filter */}
           <div className="flex items-center gap-1.5">
-            <SlidersHorizontal size={14} className="text-admin-400" />
+            <SlidersHorizontal size={14} className="text-admin-500" />
             {['', 'pending', 'processed'].map(s => (
               <button key={s || 'all'}
                 onClick={() => handleStatusFilter(s)}
@@ -850,7 +850,7 @@ export default function StockIntakePage() {
                       {search || statusFilter ? 'No records match your filters' : 'No intake records yet'}
                     </p>
                     {!search && !statusFilter && canAct && (
-                      <p className="text-xs font-admin text-admin-400 mt-1">
+                      <p className="text-xs font-admin text-admin-500 mt-1">
                         Log your first truck arrival to get started
                       </p>
                     )}
@@ -875,7 +875,7 @@ export default function StockIntakePage() {
         {!loading && pagination && pagination.pages > 1 && (
           <div className="px-5 py-3 border-t border-admin-100 bg-admin-50/40
             flex items-center justify-between">
-            <p className="text-xs font-admin text-admin-400">
+            <p className="text-xs font-admin text-admin-500">
               Page {pagination.page} of {pagination.pages} · {pagination.total} records
             </p>
             <div className="flex items-center gap-1.5">
@@ -925,7 +925,7 @@ export default function StockIntakePage() {
               </div>
               <div>
                 <h3 className="font-admin font-bold text-admin-900 text-sm">Delete Intake?</h3>
-                <p className="text-xs font-admin text-admin-400">{deleteTarget.intakeRef}</p>
+                <p className="text-xs font-admin text-admin-500">{deleteTarget.intakeRef}</p>
               </div>
             </div>
             <p className="text-sm font-admin text-admin-600 mb-5">

@@ -72,16 +72,16 @@ function PermissionsModal({ user, onClose, onSaved }) {
 
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Settings2 size={15} className="text-brand-600" />
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              <Settings2 size={15} className="text-shell-600" />
             </div>
             <div>
               <h3 className="font-admin font-bold text-admin-900 text-sm">Custom Permissions</h3>
-              <p className="text-admin-400 text-xs font-admin">{user.name}</p>
+              <p className="text-admin-500 text-xs font-admin">{user.name}</p>
             </div>
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-600 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-600 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -101,7 +101,7 @@ function PermissionsModal({ user, onClose, onSaved }) {
                     className="mt-0.5 accent-brand-500 w-4 h-4 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-admin font-semibold text-admin-800">{p.label}</p>
-                    <p className="text-xs font-admin text-admin-400">{p.desc}</p>
+                    <p className="text-xs font-admin text-admin-500">{p.desc}</p>
                   </div>
                 </label>
               ))}
@@ -113,13 +113,13 @@ function PermissionsModal({ user, onClose, onSaved }) {
             <p className="text-xs font-admin font-semibold text-admin-600 uppercase tracking-wide mb-1">
               Branch Access
             </p>
-            <p className="text-xs font-admin text-admin-400 mb-3">
+            <p className="text-xs font-admin text-admin-500 mb-3">
               Select multiple branches for this user to switch between at login.
             </p>
             {loadingBranches ? (
               <div className="flex justify-center py-4"><Spinner size="sm" /></div>
             ) : branches.length === 0 ? (
-              <p className="text-xs font-admin text-admin-400 text-center py-3">No branches found</p>
+              <p className="text-xs font-admin text-admin-500 text-center py-3">No branches found</p>
             ) : (
               <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                 {branches.map(b => (
@@ -130,7 +130,7 @@ function PermissionsModal({ user, onClose, onSaved }) {
                       className="accent-brand-500 w-4 h-4 flex-shrink-0" />
                     <div>
                       <p className="text-sm font-admin font-semibold text-admin-800">{b.name}</p>
-                      {b.location && <p className="text-xs font-admin text-admin-400">{b.location}</p>}
+                      {b.location && <p className="text-xs font-admin text-admin-500">{b.location}</p>}
                     </div>
                   </label>
                 ))}
@@ -188,15 +188,15 @@ function Modal({ modal, onClose, onSave }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              {modal.type === 'create' ? <UserCog size={15} className="text-brand-600" />
-               : modal.type === 'role' ? <Shield size={15} className="text-brand-600" />
-               : <Key size={15} className="text-brand-600" />}
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              {modal.type === 'create' ? <UserCog size={15} className="text-shell-600" />
+               : modal.type === 'role' ? <Shield size={15} className="text-shell-600" />
+               : <Key size={15} className="text-shell-600" />}
             </div>
             <h3 className="font-admin font-bold text-admin-900 text-sm">{titles[modal.type]}</h3>
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-600 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-600 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -227,7 +227,7 @@ function Modal({ modal, onClose, onSave }) {
                     value={form.password || ''} onChange={e => set('password', e.target.value)}
                     className={fieldClass + ' pr-10'} />
                   <button type="button" onClick={() => setShowPass(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400 hover:text-admin-600 p-0.5">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-500 hover:text-admin-600 p-0.5">
                     {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
@@ -274,7 +274,7 @@ function Modal({ modal, onClose, onSave }) {
                   value={form.password || ''} onChange={e => set('password', e.target.value)}
                   className={fieldClass + ' pr-10'} autoFocus />
                 <button type="button" onClick={() => setShowPass(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400 hover:text-admin-600 p-0.5">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-500 hover:text-admin-600 p-0.5">
                   {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -360,7 +360,7 @@ export default function UserManagementPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">User Management</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">{users.length} admin account{users.length !== 1 ? 's' : ''}</p>
+          <p className="text-admin-500 text-xs font-admin mt-0.5">{users.length} admin account{users.length !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={() => setModal({ type: 'create', form: { role: 'staff' } })}
           className="flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white rounded-xl
@@ -394,7 +394,7 @@ export default function UserManagementPage() {
                       </div>
                       <div>
                         <p className="font-admin font-semibold text-admin-800">{user.name}</p>
-                        {user.email && <p className="text-admin-400 text-xs">{user.email}</p>}
+                        {user.email && <p className="text-admin-500 text-xs">{user.email}</p>}
                       </div>
                     </div>
                   </td>
@@ -411,19 +411,19 @@ export default function UserManagementPage() {
                       {user.isLocked ? 'Locked' : 'Active'}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-admin-400 text-xs hidden sm:table-cell">
+                  <td className="px-5 py-4 text-admin-500 text-xs hidden sm:table-cell">
                     {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => setModal({ type: 'role', user, form: { role: user.role } })}
                         disabled={user._id === currentUser?.id}
-                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-700 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                         title={user._id === currentUser?.id ? "You can't change your own role" : 'Change role'}>
                         <Edit size={15} />
                       </button>
                       <button onClick={() => setModal({ type: 'password', user, form: {} })}
-                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-700 transition-colors"
                         title="Reset password">
                         <Key size={15} />
                       </button>
@@ -431,7 +431,7 @@ export default function UserManagementPage() {
                         className={`p-1.5 rounded-lg transition-colors ${
                           user.customPermissions?.length > 0 || user.allowedBranchIds?.length > 0
                             ? 'text-brand-500 hover:bg-brand-50'
-                            : 'text-admin-400 hover:bg-admin-100 hover:text-admin-700'
+                            : 'text-admin-500 hover:bg-admin-100 hover:text-admin-700'
                         }`}
                         title="Custom permissions">
                         <Settings2 size={15} />
@@ -440,8 +440,8 @@ export default function UserManagementPage() {
                         disabled={user._id === currentUser?.id}
                         className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed ${
                           user.isLocked
-                            ? 'hover:bg-green-50 text-admin-400 hover:text-green-600'
-                            : 'hover:bg-red-50 text-admin-400 hover:text-red-600'
+                            ? 'hover:bg-green-50 text-admin-500 hover:text-green-600'
+                            : 'hover:bg-red-50 text-admin-500 hover:text-red-600'
                         }`}
                         title={user._id === currentUser?.id ? "You can't lock your own account" : (user.isLocked ? 'Unlock account' : 'Lock account')}>
                         {user.isLocked ? <Unlock size={15} /> : <Lock size={15} />}

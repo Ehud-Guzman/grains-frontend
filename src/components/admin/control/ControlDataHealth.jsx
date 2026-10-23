@@ -37,14 +37,14 @@ function BackupSummary({ backups, reload }) {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={create} disabled={busy}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-admin-900 text-white text-sm font-admin font-semibold disabled:opacity-50">
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-shell-800 text-white text-sm font-admin font-semibold disabled:opacity-50">
           <Archive size={14} /> {busy ? 'Backing up…' : 'Back up now'}
         </button>
         <Link to="/admin/backups" className="text-xs font-admin font-semibold text-brand-600 hover:text-brand-700">
           Download, restore or delete backups →
         </Link>
       </div>
-      <p className="text-xs font-admin text-admin-400">
+      <p className="text-xs font-admin text-admin-500">
         Backups here are made by hand — nothing schedules them. Make one before anything risky, and keep a copy off the server.
       </p>
     </div>
@@ -78,7 +78,7 @@ function Check({ check }) {
                   </li>
                 ))}
                 {check.count > check.examples.length && (
-                  <li className="text-xs font-admin text-admin-400">…and {check.count - check.examples.length} more</li>
+                  <li className="text-xs font-admin text-admin-500">…and {check.count - check.examples.length} more</li>
                 )}
               </ul>
             </>
@@ -124,7 +124,7 @@ export default function ControlDataHealth({ overview, reload }) {
         {error && <SectionError message={error} onRetry={run} />}
         {scanning && !scan && <Loading label="Checking the books…" />}
         {!scan && !scanning && !error && (
-          <p className="text-sm font-admin text-admin-400">Not run yet. It takes a few seconds and is safe to run any time.</p>
+          <p className="text-sm font-admin text-admin-500">Not run yet. It takes a few seconds and is safe to run any time.</p>
         )}
         {scan && (
           <div className="space-y-3">
@@ -132,7 +132,7 @@ export default function ControlDataHealth({ overview, reload }) {
               {scan.problems === 0
                 ? <strong className="text-green-700">All {scan.checks.length} checks passed.</strong>
                 : <><strong className="text-amber-700">{scan.problems} of {scan.checks.length} checks found something.</strong></>}
-              <span className="text-admin-400"> Ran {timeAgo(scan.ranAt)} in {scan.durationMs} ms.</span>
+              <span className="text-admin-500"> Ran {timeAgo(scan.ranAt)} in {scan.durationMs} ms.</span>
             </p>
             <ul className="space-y-2">
               {[...scan.checks].sort((a, b) => Number(a.ok) - Number(b.ok)).map(c => <Check key={c.id} check={c} />)}

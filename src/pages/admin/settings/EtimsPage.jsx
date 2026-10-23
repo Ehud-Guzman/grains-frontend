@@ -27,7 +27,7 @@ function Field({ label, hint, children }) {
         {label}
       </label>
       {children}
-      {hint && <p className="text-admin-400 text-xs mt-1">{hint}</p>}
+      {hint && <p className="text-admin-500 text-xs mt-1">{hint}</p>}
     </div>
   )
 }
@@ -47,7 +47,7 @@ function Input({ secret, ...props }) {
         <button
           type="button"
           onClick={() => setShow(s => !s)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400 hover:text-admin-600">
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-500 hover:text-admin-600">
           {show ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
       )}
@@ -113,7 +113,7 @@ export default function EtimsPage() {
         </div>
         <div>
           <h1 className="text-xl font-admin font-bold text-admin-900">KRA eTIMS</h1>
-          <p className="text-admin-400 text-sm">Electronic Tax Invoice Management System — credentials and access control</p>
+          <p className="text-admin-500 text-sm">Electronic Tax Invoice Management System — credentials and access control</p>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export default function EtimsPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-admin font-semibold text-admin-800">Enable eTIMS Integration</p>
-            <p className="text-admin-400 text-xs mt-0.5">
+            <p className="text-admin-500 text-xs mt-0.5">
               When enabled, fiscal invoices are automatically submitted to KRA after every payment confirmation.
             </p>
           </div>
@@ -142,7 +142,7 @@ export default function EtimsPage() {
       <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
         <div className="px-6 py-4 border-b border-admin-100 bg-admin-50/40">
           <h2 className="font-admin font-semibold text-admin-900">API Credentials</h2>
-          <p className="text-admin-400 text-xs mt-0.5">
+          <p className="text-admin-500 text-xs mt-0.5">
             Obtain these from KRA's eTIMS portal. Use the sandbox URL while testing.
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function EtimsPage() {
           <Shield size={15} className="text-admin-500" />
           <div>
             <h2 className="font-admin font-semibold text-admin-900">Manual Resubmit — Allowed Roles</h2>
-            <p className="text-admin-400 text-xs mt-0.5">
+            <p className="text-admin-500 text-xs mt-0.5">
               These roles can see eTIMS status on orders and trigger a manual resubmission.
             </p>
           </div>

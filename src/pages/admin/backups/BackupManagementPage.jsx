@@ -33,7 +33,7 @@ const StatCard = ({ icon: Icon, label, value, hint, tone = 'brand' }) => {
       </div>
       <p className="text-2xl font-admin font-bold text-admin-900 leading-tight">{value}</p>
       <p className="text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide mt-1">{label}</p>
-      {hint && <p className="text-xs text-admin-400 font-admin mt-1">{hint}</p>}
+      {hint && <p className="text-xs text-admin-500 font-admin mt-1">{hint}</p>}
     </div>
   )
 }
@@ -51,7 +51,7 @@ function DeleteModal({ backup, onConfirm, onCancel, loading }) {
             <h3 className="font-admin font-bold text-admin-900 text-sm">Delete Backup</h3>
           </div>
           <button onClick={onCancel} disabled={loading}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -62,7 +62,7 @@ function DeleteModal({ backup, onConfirm, onCancel, loading }) {
           </p>
           <div className="bg-admin-50 rounded-lg px-3 py-2.5 border border-admin-200">
             <p className="text-xs font-admin font-semibold text-admin-700 break-all">{backup.filename}</p>
-            <p className="text-xs text-admin-400 font-admin mt-0.5">
+            <p className="text-xs text-admin-500 font-admin mt-0.5">
               {formatBytes(backup.sizeBytes)} · Created {formatDateTime(backup.createdAt)}
             </p>
           </div>
@@ -104,7 +104,7 @@ function RestoreModal({ file, onConfirm, onCancel, loading }) {
             <h3 className="font-admin font-bold text-admin-900 text-sm">Confirm Restore</h3>
           </div>
           <button onClick={onCancel} disabled={loading}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -347,7 +347,7 @@ export default function BackupManagementPage() {
             </span>
           </div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">System Backups</h1>
-          <p className="text-admin-400 text-sm mt-1 max-w-2xl">
+          <p className="text-admin-500 text-sm mt-1 max-w-2xl">
             Create full-platform recovery snapshots, download them for off-site storage,
             and restore from a verified backup when needed.
           </p>
@@ -437,7 +437,7 @@ export default function BackupManagementPage() {
         <div className="px-5 py-4 border-b border-admin-100 flex items-center justify-between">
           <div>
             <h2 className="font-admin font-bold text-admin-900">Backup History</h2>
-            <p className="text-admin-400 text-xs font-admin mt-0.5">
+            <p className="text-admin-500 text-xs font-admin mt-0.5">
               Full-system snapshots stored on the backend server
             </p>
           </div>
@@ -449,7 +449,7 @@ export default function BackupManagementPage() {
           <div className="py-16 px-6 text-center">
             <Archive size={28} className="text-admin-300 mx-auto mb-3" />
             <p className="text-admin-500 font-admin font-medium">No backups yet</p>
-            <p className="text-admin-400 text-sm font-admin mt-1">
+            <p className="text-admin-500 text-sm font-admin mt-1">
               Create your first snapshot before major product imports, settings changes,
               or branch migrations.
             </p>
@@ -486,7 +486,7 @@ export default function BackupManagementPage() {
                         <p className="text-sm font-admin font-semibold text-admin-900 break-all">
                           {backup.filename}
                         </p>
-                        <p className="text-xs text-admin-400 font-admin mt-1">
+                        <p className="text-xs text-admin-500 font-admin mt-1">
                           ID: {backup.id}
                         </p>
                         <p className="text-xs text-admin-300 font-admin mt-0.5 break-all">

@@ -21,7 +21,7 @@ function Row({ icon: Icon, tone, title, subtitle, onClick }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-admin font-semibold text-admin-800 truncate">{title}</p>
-        <p className="text-xs text-admin-400 font-admin truncate">{subtitle}</p>
+        <p className="text-xs text-admin-500 font-admin truncate">{subtitle}</p>
       </div>
       <ChevronRight size={14} className="text-admin-300 group-hover:text-admin-600 transition-colors flex-shrink-0" />
     </button>
@@ -75,7 +75,7 @@ export default function AlertsBell({ role, alerts }) {
             bg-white rounded-2xl shadow-xl border border-admin-100 z-40 overflow-hidden">
           <div className="px-4 py-3 border-b border-admin-100 bg-admin-50 flex items-center justify-between">
             <p className="text-sm font-admin font-bold text-admin-900">Alerts</p>
-            {total > 0 && <span className="text-xs font-admin text-admin-400">{total} need attention</span>}
+            {total > 0 && <span className="text-xs font-admin text-admin-500">{total} need attention</span>}
           </div>
 
           <div className="py-1 max-h-[60vh] overflow-y-auto">
@@ -101,7 +101,7 @@ export default function AlertsBell({ role, alerts }) {
             ))}
 
             {total === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-admin-400 font-admin">All clear — no alerts</p>
+              <p className="px-4 py-6 text-center text-sm text-admin-500 font-admin">All clear — no alerts</p>
             )}
           </div>
 

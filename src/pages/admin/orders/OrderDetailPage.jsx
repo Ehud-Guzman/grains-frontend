@@ -61,7 +61,7 @@ function DetailRow({ icon: Icon, label, children }) {
         <Icon size={13} className="text-admin-500" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-admin text-admin-400 mb-0.5">{label}</p>
+        <p className="text-xs font-admin text-admin-500 mb-0.5">{label}</p>
         <div className="text-sm font-admin font-medium text-admin-800">{children}</div>
       </div>
     </div>
@@ -237,7 +237,7 @@ export default function AdminOrderDetailPage() {
         <Package size={24} className="text-admin-300" />
       </div>
       <p className="font-admin font-semibold text-admin-700 mb-1">Order not found</p>
-      <p className="text-admin-400 text-sm font-admin mb-4">It may have been removed or the link is invalid.</p>
+      <p className="text-admin-500 text-sm font-admin mb-4">It may have been removed or the link is invalid.</p>
       <Link to="/admin/orders"
         className="text-brand-600 text-sm font-admin font-medium hover:underline flex items-center gap-1">
         <ArrowLeft size={14} /> Back to Orders
@@ -267,7 +267,7 @@ export default function AdminOrderDetailPage() {
         {/* ── TOPBAR ───────────────────────────────────────────────────────── */}
         <div className="mb-6">
           <Link to="/admin/orders"
-            className="inline-flex items-center gap-1.5 text-admin-400 hover:text-admin-700
+            className="inline-flex items-center gap-1.5 text-admin-500 hover:text-admin-700
               text-sm font-admin transition-colors mb-5 group">
             <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
             Back to Orders
@@ -287,7 +287,7 @@ export default function AdminOrderDetailPage() {
                   {getStatusLabel(order.status, order.deliveryMethod)}
                 </span>
               </div>
-              <p className="text-admin-400 text-sm mt-1.5 font-admin">
+              <p className="text-admin-500 text-sm mt-1.5 font-admin">
                 {formatDate(order.createdAt)}
                 <span className="mx-2 text-admin-200">·</span>
                 {timeAgo(order.createdAt)}
@@ -400,7 +400,7 @@ export default function AdminOrderDetailPage() {
                       <p className="font-admin font-semibold text-admin-800 text-sm truncate">
                         {item.productName}
                       </p>
-                      <p className="text-admin-400 text-xs mt-0.5 font-admin">
+                      <p className="text-admin-500 text-xs mt-0.5 font-admin">
                         {item.variety} · {item.packaging}
                       </p>
                     </div>
@@ -408,7 +408,7 @@ export default function AdminOrderDetailPage() {
                       <p className="font-admin font-bold text-admin-800 text-sm">
                         {formatKES(item.lineTotal)}
                       </p>
-                      <p className="text-admin-400 text-xs font-admin">
+                      <p className="text-admin-500 text-xs font-admin">
                         {formatKES(item.unitPrice)} × {item.quantity}
                       </p>
                     </div>
@@ -463,14 +463,14 @@ export default function AdminOrderDetailPage() {
                   )}
                   <div className="text-sm font-admin text-admin-700 space-y-1">
                     {order.deliveryProof.recipientName && (
-                      <p><span className="text-admin-400">Received by:</span>{' '}
+                      <p><span className="text-admin-500">Received by:</span>{' '}
                         <span className="font-semibold">{order.deliveryProof.recipientName}</span></p>
                     )}
                     {order.deliveryProof.note && (
-                      <p><span className="text-admin-400">Driver note:</span> {order.deliveryProof.note}</p>
+                      <p><span className="text-admin-500">Driver note:</span> {order.deliveryProof.note}</p>
                     )}
                     {order.deliveryProof.capturedAt && (
-                      <p className="text-xs text-admin-400">Captured {formatDate(order.deliveryProof.capturedAt)}</p>
+                      <p className="text-xs text-admin-500">Captured {formatDate(order.deliveryProof.capturedAt)}</p>
                     )}
                   </div>
                 </div>
@@ -643,7 +643,7 @@ export default function AdminOrderDetailPage() {
                     <p className="font-admin font-semibold text-admin-800 text-sm leading-tight">
                       {customer?.name || 'Guest'}
                     </p>
-                    <span className="text-xs font-admin text-admin-400">
+                    <span className="text-xs font-admin text-admin-500">
                       {order.userId ? 'Registered customer' : 'Guest order'}
                     </span>
                   </div>
@@ -718,7 +718,7 @@ export default function AdminOrderDetailPage() {
                     {assigningDriver ? 'Assigning…' : order.driverId ? 'Reassign Driver' : 'Assign Driver'}
                   </button>
                   {drivers.length === 0 && (
-                    <p className="text-xs font-admin text-admin-400 text-center">
+                    <p className="text-xs font-admin text-admin-500 text-center">
                       No available drivers. <a href="/admin/drivers" className="text-brand-600 hover:underline">Add drivers</a>
                     </p>
                   )}
@@ -739,7 +739,7 @@ export default function AdminOrderDetailPage() {
 
                 {/* Payment status pill */}
                 <div className="flex items-center justify-between pt-3 mt-1 border-t border-admin-50">
-                  <span className="text-xs font-admin text-admin-400">Payment status</span>
+                  <span className="text-xs font-admin text-admin-500">Payment status</span>
                   <span className={`inline-flex items-center gap-1.5 text-xs font-admin font-semibold
                     px-3 py-1.5 rounded-full border ${
                       order.paymentStatus === 'paid'

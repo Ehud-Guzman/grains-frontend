@@ -35,7 +35,7 @@ function ConfirmSignOut({ account, onClose, onDone }) {
       </div>
       <div className="px-5 pb-5 flex gap-2">
         <button type="button" onClick={go} disabled={busy}
-          className="flex-1 py-2.5 bg-admin-900 text-white rounded-xl text-sm font-admin font-semibold hover:bg-admin-800 disabled:opacity-50">
+          className="flex-1 py-2.5 bg-shell-800 text-white rounded-xl text-sm font-admin font-semibold hover:bg-shell-700 disabled:opacity-50">
           Sign out
         </button>
         <button type="button" onClick={onClose} disabled={busy}
@@ -106,7 +106,7 @@ export default function ControlAccounts({ onChanged }) {
         <div className="overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full min-w-[640px] text-left">
             <thead>
-              <tr className="text-[11px] font-admin font-bold uppercase tracking-wide text-admin-400 border-b border-admin-100">
+              <tr className="text-[11px] font-admin font-bold uppercase tracking-wide text-admin-500 border-b border-admin-100">
                 <th className="px-4 sm:px-3 py-2">Account</th>
                 <th className="px-3 py-2">Role · branch</th>
                 <th className="px-3 py-2">Last sign-in</th>
@@ -119,18 +119,18 @@ export default function ControlAccounts({ onChanged }) {
                 <tr key={a.id} className="align-top">
                   <td className="px-4 sm:px-3 py-3">
                     <p className="text-sm font-admin font-semibold text-admin-800">
-                      {a.name}{isMe(a) && <span className="ml-1.5 text-xs font-normal text-admin-400">(you)</span>}
+                      {a.name}{isMe(a) && <span className="ml-1.5 text-xs font-normal text-admin-500">(you)</span>}
                     </p>
-                    <p className="text-xs font-admin text-admin-400">{a.phone}</p>
+                    <p className="text-xs font-admin text-admin-500">{a.phone}</p>
                   </td>
                   <td className="px-3 py-3">
                     <Pill tone={ROLE_TONE[a.role]}>{a.role}</Pill>
-                    <p className="text-xs font-admin text-admin-400 mt-1">{a.branchName || (a.role === 'superadmin' ? 'All branches' : 'No branch')}</p>
+                    <p className="text-xs font-admin text-admin-500 mt-1">{a.branchName || (a.role === 'superadmin' ? 'All branches' : 'No branch')}</p>
                   </td>
                   <td className="px-3 py-3">
                     <p className="text-sm font-admin text-admin-700">{a.lastLoginAt ? timeAgo(a.lastLoginAt) : 'Never'}</p>
-                    {a.lastLoginIp && <p className="text-xs font-admin text-admin-400">{a.lastLoginIp}</p>}
-                    {a.sessionsRevokedAt && <p className="text-[11px] font-admin text-admin-400" title={formatDateTime(a.sessionsRevokedAt)}>signed out {timeAgo(a.sessionsRevokedAt)}</p>}
+                    {a.lastLoginIp && <p className="text-xs font-admin text-admin-500">{a.lastLoginIp}</p>}
+                    {a.sessionsRevokedAt && <p className="text-[11px] font-admin text-admin-500" title={formatDateTime(a.sessionsRevokedAt)}>signed out {timeAgo(a.sessionsRevokedAt)}</p>}
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1">

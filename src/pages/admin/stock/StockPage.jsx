@@ -106,7 +106,7 @@ export default function StockPage() {
             <OnboardingReturnLink />
           </div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Stock Management</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">
+          <p className="text-admin-500 text-xs font-admin mt-0.5">
             {rows.length} items
             {outCount > 0 && <span className="ml-2 text-red-600 font-semibold">{outCount} out of stock</span>}
             {lowCount > outCount && <span className="ml-1.5 text-amber-600">{lowCount - outCount} low</span>}
@@ -202,7 +202,7 @@ export default function StockPage() {
                         {row.stock}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-right text-admin-400 font-admin">
+                    <td className="px-5 py-4 text-right text-admin-500 font-admin">
                       {row.lowStockThreshold}
                     </td>
                     <td className="px-5 py-4">
@@ -249,7 +249,7 @@ export default function StockPage() {
 
         {!loading && displayRows.length > 0 && (
           <div className="px-5 py-3 border-t border-admin-100 bg-admin-50/40">
-            <p className="text-xs font-admin text-admin-400">
+            <p className="text-xs font-admin text-admin-500">
               {displayRows.length} of {rows.length} items shown
             </p>
           </div>
@@ -274,7 +274,7 @@ export default function StockPage() {
                 <h3 className="font-admin font-bold text-admin-900 text-sm">
                   {modal.type === 'delivery' ? 'Add Stock Delivery' : 'Manual Adjustment'}
                 </h3>
-                <p className="text-admin-400 text-xs font-admin mt-0.5">
+                <p className="text-admin-500 text-xs font-admin mt-0.5">
                   {modal.row.productName} · {modal.row.varietyName} · {modal.row.packagingSize}
                 </p>
               </div>

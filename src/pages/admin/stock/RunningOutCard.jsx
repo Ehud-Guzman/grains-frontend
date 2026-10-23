@@ -32,7 +32,7 @@ export default function RunningOutCard() {
       <div className="flex items-center gap-2 mb-3">
         <TrendingDown size={15} className="text-amber-600" aria-hidden="true" />
         <h2 className="font-admin font-bold text-admin-900 text-sm">Running out soon</h2>
-        <span className="text-xs font-admin text-admin-400">at the pace of the last {soon[0].windowDays} days</span>
+        <span className="text-xs font-admin text-admin-500">at the pace of the last {soon[0].windowDays} days</span>
       </div>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {soon.map(r => (

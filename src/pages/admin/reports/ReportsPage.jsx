@@ -82,7 +82,7 @@ const PrintHeader = ({ shopInfo, tab, period }) => {
               {shopInfo.name}
             </h1>
             <p className="text-admin-500 text-xs mt-0.5">{shopInfo.tagline}</p>
-            <div className="flex items-center gap-4 mt-1 text-xs text-admin-400">
+            <div className="flex items-center gap-4 mt-1 text-xs text-admin-500">
               <span>📞 {shopInfo.phone}</span>
               <span>✉ {shopInfo.email}</span>
             </div>
@@ -115,14 +115,14 @@ const PrintFooter = ({ shopInfo }) => (
 // ── KPI TILE ──────────────────────────────────────────────────────────────────
 const KpiTile = ({ label, value }) => (
   <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-    <p className="text-admin-400 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
+    <p className="text-admin-500 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
     <p className="text-2xl font-admin font-bold text-admin-900 leading-tight">{value ?? '—'}</p>
   </div>
 )
 
 const OnboardingSummaryCard = ({ label, value, accent = 'brand' }) => (
   <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
-    <p className="text-admin-400 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
+    <p className="text-admin-500 text-xs font-admin uppercase tracking-wide mb-1.5">{label}</p>
     <p className={`text-2xl font-admin font-bold leading-tight ${
       accent === 'brand' ? 'text-brand-700' :
       accent === 'blue' ? 'text-blue-700' :
@@ -285,7 +285,7 @@ const DataTable = ({ title, headers, rows, renderRow, emptyMessage = 'No data fo
           {!rows?.length ? (
             <tr>
               <td colSpan={headers.length}
-                className="px-5 py-10 text-center text-admin-400 font-admin text-sm">
+                className="px-5 py-10 text-center text-admin-500 font-admin text-sm">
                 {emptyMessage}
               </td>
             </tr>
@@ -461,7 +461,7 @@ export default function ReportsPage() {
               <OnboardingReturnLink />
             </div>
             <h1 className="text-2xl font-admin font-bold text-admin-900">Reports</h1>
-            <p className="text-admin-400 text-xs font-admin mt-0.5">Analytics and data exports</p>
+            <p className="text-admin-500 text-xs font-admin mt-0.5">Analytics and data exports</p>
           </div>
           {/* Wraps on narrow phones — the title plus three actions do not fit on
               a single row at 360px. */}
@@ -516,7 +516,7 @@ export default function ReportsPage() {
                 className={`px-3.5 py-1.5 rounded-full text-xs font-admin font-semibold
                   transition-all border ${
                     period === p.value
-                      ? 'bg-admin-900 text-orange-500 border-admin-900 shadow-sm'
+                      ? 'bg-shell-800 text-white border-shell-800 shadow-sm'
                       : 'bg-white border-admin-200 text-admin-600 hover:border-admin-400'
                   }`}>
                 {p.label}
@@ -537,8 +537,8 @@ export default function ReportsPage() {
               <AlertCircle size={28} className="text-red-300 mx-auto mb-3" />
               <p className="text-admin-500 font-admin font-medium mb-3">Couldn't load this report</p>
               <button onClick={fetchData}
-                className="px-4 py-2 bg-admin-900 text-white rounded-lg text-sm font-admin font-semibold
-                  hover:bg-admin-800 transition-colors">
+                className="px-4 py-2 bg-shell-800 text-white rounded-lg text-sm font-admin font-semibold
+                  hover:bg-shell-700 transition-colors">
                 Retry
               </button>
             </div>
@@ -650,14 +650,14 @@ export default function ReportsPage() {
                               i === 0 ? 'bg-amber-100 text-amber-700' :
                               i === 1 ? 'bg-admin-100 text-admin-600' :
                               i === 2 ? 'bg-orange-100 text-orange-600' :
-                              'text-admin-400'
+                              'text-admin-500'
                             }`}>
                             {i + 1}
                           </span>
                         </td>
                         <td className="px-5 py-3.5">
                           <p className="font-admin font-semibold text-admin-800">{p.productName}</p>
-                          <p className="text-admin-400 text-xs font-admin">{p.variety} · {p.packaging}</p>
+                          <p className="text-admin-500 text-xs font-admin">{p.variety} · {p.packaging}</p>
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin font-semibold text-admin-700">
                           {p.unitsSold}
@@ -699,7 +699,7 @@ export default function ReportsPage() {
                       <tr key={i} className="hover:bg-admin-50 transition-colors">
                         <td className="px-5 py-3.5">
                           <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
-                          <p className="text-admin-400 text-xs font-admin">
+                          <p className="text-admin-500 text-xs font-admin">
                             {r.varietyName} · {r.packagingSize}
                           </p>
                         </td>
@@ -741,12 +741,12 @@ export default function ReportsPage() {
                       <tr key={i} className="hover:bg-admin-50 transition-colors">
                         <td className="px-5 py-3.5">
                           <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
-                          <p className="text-admin-400 text-xs font-admin">{r.varietyName} · {r.packagingSize}</p>
+                          <p className="text-admin-500 text-xs font-admin">{r.varietyName} · {r.packagingSize}</p>
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.unitsSold}</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{r.currentStock}</td>
                         <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.turnoverRatio == null ? 'text-admin-400' :
+                          r.turnoverRatio == null ? 'text-admin-500' :
                           r.turnoverRatio >= 1 ? 'text-green-700' :
                           r.turnoverRatio >= 0.3 ? 'text-amber-600' : 'text-red-600'
                         }`}>
@@ -859,7 +859,7 @@ export default function ReportsPage() {
                           color === 'blue'  ? 'text-blue-700'    :
                           color === 'brand' ? 'text-brand-700'   : 'text-red-700'
                         }`}>{value}</p>
-                        <p className="text-admin-400 text-xs font-admin uppercase tracking-wide">{label}</p>
+                        <p className="text-admin-500 text-xs font-admin uppercase tracking-wide">{label}</p>
                       </div>
                     ))}
                   </div>
@@ -874,10 +874,10 @@ export default function ReportsPage() {
                     rows={data.customers?.slice(0, 20) || []}
                     renderRow={(c, i) => (
                       <tr key={i} className="hover:bg-admin-50 transition-colors">
-                        <td className="px-5 py-3.5 text-admin-400 font-admin font-medium">{i + 1}</td>
+                        <td className="px-5 py-3.5 text-admin-500 font-admin font-medium">{i + 1}</td>
                         <td className="px-5 py-3.5">
                           <p className="font-admin font-semibold text-admin-800">{c.name}</p>
-                          <p className="text-admin-400 text-xs font-admin">{c.phone}</p>
+                          <p className="text-admin-500 text-xs font-admin">{c.phone}</p>
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-700">{c.totalOrders}</td>
                         <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
@@ -965,7 +965,7 @@ export default function ReportsPage() {
                       <tr key={i} className="hover:bg-admin-50 transition-colors">
                         <td className="px-5 py-3.5">
                           <p className="font-admin font-semibold text-admin-800">{r.productName}</p>
-                          <p className="text-admin-400 text-xs font-admin">{r.variety} · {r.packaging}</p>
+                          <p className="text-admin-500 text-xs font-admin">{r.variety} · {r.packaging}</p>
                         </td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-600">{r.unitsSold}</td>
                         <td className="px-5 py-3.5 text-right font-admin text-admin-800">{formatKES(r.revenue)}</td>
@@ -973,13 +973,13 @@ export default function ReportsPage() {
                           {r.estimatedCost != null ? formatKES(r.estimatedCost) : '—'}
                         </td>
                         <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.grossProfit == null ? 'text-admin-400' :
+                          r.grossProfit == null ? 'text-admin-500' :
                           r.grossProfit >= 0 ? 'text-green-700' : 'text-red-600'
                         }`}>
                           {r.grossProfit != null ? formatKES(r.grossProfit) : '—'}
                         </td>
                         <td className={`px-5 py-3.5 text-right font-admin font-bold ${
-                          r.marginPct == null ? 'text-admin-400' :
+                          r.marginPct == null ? 'text-admin-500' :
                           r.marginPct >= 20 ? 'text-green-700' :
                           r.marginPct >= 0 ? 'text-amber-600' : 'text-red-600'
                         }`}>
@@ -1000,7 +1000,7 @@ export default function ReportsPage() {
                       <p className="text-admin-500 font-admin font-medium">
                         No completed delivery orders with driver assignments in this period.
                       </p>
-                      <p className="text-admin-400 text-xs font-admin mt-1">
+                      <p className="text-admin-500 text-xs font-admin mt-1">
                         Delivery time is tracked from order creation to status → completed.
                       </p>
                     </div>
@@ -1024,7 +1024,7 @@ export default function ReportsPage() {
                           <tr key={i} className="hover:bg-admin-50 transition-colors">
                             <td className="px-5 py-3.5">
                               <p className="font-admin font-semibold text-admin-800">{r.driverName || 'Unknown'}</p>
-                              <p className="text-admin-400 text-xs font-admin">{r.driverPhone}</p>
+                              <p className="text-admin-500 text-xs font-admin">{r.driverPhone}</p>
                             </td>
                             <td className="px-5 py-3.5 text-right font-admin font-bold text-admin-800">
                               {r.deliveries}

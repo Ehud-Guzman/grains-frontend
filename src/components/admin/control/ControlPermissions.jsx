@@ -10,7 +10,7 @@ function Cell({ cell, isPublic }) {
   const label = `${cell.read ? 'read' : ''}${cell.read && cell.write ? ' and ' : ''}${cell.write ? 'change' : ''}${cell.partial ? ' (some)' : ''}`
   return (
     <span aria-label={label} title={label}
-      className={`inline-flex items-center gap-0.5 font-admin font-bold text-[11px] ${isPublic ? 'text-admin-400' : cell.partial ? 'text-amber-600' : 'text-green-700'}`}>
+      className={`inline-flex items-center gap-0.5 font-admin font-bold text-[11px] ${isPublic ? 'text-admin-500' : cell.partial ? 'text-amber-600' : 'text-green-700'}`}>
       {cell.read && 'R'}{cell.write && 'W'}{cell.partial && '~'}
     </span>
   )
@@ -27,10 +27,10 @@ function Row({ area, roles }) {
             <ChevronDown size={13} className={`mt-1 text-admin-300 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
             <span>
               <span className="block text-sm font-admin font-semibold text-admin-800">
-                {area.label}{area.public && <span className="ml-1.5 text-[10px] font-bold uppercase text-admin-400">public</span>}
+                {area.label}{area.public && <span className="ml-1.5 text-[10px] font-bold uppercase text-admin-500">public</span>}
               </span>
               {area.grantedBy.length > 0 && (
-                <span className="block text-[11px] font-admin text-admin-400">also anyone granted “{area.grantedBy.join(', ')}”</span>
+                <span className="block text-[11px] font-admin text-admin-500">also anyone granted “{area.grantedBy.join(', ')}”</span>
               )}
             </span>
           </button>
@@ -48,7 +48,7 @@ function Row({ area, roles }) {
                 <li key={`${r.method}-${r.path}-${i}`} className="text-[11px] font-mono text-admin-600 flex flex-wrap gap-x-2">
                   <span className="font-bold w-12 flex-shrink-0">{r.method}</span>
                   <span className="break-all">{r.path}</span>
-                  <span className="text-admin-400">{r.public ? 'anyone' : (r.roles || []).join(', ')}</span>
+                  <span className="text-admin-500">{r.public ? 'anyone' : (r.roles || []).join(', ')}</span>
                 </li>
               ))}
             </ul>
@@ -91,14 +91,14 @@ export default function ControlPermissions() {
       {error && <SectionError message={error} onRetry={load} />}
       {loading && !matrix && <Loading label="Reading the routes…" />}
       {!matrix && !loading && !error && (
-        <p className="text-sm font-admin text-admin-400">Open the grid to see which roles reach which part of the system.</p>
+        <p className="text-sm font-admin text-admin-500">Open the grid to see which roles reach which part of the system.</p>
       )}
       {matrix && (
         <>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <table className="w-full min-w-[640px] text-left">
               <thead>
-                <tr className="text-[11px] font-admin font-bold uppercase tracking-wide text-admin-400">
+                <tr className="text-[11px] font-admin font-bold uppercase tracking-wide text-admin-500">
                   <th className="px-3 py-2">Area</th>
                   {roles.map(r => <th key={r} className={`px-2 py-2 text-center ${r === 'superadmin' ? 'text-red-500' : ''}`} data-tone={ROLE_TONE[r]}>{r}</th>)}
                 </tr>
@@ -106,7 +106,7 @@ export default function ControlPermissions() {
               <tbody>{matrix.areas.map(a => <Row key={a.mount} area={a} roles={roles} />)}</tbody>
             </table>
           </div>
-          <p className="text-xs font-admin text-admin-400 mt-3 leading-relaxed">
+          <p className="text-xs font-admin text-admin-500 mt-3 leading-relaxed">
             This shows what each route’s guard allows. Finer rules inside a screen — a customer seeing only their own orders, a driver
             only their own deliveries — are applied in the code behind the route and are not visible here. Superadmin is deliberately
             read-only on orders, products, stock and payments: day-to-day trading needs a branch account.

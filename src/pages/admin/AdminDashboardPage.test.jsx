@@ -14,7 +14,7 @@ vi.mock('../../context/OnboardingContext', () => ({ useOnboarding: () => ({ getC
 vi.mock('../../components/onboarding/OnboardingEnhancements', () => ({ OnboardingChecklistCard: () => null }))
 vi.mock('recharts', () => {
   const Pass = ({ children }) => <div>{children}</div>
-  return { ResponsiveContainer: Pass, AreaChart: Pass, Area: Pass, XAxis: Pass, YAxis: Pass, CartesianGrid: Pass, Tooltip: Pass }
+  return { ResponsiveContainer: Pass, ComposedChart: Pass, Area: Pass, Bar: Pass, XAxis: Pass, YAxis: Pass, CartesianGrid: Pass, Tooltip: Pass }
 })
 vi.mock('../../services/admin/report.service', () => ({
   adminReportService: { getKPIs: m.kpis, getSales: m.sales, getBestSellers: m.best },
@@ -81,6 +81,50 @@ describe('business dashboard — by role', () => {
     expect(screen.queryByText('Low Stock')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /add product/i })).not.toBeInTheDocument()
     expect(await screen.findByText('ORD-7')).toBeInTheDocument()
+  })
+
+  it('shows how today compares with the same time yesterday', async () => {
+    m.kpis.mockResolvedValue({ data: { data: { ...KPIS, ordersToday: 12, revenueToday: 5000,
+      comparison: { ordersYesterday: 10, revenueYesterday: 8000 } } } })
+    renderPage()
+    expect(await screen.findByText('Revenue Today (gross)')).toBeInTheDocument()
+    expect(screen.getByText(/up 20% compared with this time yesterday/i)).toBeInTheDocument()   // 10 -> 12
+    expect(screen.getByText(/down 38% compared with this time yesterday/i)).toBeInTheDocument() // 8000 -> 5000 (37.5% rounds away from zero)
+  })
+
+  it('says so when yesterday had nothing at this hour, and stays quiet without a comparison', async () => {
+    m.kpis.mockResolvedValue({ data: { data: { ...KPIS, ordersToday: 3, revenueToday: 0,
+      comparison: { ordersYesterday: 0, revenueYesterday: 0 } } } })
+    renderPage()
+    expect(await screen.findByText('Nothing yet at this time yesterday')).toBeInTheDocument() // orders: 0 -> 3
+    expect(screen.queryByText(/compared with this time yesterday/i)).not.toBeInTheDocument() // revenue 0 -> 0: nothing to say
+  })
+
+  it('does not invent a comparison when the API sends none (older backend)', async () => {
+    renderPage()
+    await screen.findByText('Revenue Today (gross)')
+    expect(screen.queryByText(/yesterday/i)).not.toBeInTheDocument()
+  })
+
+  it('breaks the month down into paid and awaiting payment', async () => {
+    m.kpis.mockResolvedValue({ data: { data: { ...KPIS, revenueThisMonth: 400000,
+      cashFlow: { paidRevenue: 300000, unpaidRevenue: 100000, paidOrders: 6, unpaidOrders: 2 } } } })
+    renderPage()
+    expect(await screen.findByText('This Month (gross)')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: "75% of this month's orders are paid" })).toBeInTheDocument()
+    expect(screen.getByText('6 orders confirmed')).toBeInTheDocument()
+    expect(screen.getByText('2 orders outstanding')).toBeInTheDocument()
+  })
+
+  it('ranks the best sellers', async () => {
+    m.best.mockResolvedValue({ data: { data: { products: [
+      { productName: 'Maize Flour', variety: 'Sifted', packaging: '2kg', unitsSold: 40 },
+      { productName: 'Beans', variety: 'Rosecoco', packaging: '1kg', unitsSold: 10 },
+    ] } } })
+    renderPage()
+    expect(await screen.findByText('Maize Flour')).toBeInTheDocument()
+    expect(screen.getByText('40 sold')).toBeInTheDocument()
+    expect(screen.getByText('10 sold')).toBeInTheDocument()
   })
 
   it('shows no attention chips when there is nothing to do', async () => {

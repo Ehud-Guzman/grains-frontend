@@ -65,7 +65,7 @@ export default function AdminAlertsPage() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-admin font-bold text-admin-900">Alerts</h1>
-          <p className="text-admin-400 text-sm font-admin mt-0.5">
+          <p className="text-admin-500 text-sm font-admin mt-0.5">
             Signals that may need attention — refresh to check the latest state.
           </p>
         </div>
@@ -123,7 +123,7 @@ export default function AdminAlertsPage() {
             ].map(b => (
               <div key={b.label} className="bg-admin-50 rounded-lg py-2.5 text-center">
                 <p className="font-admin font-bold text-admin-900 text-lg leading-none">{b.value}</p>
-                <p className="text-admin-400 text-xs font-admin mt-1">{b.label}</p>
+                <p className="text-admin-500 text-xs font-admin mt-1">{b.label}</p>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ export default function AdminAlertsPage() {
                     <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
                     {f.detail?.reason || f.detail?.resultDesc || 'Payment failed'}
                   </span>
-                  <span className="text-admin-400 text-xs">{formatDate(f.timestamp)}</span>
+                  <span className="text-admin-500 text-xs">{formatDate(f.timestamp)}</span>
                 </div>
               ))}
             </div>
@@ -164,10 +164,10 @@ export default function AdminAlertsPage() {
                       <AlertTriangle size={12} className="text-red-400 flex-shrink-0" />
                       {o.orderRef}
                     </Link>
-                    <span className="text-admin-400 text-xs">{formatDate(o.updatedAt)}</span>
+                    <span className="text-admin-500 text-xs">{formatDate(o.updatedAt)}</span>
                   </div>
                 ))}
-                <p className="text-xs font-admin text-admin-400 mt-1">
+                <p className="text-xs font-admin text-admin-500 mt-1">
                   A background job retries these automatically — open an order to resubmit manually.
                 </p>
               </div>

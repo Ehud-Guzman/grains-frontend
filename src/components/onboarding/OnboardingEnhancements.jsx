@@ -25,8 +25,8 @@ const ACCENT_STYLES = {
   },
   admin: {
     shell: 'border-admin-200 bg-white',
-    badge: 'border-admin-300/40 bg-admin-900 text-white',
-    icon: 'bg-admin-900 text-white',
+    badge: 'border-admin-300/40 bg-shell-800 text-white',
+    icon: 'bg-shell-800 text-white',
     title: 'text-admin-900',
     body: 'text-admin-600',
     stat: 'text-admin-900',
@@ -38,7 +38,7 @@ const ACCENT_STYLES = {
     completedTitle: 'text-admin-900',
     helper: 'text-admin-500',
     button: 'text-brand-700 hover:text-brand-800',
-    actionButton: 'bg-admin-900 hover:bg-admin-800 text-white',
+    actionButton: 'bg-shell-800 hover:bg-shell-700 text-white',
     glow: SHARED_GLOW,
   },
 }

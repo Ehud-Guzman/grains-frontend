@@ -68,7 +68,7 @@ function ProductPicker({ value, label, onChange }) {
         <Package size={14} className="text-brand-500 flex-shrink-0" />
         <span className="text-sm font-admin text-admin-800 font-medium truncate flex-1">{label}</span>
         <button type="button" onClick={() => onChange(null)}
-          className="text-admin-400 hover:text-red-500 transition-colors flex-shrink-0">
+          className="text-admin-500 hover:text-red-500 transition-colors flex-shrink-0">
           <X size={14} />
         </button>
       </div>
@@ -78,7 +78,7 @@ function ProductPicker({ value, label, onChange }) {
   return (
     <div ref={boxRef} className="relative">
       <div className="relative">
-        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-admin-400" />
+        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-admin-500" />
         <input
           className={`${fieldClass} pl-9`}
           placeholder="Search products to link…"
@@ -92,7 +92,7 @@ function ProductPicker({ value, label, onChange }) {
           {searching ? (
             <div className="flex justify-center py-4"><Spinner size="sm" /></div>
           ) : results.length === 0 ? (
-            <p className="text-xs font-admin text-admin-400 text-center py-4">No products found</p>
+            <p className="text-xs font-admin text-admin-500 text-center py-4">No products found</p>
           ) : (
             results.map(p => (
               <button key={p._id} type="button"
@@ -101,7 +101,7 @@ function ProductPicker({ value, label, onChange }) {
                 <Package size={13} className="text-admin-300 flex-shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-admin text-admin-800 truncate">{p.name}</p>
-                  <p className="text-xs font-admin text-admin-400 truncate">{p.category}</p>
+                  <p className="text-xs font-admin text-admin-500 truncate">{p.category}</p>
                 </div>
               </button>
             ))
@@ -257,14 +257,14 @@ function PromoModal({ promo, onClose, onSaved }) {
       <div className="bg-white rounded-2xl w-full max-w-xl shadow-admin-lg border border-admin-100 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100 sticky top-0 bg-white z-10">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Megaphone size={15} className="text-brand-600" />
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              <Megaphone size={15} className="text-shell-600" />
             </div>
             <p className="font-admin font-bold text-admin-800 text-sm">
               {isEdit ? `Edit ${promo.title}` : 'Create Promotion'}
             </p>
           </div>
-          <button onClick={onClose} className="text-admin-400 hover:text-admin-700 p-1 rounded-lg hover:bg-admin-100">
+          <button onClick={onClose} className="text-admin-500 hover:text-admin-700 p-1 rounded-lg hover:bg-admin-100">
             <X size={16} />
           </button>
         </div>
@@ -340,7 +340,7 @@ function PromoModal({ promo, onClose, onSaved }) {
                   ) : (
                     <button type="button" onClick={() => fileRef.current?.click()} disabled={imgUploading}
                       className="w-full h-24 border-2 border-dashed border-admin-200 rounded-xl flex flex-col
-                        items-center justify-center gap-1.5 text-admin-400 hover:border-brand-300
+                        items-center justify-center gap-1.5 text-admin-500 hover:border-brand-300
                         hover:text-brand-500 transition-colors disabled:opacity-50 bg-admin-50">
                       {imgUploading
                         ? <><Spinner size="sm" /><span className="text-xs font-admin">Uploading…</span></>
@@ -365,7 +365,7 @@ function PromoModal({ promo, onClose, onSaved }) {
                   ) : (
                     <button type="button" onClick={() => videoFileRef.current?.click()} disabled={vidUploading}
                       className="w-full h-24 border-2 border-dashed border-admin-200 rounded-xl flex flex-col
-                        items-center justify-center gap-1.5 text-admin-400 hover:border-brand-300
+                        items-center justify-center gap-1.5 text-admin-500 hover:border-brand-300
                         hover:text-brand-500 transition-colors disabled:opacity-50 bg-admin-50">
                       {vidUploading
                         ? <><Spinner size="sm" /><span className="text-xs font-admin">Uploading…</span></>
@@ -373,7 +373,7 @@ function PromoModal({ promo, onClose, onSaved }) {
                       }
                     </button>
                   )}
-                  <p className="text-[10px] font-admin text-admin-400 mt-1.5 leading-relaxed">
+                  <p className="text-[10px] font-admin text-admin-500 mt-1.5 leading-relaxed">
                     Plays muted and looped on the storefront — keep it short (a few seconds).
                   </p>
                 </>
@@ -383,7 +383,7 @@ function PromoModal({ promo, onClose, onSaved }) {
 
           <div>
             <label className="block text-xs font-admin font-semibold text-admin-600 mb-1.5 uppercase tracking-wide">
-              Linked Product <span className="normal-case font-normal text-admin-400">(optional — sends "Shop Now" here)</span>
+              Linked Product <span className="normal-case font-normal text-admin-500">(optional — sends "Shop Now" here)</span>
             </label>
             <ProductPicker
               value={form.linkedProductId}
@@ -547,13 +547,13 @@ export default function PromotionsPage() {
                     ? <span className="flex items-center gap-1 text-xs font-admin font-semibold text-green-700">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />Live
                       </span>
-                    : <span className="text-xs font-admin text-admin-400">
+                    : <span className="text-xs font-admin text-admin-500">
                         {!p.isActive ? 'Inactive' : p.startDate && new Date(p.startDate) > now ? 'Scheduled' : 'Ended'}
                       </span>
                   }
                 </div>
                 {p.description && <p className="text-xs font-admin text-admin-500 truncate mb-1">{p.description}</p>}
-                <div className="flex gap-3 text-xs font-admin text-admin-400">
+                <div className="flex gap-3 text-xs font-admin text-admin-500">
                   {p.startDate && <span>From {formatDate(p.startDate)}</span>}
                   {p.endDate   && <span>Until {formatDate(p.endDate)}</span>}
                   {p.seasonTag && <span className="text-brand-600">· {p.seasonTag}</span>}
@@ -571,7 +571,7 @@ export default function PromotionsPage() {
                   {p.isActive ? 'Deactivate' : 'Activate'}
                 </button>
                 <button onClick={() => setModal({ type: 'edit', promo: p })}
-                  className="p-1.5 rounded-lg text-admin-400 hover:text-admin-700 hover:bg-admin-100 transition-colors">
+                  className="p-1.5 rounded-lg text-admin-500 hover:text-admin-700 hover:bg-admin-100 transition-colors">
                   <Edit2 size={13} />
                 </button>
                 <button onClick={() => handleDelete(p._id)} disabled={deleting === p._id}

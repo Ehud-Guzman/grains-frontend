@@ -20,6 +20,16 @@ export default [
 
   js.configs.recommended,
 
+  // Dev-only Node scripts (CommonJS). They also hand callbacks to a browser page, so both sets of globals.
+  {
+    files: ['scripts/**/*.cjs'],
+    languageOptions: {
+      ecmaVersion: 2023,
+      sourceType: 'commonjs',
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
+
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, Menu, X, Eye, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react'
+import { LogOut, Menu, X, Eye, ChevronsLeft, ChevronsRight, HelpCircle, Search } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import Modal from '../ui/Modal'
 import AlertsBell from './AlertsBell'
@@ -10,6 +10,10 @@ import { safeStorage } from '../../utils/safeStorage'
 
 // Loaded on first open: most sessions never ask for help, so it stays out of the admin bundle.
 const AssistantPanel = lazy(() => import('./AssistantPanel'))
+const CommandPalette = lazy(() => import('./CommandPalette'))
+
+// The shortcut hint follows the platform: ⌘K on a Mac, Ctrl K elsewhere.
+const SHORTCUT_HINT = typeof navigator !== 'undefined' && /mac|iphone|ipad/i.test(navigator.platform || '') ? '⌘K' : 'Ctrl K'
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 // Sidebar surface = tailwind `shell-950`; kept as a literal because the drawer paints it inline.
@@ -206,6 +210,7 @@ export default function AdminLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const alerts = useAdminAlerts(user?.role)
 
   const groups = navGroupsFor(user)
@@ -216,6 +221,18 @@ export default function AdminLayout() {
   useEffect(() => {
     mainRef.current?.scrollTo?.(0, 0)
   }, [location.pathname])
+
+  // Ctrl/⌘ + K opens the jump-to palette from anywhere in the panel.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen(open => !open)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   const handleLogout = async () => {
     await logout()
@@ -277,6 +294,17 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {/* One button: an icon on phones, a search-field look with the shortcut from md up. */}
+            <button type="button" onClick={() => setSearchOpen(true)}
+              aria-label="Search pages and orders" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K"
+              className="flex items-center justify-center gap-2 p-2.5 min-w-[44px] min-h-[44px] rounded-xl text-admin-500
+                hover:bg-admin-100 hover:text-admin-800 transition-colors
+                md:h-10 md:min-h-0 md:min-w-0 md:pl-3 md:pr-2 md:mr-1 md:py-0 md:border md:border-admin-200 md:bg-admin-50
+                md:hover:bg-white md:hover:border-admin-300 text-sm font-admin">
+              <Search size={19} className="md:w-[15px] md:h-[15px]" aria-hidden="true" />
+              <span aria-hidden="true" className="hidden md:inline pr-6">Search…</span>
+              <kbd aria-hidden="true" className="hidden md:inline text-[11px] font-medium border border-admin-200 bg-white rounded-md px-1.5 py-0.5">{SHORTCUT_HINT}</kbd>
+            </button>
             <button type="button" onClick={() => setHelpOpen(true)}
               aria-label="Ask the help assistant" aria-haspopup="dialog"
               className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl
@@ -287,7 +315,7 @@ export default function AdminLayout() {
             <div className="w-px h-6 bg-admin-100 mx-1 hidden sm:block" />
             <div className="flex items-center gap-2.5">
               <div className="text-right hidden md:block">
-                <p className="text-xs text-admin-400 font-admin leading-tight">{getGreeting()}</p>
+                <p className="text-xs text-admin-500 font-admin leading-tight">{getGreeting()}</p>
                 <p className="text-sm font-admin font-semibold text-admin-800 leading-tight">{user?.name?.split(' ')[0]}</p>
               </div>
               <Avatar user={user} />
@@ -299,6 +327,12 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {searchOpen && (
+        <Suspense fallback={null}>
+          <CommandPalette user={user} onClose={() => setSearchOpen(false)} />
+        </Suspense>
+      )}
 
       {helpOpen && (
         <Suspense fallback={null}>

@@ -164,7 +164,7 @@ export default function CustomerProfilePage() {
   }
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
-  if (!customer) return <div className="p-6 text-center text-admin-400">Customer not found</div>
+  if (!customer) return <div className="p-6 text-center text-admin-500">Customer not found</div>
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -185,7 +185,7 @@ export default function CustomerProfilePage() {
               <div className="flex-1 min-w-0">
                 <h1 className="font-admin font-bold text-admin-900">{customer.name}</h1>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-admin-400 text-xs capitalize">{customer.role}</p>
+                  <p className="text-admin-500 text-xs capitalize">{customer.role}</p>
                   {customer.isLocked && (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-admin font-medium bg-red-100 text-red-700">
                       <Lock size={10} /> Locked
@@ -202,17 +202,17 @@ export default function CustomerProfilePage() {
             <div className="space-y-2 text-sm font-admin">
               {customer.phone && (
                 <a href={`tel:${customer.phone}`} className="flex items-center gap-2 text-admin-600 hover:text-brand-600 transition-colors">
-                  <Phone size={14} className="text-admin-400 flex-shrink-0" />{customer.phone}
+                  <Phone size={14} className="text-admin-500 flex-shrink-0" />{customer.phone}
                 </a>
               )}
               {customer.email && (
                 <a href={`mailto:${customer.email}`} className="flex items-center gap-2 text-admin-600 hover:text-brand-600 transition-colors">
-                  <Mail size={14} className="text-admin-400 flex-shrink-0" />{customer.email}
+                  <Mail size={14} className="text-admin-500 flex-shrink-0" />{customer.email}
                 </a>
               )}
               {customer.kraPin && (
                 <div className="flex items-center gap-2 text-admin-600">
-                  <Receipt size={14} className="text-admin-400 flex-shrink-0" />KRA PIN: {customer.kraPin}
+                  <Receipt size={14} className="text-admin-500 flex-shrink-0" />KRA PIN: {customer.kraPin}
                 </div>
               )}
             </div>
@@ -343,7 +343,7 @@ export default function CustomerProfilePage() {
               <h2 className="font-admin font-semibold text-admin-900">Order History</h2>
             </div>
             {!customer.recentOrders?.length ? (
-              <div className="p-8 text-center text-admin-400 text-sm font-admin">No orders yet</div>
+              <div className="p-8 text-center text-admin-500 text-sm font-admin">No orders yet</div>
             ) : (
               <div className="divide-y divide-admin-50">
                 {customer.recentOrders.map(order => (
@@ -351,7 +351,7 @@ export default function CustomerProfilePage() {
                     className="flex items-center justify-between px-5 py-3.5 hover:bg-admin-50 transition-colors group">
                     <div>
                       <p className="font-admin font-medium text-admin-800 text-sm">{order.orderRef}</p>
-                      <p className="text-admin-400 text-xs mt-0.5">{formatDate(order.createdAt)}</p>
+                      <p className="text-admin-500 text-xs mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className={getStatusBadgeClass(order.status)}>{getStatusLabel(order.status, order.deliveryMethod)}</span>

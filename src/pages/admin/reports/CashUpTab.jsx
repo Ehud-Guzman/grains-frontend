@@ -10,7 +10,7 @@ const Tile = ({ icon: Icon, label, amount, sub, tone = 'text-admin-800' }) => (
       <Icon size={14} aria-hidden="true" /> {label}
     </div>
     <p className={`font-display text-2xl font-bold mt-2 ${tone}`}>{formatKES(amount)}</p>
-    {sub && <p className="text-xs font-admin text-admin-400 mt-0.5">{sub}</p>}
+    {sub && <p className="text-xs font-admin text-admin-500 mt-0.5">{sub}</p>}
   </div>
 )
 
@@ -18,14 +18,14 @@ const Section = ({ title, hint, children }) => (
   <div className="bg-white rounded-xl border border-admin-200 shadow-admin overflow-hidden">
     <div className="px-5 py-4 border-b border-admin-100">
       <h3 className="font-admin font-bold text-admin-900">{title}</h3>
-      {hint && <p className="text-xs font-admin text-admin-400 mt-0.5">{hint}</p>}
+      {hint && <p className="text-xs font-admin text-admin-500 mt-0.5">{hint}</p>}
     </div>
     {children}
   </div>
 )
 
 const Empty = ({ children }) => (
-  <p className="px-5 py-8 text-center text-sm font-admin text-admin-400">{children}</p>
+  <p className="px-5 py-8 text-center text-sm font-admin text-admin-500">{children}</p>
 )
 
 const th = 'px-5 py-3 text-xs text-admin-500 font-semibold uppercase tracking-wide'
@@ -75,7 +75,7 @@ export default function CashUpTab({ data }) {
                     <td className="px-5 py-3 text-right">{d.deliveries}</td>
                     <td className="px-5 py-3 text-right">{formatKES(d.due)}</td>
                     <td className="px-5 py-3 text-right text-green-700">{formatKES(d.confirmed)}</td>
-                    <td className={`px-5 py-3 text-right font-bold ${d.outstanding ? 'text-amber-600' : 'text-admin-400'}`}>
+                    <td className={`px-5 py-3 text-right font-bold ${d.outstanding ? 'text-amber-600' : 'text-admin-500'}`}>
                       {formatKES(d.outstanding)}{d.unconfirmedOrders ? ` (${d.unconfirmedOrders})` : ''}
                     </td>
                   </tr>
@@ -93,7 +93,7 @@ export default function CashUpTab({ data }) {
               <li key={o._id} className="px-5 py-3 flex items-center justify-between gap-3 text-sm font-admin">
                 <div className="min-w-0">
                   <Link to={`/admin/orders/${o._id}`} className="font-semibold text-brand-700 hover:underline">{o.orderRef}</Link>
-                  <p className="text-xs text-admin-400">{o.driverId?.name ? `${o.driverId.name} · ` : ''}{o.deliveredAt ? formatDate(o.deliveredAt) : ''}</p>
+                  <p className="text-xs text-admin-500">{o.driverId?.name ? `${o.driverId.name} · ` : ''}{o.deliveredAt ? formatDate(o.deliveredAt) : ''}</p>
                 </div>
                 <span className="font-bold text-amber-600">{formatKES(o.total)}</span>
               </li>
@@ -109,13 +109,13 @@ export default function CashUpTab({ data }) {
               <li key={`l-${p.paymentId}`} className="px-5 py-3 text-sm font-admin">
                 <span className="font-semibold text-red-600">Late payment</span> · {p.orderRef} ·{' '}
                 {p.lateSuccessMeta?.mpesaTransactionId} · {formatKES(p.lateSuccessMeta?.paidAmount || p.amount)}
-                <p className="text-xs text-admin-400">Money was received but the order was already marked failed. Reconcile by hand.</p>
+                <p className="text-xs text-admin-500">Money was received but the order was already marked failed. Reconcile by hand.</p>
               </li>
             ))}
             {stuckPending.map(p => (
               <li key={`s-${p.paymentId}`} className="px-5 py-3 text-sm font-admin">
                 <span className="font-semibold text-amber-600">No answer</span> · {p.orderRef} · {formatKES(p.amount)}
-                <p className="text-xs text-admin-400">Prompt sent {formatDate(p.createdAt)}{p.mpesaPhone ? ` to ${p.mpesaPhone}` : ''} and never completed.</p>
+                <p className="text-xs text-admin-500">Prompt sent {formatDate(p.createdAt)}{p.mpesaPhone ? ` to ${p.mpesaPhone}` : ''} and never completed.</p>
               </li>
             ))}
           </ul>
@@ -127,8 +127,8 @@ export default function CashUpTab({ data }) {
           <ul className="divide-y divide-admin-50">
             {cashByCollector.map(c => (
               <li key={String(c.userId)} className="px-5 py-3 flex items-center justify-between text-sm font-admin">
-                <span>{c.name || 'Unknown'}{c.role ? <span className="text-admin-400"> · {c.role}</span> : null}</span>
-                <span className="font-bold text-admin-800">{formatKES(c.amount)} <span className="font-normal text-admin-400">({c.count})</span></span>
+                <span>{c.name || 'Unknown'}{c.role ? <span className="text-admin-500"> · {c.role}</span> : null}</span>
+                <span className="font-bold text-admin-800">{formatKES(c.amount)} <span className="font-normal text-admin-500">({c.count})</span></span>
               </li>
             ))}
           </ul>

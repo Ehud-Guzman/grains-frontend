@@ -22,7 +22,7 @@ export function Section({ id, icon: Icon, title, subtitle, actions, children }) 
           )}
           <div className="min-w-0">
             <h2 id={`${id}-title`} className="font-admin font-bold text-admin-900 leading-tight">{title}</h2>
-            {subtitle && <p className="text-xs font-admin text-admin-400 mt-0.5 leading-relaxed">{subtitle}</p>}
+            {subtitle && <p className="text-xs font-admin text-admin-500 mt-0.5 leading-relaxed">{subtitle}</p>}
           </div>
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -36,7 +36,7 @@ export function Section({ id, icon: Icon, title, subtitle, actions, children }) 
 const SEVERITY = {
   high:   { label: 'Needs you', box: 'bg-red-50 border-red-200',     text: 'text-red-800',   sub: 'text-red-700',   icon: ShieldAlert,   iconCls: 'text-red-600' },
   medium: { label: 'Look soon', box: 'bg-amber-50 border-amber-200', text: 'text-amber-900', sub: 'text-amber-800', icon: AlertTriangle, iconCls: 'text-amber-600' },
-  info:   { label: 'FYI',       box: 'bg-admin-50 border-admin-200', text: 'text-admin-800', sub: 'text-admin-600', icon: Info,          iconCls: 'text-admin-400' },
+  info:   { label: 'FYI',       box: 'bg-admin-50 border-admin-200', text: 'text-admin-800', sub: 'text-admin-600', icon: Info,          iconCls: 'text-admin-500' },
 }
 export const severityStyle = (severity) => SEVERITY[severity] || SEVERITY.info
 
@@ -70,8 +70,8 @@ export function Stat({ label, value, sub, tone }) {
   return (
     <div className="rounded-lg border border-admin-100 bg-admin-50/50 px-3 py-2.5 min-w-0">
       <p className={`text-lg font-admin font-bold leading-tight truncate ${color}`}>{value}</p>
-      <p className="text-[11px] font-admin font-semibold uppercase tracking-wide text-admin-400 mt-0.5">{label}</p>
-      {sub && <p className="text-[11px] font-admin text-admin-400 mt-0.5 truncate">{sub}</p>}
+      <p className="text-[11px] font-admin font-semibold uppercase tracking-wide text-admin-500 mt-0.5">{label}</p>
+      {sub && <p className="text-[11px] font-admin text-admin-500 mt-0.5 truncate">{sub}</p>}
     </div>
   )
 }
@@ -91,7 +91,7 @@ export function SectionError({ message, onRetry }) {
 
 export function Loading({ label = 'Loading…' }) {
   return (
-    <div className="flex items-center gap-3 py-6 justify-center text-admin-400 text-sm font-admin">
+    <div className="flex items-center gap-3 py-6 justify-center text-admin-500 text-sm font-admin">
       <Spinner size="sm" /> {label}
     </div>
   )
@@ -106,7 +106,7 @@ export function Toggle({ checked, onChange, label, description, disabled, busy, 
     <div className="flex items-start justify-between gap-3 py-2.5">
       <div className="min-w-0">
         <label htmlFor={id} className="text-sm font-admin font-semibold text-admin-800 cursor-pointer">{label}</label>
-        {description && <p className="text-xs font-admin text-admin-400 mt-0.5 leading-relaxed">{description}</p>}
+        {description && <p className="text-xs font-admin text-admin-500 mt-0.5 leading-relaxed">{description}</p>}
       </div>
       <button
         id={id}
@@ -164,7 +164,7 @@ export function PasswordConfirmModal({ title, children, confirmLabel = 'Confirm'
             <h3 className="font-admin font-bold text-admin-900 text-sm">{title}</h3>
           </div>
           <button type="button" onClick={onClose} disabled={busy} aria-label="Close"
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -191,7 +191,7 @@ export function PasswordConfirmModal({ title, children, confirmLabel = 'Confirm'
         <div className="px-5 pb-5 flex gap-2">
           <button type="submit" disabled={!password || busy}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-white rounded-xl text-sm font-admin font-semibold disabled:opacity-50 transition-colors
-              ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-admin-900 hover:bg-admin-800'}`}>
+              ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-shell-800 hover:bg-shell-700'}`}>
             {busy && <Spinner size="sm" />} {confirmLabel}
           </button>
           <button type="button" onClick={onClose} disabled={busy}

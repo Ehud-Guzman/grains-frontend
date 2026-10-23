@@ -43,9 +43,9 @@ function MaintenanceMessage({ branch, onSave }) {
         className="mt-1 w-full border border-admin-200 rounded-lg px-3 py-2 text-sm font-admin focus:outline-none focus:ring-2 focus:ring-brand-300"
       />
       <div className="flex items-center justify-between mt-1">
-        <span className="text-[11px] font-admin text-admin-400">{text.length}/300</span>
+        <span className="text-[11px] font-admin text-admin-500">{text.length}/300</span>
         <button type="button" onClick={save} disabled={!dirty || busy}
-          className="text-xs font-admin font-semibold px-3 py-1.5 rounded-lg bg-admin-900 text-white disabled:opacity-40">
+          className="text-xs font-admin font-semibold px-3 py-1.5 rounded-lg bg-shell-800 text-white disabled:opacity-40">
           Save message
         </button>
       </div>
@@ -97,7 +97,7 @@ function BranchSwitches({ branch, definitions, reload }) {
         if (items.length === 0) return null
         return (
           <div key={group.id} className="border-t border-admin-100 first:border-t-0 pt-2 mt-2">
-            <p className="text-[10px] font-admin font-bold uppercase tracking-widest text-admin-400">{group.title}</p>
+            <p className="text-[10px] font-admin font-bold uppercase tracking-widest text-admin-500">{group.title}</p>
             <div className="divide-y divide-admin-50">
               {items.map(def => (
                 <Toggle key={def.key} label={def.label} description={def.description}
@@ -154,9 +154,9 @@ function Jobs({ jobs, reload }) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-admin font-semibold text-admin-800">
-                {job.label} <span className="font-normal text-admin-400">· {job.schedule}</span>
+                {job.label} <span className="font-normal text-admin-500">· {job.schedule}</span>
               </p>
-              <p className="text-xs font-admin text-admin-400 mt-0.5 leading-relaxed">{job.description}</p>
+              <p className="text-xs font-admin text-admin-500 mt-0.5 leading-relaxed">{job.description}</p>
               <p className="text-xs font-admin mt-1.5 flex flex-wrap items-center gap-1.5">
                 {job.paused && <Pill tone="amber">Paused</Pill>}
                 {job.lastRun ? (
@@ -164,11 +164,11 @@ function Jobs({ jobs, reload }) {
                     <Pill tone={job.lastRun.outcome === 'ok' ? 'green' : job.lastRun.outcome === 'failed' ? 'red' : 'gray'}>
                       {job.lastRun.outcome === 'ok' ? 'Ran' : job.lastRun.outcome === 'failed' ? 'Failed' : 'Skipped'}
                     </Pill>
-                    <span className="text-admin-400">{timeAgo(job.lastRun.finishedAt)}</span>
+                    <span className="text-admin-500">{timeAgo(job.lastRun.finishedAt)}</span>
                     {job.lastRun.error && <span className="text-red-600">{job.lastRun.error}</span>}
                   </>
                 ) : (
-                  <span className="text-admin-400">Not run since the server last started</span>
+                  <span className="text-admin-500">Not run since the server last started</span>
                 )}
               </p>
               {job.paused && <p className="text-xs font-admin text-amber-700 mt-1">{job.pauseEffect}</p>}
@@ -210,7 +210,7 @@ export default function ControlSwitches({ overview, reload }) {
             {branches.map(b => <BranchSwitches key={b.id} branch={b} definitions={overview.switchDefinitions} reload={reload} />)}
           </div>
         )}
-        <p className="text-xs font-admin text-admin-400 mt-4 leading-relaxed">
+        <p className="text-xs font-admin text-admin-500 mt-4 leading-relaxed">
           A locked branch is frozen, not hidden: staff can still read everything. M-Pesa confirmations from Safaricom
           are never blocked, so money that has already moved is always recorded.
         </p>
@@ -219,7 +219,7 @@ export default function ControlSwitches({ overview, reload }) {
       <Section id="jobs" icon={Timer} title="Scheduled jobs"
         subtitle="Background work the server does on its own. Pause one to stop it without redeploying.">
         <Jobs jobs={overview.jobs} reload={reload} />
-        <p className="text-xs font-admin text-admin-400 mt-3">
+        <p className="text-xs font-admin text-admin-500 mt-3">
           Run records cover the time since the server last started. The keep-alive pinger is not listed: pausing it would let the host put the server to sleep.
         </p>
       </Section>

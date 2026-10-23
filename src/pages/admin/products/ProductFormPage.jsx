@@ -46,7 +46,7 @@ const Field = ({ label, error, required, hint, children }) => (
       {label}{required && <span className="text-red-400 ml-0.5 normal-case font-normal"> *</span>}
     </label>
     {children}
-    {hint  && <p className="text-admin-400 text-xs mt-1 leading-relaxed">{hint}</p>}
+    {hint  && <p className="text-admin-500 text-xs mt-1 leading-relaxed">{hint}</p>}
     {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
   </div>
 )
@@ -126,7 +126,7 @@ function ImageUploader({ images = [], onChange, label = 'Images' }) {
             <p className="text-xs font-admin text-admin-500">
               Drop images or <span className="text-brand-600 font-semibold">click to browse</span>
             </p>
-            <p className="text-xs text-admin-400 mt-0.5">JPG, PNG, WebP · Max 5MB each</p>
+            <p className="text-xs text-admin-500 mt-0.5">JPG, PNG, WebP · Max 5MB each</p>
           </>
         )}
       </div>
@@ -166,7 +166,7 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
         <div className="col-span-6 sm:col-span-3">
           <label className="block text-xs font-admin text-admin-500 mb-1.5">Sale Price (KES)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400 text-xs font-admin">KES</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-500 text-xs font-admin">KES</span>
             <Input type="number" min="0" placeholder="3,800"
               value={pkg.priceKES}
               onChange={e => onChange({ ...pkg, priceKES: e.target.value })}
@@ -182,7 +182,7 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
             Cost Price <span className="text-admin-300 font-normal">(optional)</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400 text-xs font-admin">KES</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-500 text-xs font-admin">KES</span>
             <Input type="number" min="0" placeholder="2,500"
               value={pkg.costPriceKES}
               onChange={e => onChange({ ...pkg, costPriceKES: e.target.value })}
@@ -202,7 +202,7 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
             className={(pkg.quoteOnly || pkg.isExisting) ? 'opacity-40 cursor-not-allowed' : ''}
           />
           {pkg.isExisting && !pkg.quoteOnly && (
-            <p className="text-admin-400 text-[11px] mt-1 leading-snug">
+            <p className="text-admin-500 text-[11px] mt-1 leading-snug">
               Use the <Link to="/admin/stock" className="text-brand-600 hover:underline">Stock page</Link> to adjust
             </p>
           )}
@@ -248,7 +248,7 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
       </div>
 
       {pkg.quoteOnly && (
-        <p className="text-xs text-admin-400 font-admin mt-2 flex items-center gap-1">
+        <p className="text-xs text-admin-500 font-admin mt-2 flex items-center gap-1">
           <Info size={11} />
           Customers will see a "Request a Quote" button instead of a price
         </p>
@@ -268,7 +268,7 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
           </div>
 
           {(pkg.pricingTiers || []).length === 0 ? (
-            <p className="text-xs text-admin-400 font-admin">
+            <p className="text-xs text-admin-500 font-admin">
               No tiers — customers always pay the sale price above regardless of quantity.
             </p>
           ) : (
@@ -285,7 +285,7 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
                   </div>
                   <span className="text-admin-300 text-xs">→</span>
                   <div className="flex-1 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400 text-xs font-admin">KES</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-500 text-xs font-admin">KES</span>
                     <Input type="number" min="0" placeholder="Price per unit"
                       value={tier.priceKES}
                       onChange={e => onChange({
@@ -296,12 +296,12 @@ function PackagingRow({ pkg, onChange, onRemove, canRemove, index }) {
                   </div>
                   <button type="button"
                     onClick={() => onChange({ ...pkg, pricingTiers: pkg.pricingTiers.filter(t => t._id !== tier._id) })}
-                    className="p-2 text-admin-400 hover:text-red-500 transition-colors flex-shrink-0">
+                    className="p-2 text-admin-500 hover:text-red-500 transition-colors flex-shrink-0">
                     <Trash2 size={13} />
                   </button>
                 </div>
               ))}
-              <p className="text-xs text-admin-400 font-admin">
+              <p className="text-xs text-admin-500 font-admin">
                 Applied at checkout when quantity ≥ Min qty. Highest matching tier wins.
               </p>
             </div>
@@ -339,7 +339,7 @@ function VarietySection({ variety, index, onChange, onRemove, canRemove, errors 
             <p className="font-admin font-semibold text-admin-800 text-sm">
               {variety.varietyName || `Variety ${index + 1}`}
             </p>
-            <p className="text-admin-400 text-xs mt-0.5">
+            <p className="text-admin-500 text-xs mt-0.5">
               {variety.packaging.length} size{variety.packaging.length !== 1 ? 's' : ''}
               {errors && <span className="text-red-500 ml-2">— has errors</span>}
             </p>
@@ -349,13 +349,13 @@ function VarietySection({ variety, index, onChange, onRemove, canRemove, errors 
           {canRemove && (
             <button type="button"
               onClick={e => { e.stopPropagation(); onRemove() }}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-500 transition-colors">
+              className="p-1.5 rounded-lg hover:bg-red-50 text-admin-500 hover:text-red-500 transition-colors">
               <Trash2 size={15} />
             </button>
           )}
           {variety.collapsed
-            ? <ChevronDown size={16} className="text-admin-400" />
-            : <ChevronUp size={16} className="text-admin-400" />
+            ? <ChevronDown size={16} className="text-admin-500" />
+            : <ChevronUp size={16} className="text-admin-500" />
           }
         </div>
       </div>
@@ -414,7 +414,7 @@ function VarietySection({ variety, index, onChange, onRemove, canRemove, errors 
             <button type="button"
               onClick={() => onChange({ ...variety, packaging: [...variety.packaging, emptyPackaging()] })}
               className="mt-2 w-full py-2 border-2 border-dashed border-admin-200 rounded-xl
-                text-xs font-admin text-admin-400 hover:border-brand-300 hover:text-brand-600
+                text-xs font-admin text-admin-500 hover:border-brand-300 hover:text-brand-600
                 hover:bg-brand-50 transition-all flex items-center justify-center gap-1.5">
               <Plus size={13} /> Add Another Size
             </button>
@@ -453,12 +453,12 @@ function PriceHistorySection({ productId }) {
       <button type="button" onClick={handleToggle}
         className="flex items-center justify-between w-full text-left">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-brand-50 rounded-lg flex items-center justify-center">
-            <History size={14} className="text-brand-600" />
+          <div className="w-7 h-7 bg-shell-50 rounded-lg flex items-center justify-center">
+            <History size={14} className="text-shell-600" />
           </div>
           <h2 className="font-admin font-bold text-admin-900">Price History</h2>
         </div>
-        {open ? <ChevronUp size={16} className="text-admin-400" /> : <ChevronDown size={16} className="text-admin-400" />}
+        {open ? <ChevronUp size={16} className="text-admin-500" /> : <ChevronDown size={16} className="text-admin-500" />}
       </button>
 
       {open && (
@@ -466,12 +466,12 @@ function PriceHistorySection({ productId }) {
           {loading ? (
             <div className="flex justify-center py-6"><Spinner size={20} /></div>
           ) : logs.length === 0 ? (
-            <p className="text-xs font-admin text-admin-400 py-2">No recorded price changes for this product yet.</p>
+            <p className="text-xs font-admin text-admin-500 py-2">No recorded price changes for this product yet.</p>
           ) : (
             <div className="overflow-x-auto -mx-5 px-5">
               <table className="w-full text-xs font-admin">
                 <thead>
-                  <tr className="text-admin-400 border-b border-admin-100">
+                  <tr className="text-admin-500 border-b border-admin-100">
                     <th scope="col" className="text-left py-2 pr-3 font-medium">Date</th>
                     <th scope="col" className="text-left py-2 pr-3 font-medium">Variety / Size</th>
                     <th scope="col" className="text-right py-2 pr-3 font-medium">Old Price</th>
@@ -671,8 +671,8 @@ export default function ProductFormPage() {
         {/* ── BASIC INFO ─────────────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-admin-200 shadow-admin p-5">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 bg-brand-50 rounded-lg flex items-center justify-center">
-              <Package size={14} className="text-brand-600" />
+            <div className="w-7 h-7 bg-shell-50 rounded-lg flex items-center justify-center">
+              <Package size={14} className="text-shell-600" />
             </div>
             <h2 className="font-admin font-bold text-admin-900">Basic Information</h2>
           </div>
@@ -748,7 +748,7 @@ export default function ProductFormPage() {
               </div>
               <div>
                 <h2 className="font-admin font-bold text-admin-900">Varieties & Packaging</h2>
-                <p className="text-admin-400 text-xs font-admin mt-0.5">
+                <p className="text-admin-500 text-xs font-admin mt-0.5">
                   {form.varieties.length} variet{form.varieties.length !== 1 ? 'ies' : 'y'}
                 </p>
               </div>
@@ -779,7 +779,7 @@ export default function ProductFormPage() {
           <button type="button"
             onClick={() => setForm(f => ({ ...f, varieties: [...f.varieties, emptyVariety()] }))}
             className="mt-3 w-full py-3 border-2 border-dashed border-admin-200 rounded-xl
-              text-sm font-admin text-admin-400 hover:border-brand-300 hover:text-brand-600
+              text-sm font-admin text-admin-500 hover:border-brand-300 hover:text-brand-600
               hover:bg-brand-50 transition-all flex items-center justify-center gap-2">
             <Plus size={15} /> Add Another Variety
           </button>

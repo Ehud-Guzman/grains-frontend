@@ -73,7 +73,7 @@ export default function BroadcastPage() {
               </button>
             ))}
           </div>
-          <p className="text-xs font-admin text-admin-400 mt-2 flex items-center gap-1.5">
+          <p className="text-xs font-admin text-admin-500 mt-2 flex items-center gap-1.5">
             <Users size={12} />
             {countLoading ? 'Counting recipients…' : count === null ? 'Could not load recipient count' : `${count} recipient${count !== 1 ? 's' : ''}`}
           </p>
@@ -90,7 +90,7 @@ export default function BroadcastPage() {
               text-admin-800 placeholder-admin-400 focus:outline-none focus:ring-2
               focus:ring-brand-400 focus:border-transparent bg-white resize-none" />
           <div className="flex items-center justify-between mt-1.5">
-            <p className="text-xs font-admin text-admin-400">
+            <p className="text-xs font-admin text-admin-500">
               {message.length} / {MAX_LENGTH} characters · {segments} SMS segment{segments !== 1 ? 's' : ''}
             </p>
           </div>

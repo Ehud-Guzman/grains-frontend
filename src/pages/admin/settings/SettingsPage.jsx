@@ -42,7 +42,7 @@ const Section = ({ id, icon: Icon, title, desc, children, accent }) => (
       </div>
       <div>
         <h2 className="font-admin font-semibold text-admin-900 text-base leading-tight">{title}</h2>
-        {desc && <p className="text-admin-400 text-xs mt-0.5">{desc}</p>}
+        {desc && <p className="text-admin-500 text-xs mt-0.5">{desc}</p>}
       </div>
     </div>
     <div className="p-6 space-y-5">{children}</div>
@@ -50,7 +50,7 @@ const Section = ({ id, icon: Icon, title, desc, children, accent }) => (
 )
 
 const SubHeading = ({ children }) => (
-  <p className="text-xs font-admin font-bold text-admin-400 uppercase tracking-widest pt-1">
+  <p className="text-xs font-admin font-bold text-admin-500 uppercase tracking-widest pt-1">
     {children}
   </p>
 )
@@ -63,7 +63,7 @@ const Field = ({ label, hint, children }) => (
       {label}
     </label>
     {children}
-    {hint && <p className="text-admin-400 text-xs mt-1">{hint}</p>}
+    {hint && <p className="text-admin-500 text-xs mt-1">{hint}</p>}
   </div>
 )
 
@@ -104,7 +104,7 @@ const Toggle = ({ label, desc, checked, onChange, disabled, danger }) => (
       <p className={`text-sm font-admin font-medium leading-snug ${
         danger ? 'text-red-800' : 'text-admin-800'
       }`}>{label}</p>
-      {desc && <p className="text-admin-400 text-xs mt-0.5 leading-relaxed">{desc}</p>}
+      {desc && <p className="text-admin-500 text-xs mt-0.5 leading-relaxed">{desc}</p>}
     </div>
   </label>
 )
@@ -127,7 +127,7 @@ function BranchSelector({ branches, selectedId, onChange }) {
         <span className="flex-1 text-left truncate">
           {selected ? selected.name : 'Select branch'}
         </span>
-        <ChevronDown size={13} className={`text-admin-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={13} className={`text-admin-500 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -183,7 +183,7 @@ function SettingsNav({ active, isSuperAdmin, dirty }) {
                   : 'text-admin-500 hover:bg-admin-50 hover:text-admin-800'
               }`}
           >
-            <Icon size={15} className={isActive ? 'text-brand-500' : 'text-admin-400 group-hover:text-admin-600'} />
+            <Icon size={15} className={isActive ? 'text-brand-500' : 'text-admin-500 group-hover:text-admin-600'} />
             <span className="flex-1 truncate">{label}</span>
             {isActive && (
               <div className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
@@ -311,12 +311,12 @@ export default function SettingsPage() {
         <div>
           <div className="mb-3"><OnboardingReturnLink /></div>
           <h1 className="text-2xl font-admin font-bold text-admin-900 tracking-tight">Settings</h1>
-          <p className="text-admin-400 text-sm mt-0.5">Manage shop configuration and preferences</p>
+          <p className="text-admin-500 text-sm mt-0.5">Manage shop configuration and preferences</p>
         </div>
 
         {isSuperAdmin && branches.length > 0 && (
           <div className="flex flex-col items-end gap-1.5">
-            <p className="text-xs font-admin font-semibold text-admin-400 uppercase tracking-wide">
+            <p className="text-xs font-admin font-semibold text-admin-500 uppercase tracking-wide">
               Editing Branch
             </p>
             <BranchSelector
@@ -345,7 +345,7 @@ export default function SettingsPage() {
         {/* ── LEFT NAV (desktop only) ───────────────────────────────────── */}
         <aside className="hidden lg:block w-44 flex-shrink-0 sticky top-6">
           <div className="bg-white border border-admin-200 rounded-xl shadow-admin p-2">
-            <p className="text-[10px] font-admin font-bold text-admin-400 uppercase tracking-widest px-3 pt-2 pb-1.5">
+            <p className="text-[10px] font-admin font-bold text-admin-500 uppercase tracking-widest px-3 pt-2 pb-1.5">
               Sections
             </p>
             <SettingsNav active={activeSection} isSuperAdmin={isSuperAdmin} dirty={dirty} />
@@ -507,7 +507,7 @@ export default function SettingsPage() {
                       value={form.vatRate}
                       onChange={e => set('vatRate', Number(e.target.value))}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-500
                       text-sm font-admin font-semibold pointer-events-none">%</span>
                   </div>
                 </Field>
@@ -654,7 +654,7 @@ export default function SettingsPage() {
                     <p className={`text-sm font-admin font-semibold ${
                       form.deliveryPricingMode === opt.value ? 'text-brand-800' : 'text-admin-800'
                     }`}>{opt.label}</p>
-                    <p className="text-xs font-admin text-admin-400 mt-0.5">{opt.desc}</p>
+                    <p className="text-xs font-admin text-admin-500 mt-0.5">{opt.desc}</p>
                   </button>
                 ))}
               </div>
@@ -766,7 +766,7 @@ export default function SettingsPage() {
                     {(form.deliveryZones || []).length > 0 && (
                       <div className="grid grid-cols-[1fr_80px_80px_90px_32px] gap-2 px-1">
                         {['Label', 'From km', 'To km', 'Fee (KES)', ''].map(h => (
-                          <p key={h} className="text-[10px] font-admin font-bold text-admin-400 uppercase tracking-wide">{h}</p>
+                          <p key={h} className="text-[10px] font-admin font-bold text-admin-500 uppercase tracking-wide">{h}</p>
                         ))}
                       </div>
                     )}
@@ -832,12 +832,12 @@ export default function SettingsPage() {
                     ))}
 
                     {(form.deliveryZones || []).length === 0 && (
-                      <p className="text-xs font-admin text-admin-400 text-center py-4 bg-admin-50 rounded-lg">
+                      <p className="text-xs font-admin text-admin-500 text-center py-4 bg-admin-50 rounded-lg">
                         No bands configured. Add one to get started.
                       </p>
                     )}
 
-                    <p className="text-xs font-admin text-admin-400 leading-relaxed">
+                    <p className="text-xs font-admin text-admin-500 leading-relaxed">
                       Example: 0–5 km = KES 100 · 5–15 km = KES 250 · 15–∞ km = KES 400.
                       Leave "To km" blank for unlimited.
                     </p>

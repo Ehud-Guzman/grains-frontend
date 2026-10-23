@@ -40,7 +40,7 @@ function ImportResultModal({ result, onClose }) {
             <CheckCircle size={18} className="text-green-500" />
             <h3 className="font-admin font-bold text-admin-900">Import Complete</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -93,7 +93,7 @@ function ImportPreviewModal({ result, importing, onConfirm, onClose }) {
             <FileSpreadsheet size={18} className="text-brand-600" />
             <h3 className="font-admin font-bold text-admin-900">Import Preview</h3>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -135,7 +135,7 @@ function ImportPreviewModal({ result, importing, onConfirm, onClose }) {
                   <div key={`${item.branch}-${item.productName}-${index}`} className="px-4 py-3 flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-admin font-semibold text-admin-800">{item.productName}</p>
-                      <p className="text-xs text-admin-400 font-admin mt-0.5">
+                      <p className="text-xs text-admin-500 font-admin mt-0.5">
                         {item.branch} · {item.varieties} variet{item.varieties === 1 ? 'y' : 'ies'} · {item.packagingCount} package row{item.packagingCount === 1 ? '' : 's'}
                       </p>
                     </div>
@@ -272,15 +272,15 @@ function BulkPanel({ onImportDone }) {
       <button onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-admin-50 transition-colors">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-brand-50 rounded-lg flex items-center justify-center">
-            <FileSpreadsheet size={14} className="text-brand-600" />
+          <div className="w-7 h-7 bg-shell-50 rounded-lg flex items-center justify-center">
+            <FileSpreadsheet size={14} className="text-shell-600" />
           </div>
           <div className="text-left">
             <p className="font-admin font-semibold text-admin-800 text-sm">Bulk Import / Export</p>
-            <p className="text-xs text-admin-400 font-admin">Add or update products via Excel</p>
+            <p className="text-xs text-admin-500 font-admin">Add or update products via Excel</p>
           </div>
         </div>
-        {open ? <ChevronUp size={16} className="text-admin-400" /> : <ChevronDown size={16} className="text-admin-400" />}
+        {open ? <ChevronUp size={16} className="text-admin-500" /> : <ChevronDown size={16} className="text-admin-500" />}
       </button>
 
       {open && (
@@ -292,7 +292,7 @@ function BulkPanel({ onImportDone }) {
                 <Download size={15} className="text-blue-600" />
                 <p className="font-admin font-semibold text-admin-800 text-sm">Export Products</p>
               </div>
-              <p className="text-admin-400 text-xs font-admin mb-3 leading-relaxed">
+              <p className="text-admin-500 text-xs font-admin mb-3 leading-relaxed">
                 Download all products as Excel. Edit prices or stock then re-import.
               </p>
               <button onClick={handleExport} disabled={exporting}
@@ -309,7 +309,7 @@ function BulkPanel({ onImportDone }) {
                 <FileSpreadsheet size={15} className="text-green-600" />
                 <p className="font-admin font-semibold text-admin-800 text-sm">Get Template</p>
               </div>
-              <p className="text-admin-400 text-xs font-admin mb-3 leading-relaxed">
+              <p className="text-admin-500 text-xs font-admin mb-3 leading-relaxed">
                 Blank Excel template with correct column format and sample data.
               </p>
               <button onClick={handleTemplate}
@@ -326,7 +326,7 @@ function BulkPanel({ onImportDone }) {
                 <Upload size={15} className="text-brand-600" />
                 <p className="font-admin font-semibold text-admin-800 text-sm">Import Products</p>
               </div>
-              <p className="text-admin-400 text-xs font-admin mb-3 leading-relaxed">
+              <p className="text-admin-500 text-xs font-admin mb-3 leading-relaxed">
                 Upload a filled Excel file. Existing products update, new ones are created.
               </p>
               <label className={`w-full py-2 rounded-lg text-xs font-admin font-semibold transition-colors
@@ -441,10 +441,10 @@ export default function ProductListPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Products</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">
+          <p className="text-admin-500 text-xs font-admin mt-0.5">
             {products.length} product{products.length !== 1 ? 's' : ''}
             {activeCount > 0 && <span className="ml-2 text-green-600 font-semibold">{activeCount} active</span>}
-            {inactiveCount > 0 && <span className="ml-1.5 text-admin-400">{inactiveCount} draft</span>}
+            {inactiveCount > 0 && <span className="ml-1.5 text-admin-500">{inactiveCount} draft</span>}
           </p>
         </div>
         {!isSuperAdmin && (
@@ -471,7 +471,7 @@ export default function ProductListPage() {
             <button key={f.value} onClick={() => setStatusFilter(f.value)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-admin font-semibold border transition-all ${
                 statusFilter === f.value
-                  ? 'bg-admin-900 text-orange-500 border-admin-900 shadow-sm'
+                  ? 'bg-shell-800 text-white border-shell-800 shadow-sm'
                   : 'bg-white text-admin-500 border-admin-200 hover:border-admin-400 hover:text-admin-700'
               }`}>
               {f.label}
@@ -483,7 +483,7 @@ export default function ProductListPage() {
               className={`px-3.5 py-1.5 rounded-full text-xs font-admin font-semibold border transition-all ${
                 categoryFilter === cat
                   ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                  : 'bg-white text-admin-400 border-admin-200 hover:border-brand-300 hover:text-brand-600'
+                  : 'bg-white text-admin-500 border-admin-200 hover:border-brand-300 hover:text-brand-600'
               }`}>
               {cat}
             </button>
@@ -530,7 +530,7 @@ export default function ProductListPage() {
                   <td colSpan={5} className="px-5 py-16 text-center">
                     <Package size={28} className="text-admin-300 mx-auto mb-3" />
                     <p className="text-admin-500 font-admin font-medium mb-1">No products found</p>
-                    <p className="text-admin-400 text-xs mb-4">
+                    <p className="text-admin-500 text-xs mb-4">
                       {search || categoryFilter || statusFilter ? 'Try adjusting your filters' : 'Add your first product to get started'}
                     </p>
                     {!search && !categoryFilter && !statusFilter && (
@@ -559,7 +559,7 @@ export default function ProductListPage() {
                           </div>
                           <div>
                             <p className="font-admin font-semibold text-admin-800">{product.name}</p>
-                            <p className="text-admin-400 text-xs sm:hidden mt-0.5">{product.category}</p>
+                            <p className="text-admin-500 text-xs sm:hidden mt-0.5">{product.category}</p>
                           </div>
                         </div>
                       </td>
@@ -611,12 +611,12 @@ export default function ProductListPage() {
                         {!isSuperAdmin && (
                           <div className="flex items-center gap-0.5">
                             <Link to={`/admin/products/${product._id}/edit`}
-                              className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700
+                              className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-700
                                 transition-colors" title="Edit">
                               <Edit size={15} />
                             </Link>
                             <button onClick={() => handleDuplicate(product._id)}
-                              className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-blue-600
+                              className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-blue-600
                                 transition-colors" title="Duplicate">
                               <Copy size={15} />
                             </button>
@@ -635,7 +635,7 @@ export default function ProductListPage() {
                               </div>
                             ) : (
                               <button onClick={() => setConfirmDelete(product._id)}
-                                className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600
+                                className="p-1.5 rounded-lg hover:bg-red-50 text-admin-500 hover:text-red-600
                                   transition-colors opacity-0 group-hover:opacity-100" title="Delete">
                                 <Trash2 size={15} />
                               </button>
@@ -653,7 +653,7 @@ export default function ProductListPage() {
 
         {!loading && products.length > 0 && (
           <div className="px-5 py-3 border-t border-admin-100 bg-admin-50/40">
-            <p className="text-xs font-admin text-admin-400">
+            <p className="text-xs font-admin text-admin-500">
               {products.length} product{products.length !== 1 ? 's' : ''} shown
               {(search || categoryFilter || statusFilter) && ' — filtered'}
             </p>

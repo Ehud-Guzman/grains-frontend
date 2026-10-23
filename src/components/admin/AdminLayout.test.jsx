@@ -201,6 +201,46 @@ describe('AdminLayout — mobile drawer', () => {
   })
 })
 
+describe('AdminLayout — search palette', () => {
+  it('opens from the top bar, filters pages by what you type, and navigates on Enter', async () => {
+    mocks.user = { id: 'u1', name: 'Sup', role: 'supervisor' }   // Intake is a supervisor+ page
+    renderAt()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Search pages and orders' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Search pages and orders' })
+    expect(within(dialog).getByRole('option', { name: /orders/i })).toBeInTheDocument()
+    await user.keyboard('inta')
+    const options = within(dialog).getAllByRole('option')
+    expect(options[0]).toHaveTextContent('Intake')          // pages first…
+    expect(options[options.length - 1]).toHaveTextContent('Search orders for “inta”') // …then the order search
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search pages and orders' })).not.toBeInTheDocument())
+    expect(screen.getByText('intake page')).toBeInTheDocument()
+  })
+
+  it('opens with Ctrl+K, never offers a page the role cannot open, and closes on Escape', async () => {
+    renderAt()
+    const user = userEvent.setup()
+    await user.keyboard('{Control>}k{/Control}')
+    const dialog = await screen.findByRole('dialog', { name: 'Search pages and orders' })
+    expect(within(dialog).queryByRole('option', { name: /products/i })).not.toBeInTheDocument() // staff: no catalogue
+    expect(within(dialog).queryByRole('option', { name: /settings/i })).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog', { name: 'Search pages and orders' })).not.toBeInTheDocument()
+  })
+
+  it('turns a reference into an order search, with the text safely encoded', async () => {
+    renderAt()
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Search pages and orders' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Search pages and orders' }) // the palette is a lazy chunk
+    await user.keyboard('NAI-2026-0140 & co{ArrowDown}')
+    const options = within(dialog).getAllByRole('option')
+    expect(options).toHaveLength(1)
+    expect(options[0]).toHaveTextContent('Search orders for “NAI-2026-0140 & co”')
+  })
+})
+
 describe('AdminLayout — help assistant', () => {
   it('opens the help assistant from the top bar and closes it again', async () => {
     renderAt()

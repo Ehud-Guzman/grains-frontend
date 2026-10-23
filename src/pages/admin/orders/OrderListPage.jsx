@@ -275,7 +275,7 @@ export default function OrderListPage() {
           </div>
           <h1 className="text-xl sm:text-2xl font-admin font-bold text-admin-900">Orders</h1>
           <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-admin-400 text-xs font-admin">
+            <p className="text-admin-500 text-xs font-admin">
               {pagination.total} total
             </p>
             {pendingTotal > 0 && (
@@ -314,7 +314,7 @@ export default function OrderListPage() {
       {/* ── Search ──────────────────────────────────────────────────── */}
       <div className="relative mb-4">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2
-          text-admin-400 pointer-events-none" />
+          text-admin-500 pointer-events-none" />
         <input
           type="text"
           placeholder="Search order ref, name or phone…"
@@ -327,7 +327,7 @@ export default function OrderListPage() {
         {searchInput && (
           <button onClick={() => setSearchInput('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full
-              hover:bg-admin-100 text-admin-400 transition-colors">
+              hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={13} />
           </button>
         )}
@@ -340,7 +340,7 @@ export default function OrderListPage() {
             className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-admin
               font-semibold transition-all border ${
                 statusFilter === f.value
-                  ? 'bg-admin-900 text-orange-500 border-admin-900 shadow-sm'
+                  ? 'bg-shell-800 text-white border-shell-800 shadow-sm'
                   : 'bg-white text-admin-500 border-admin-200 hover:border-admin-400 hover:text-admin-700'
               }`}>
             {f.label}
@@ -372,7 +372,7 @@ export default function OrderListPage() {
             className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-admin
               font-semibold transition-all border ${
                 paymentFilter === f.value
-                  ? 'bg-admin-900 text-orange-500 border-admin-900 shadow-sm'
+                  ? 'bg-shell-800 text-white border-shell-800 shadow-sm'
                   : 'bg-white text-admin-500 border-admin-200 hover:border-admin-400 hover:text-admin-700'
               }`}>
             {f.label}
@@ -382,7 +382,7 @@ export default function OrderListPage() {
 
       {/* ── Bulk action bar ─────────────────────────────────────────── */}
       {!isSuperAdmin && selected.length > 0 && (
-        <div className="bg-admin-900 rounded-xl px-4 py-3 mb-4 flex items-center
+        <div className="bg-shell-800 rounded-xl px-4 py-3 mb-4 flex items-center
           gap-3 flex-wrap shadow-sm">
           <span className="text-white text-sm font-admin font-semibold">
             {selected.length} selected
@@ -474,12 +474,12 @@ export default function OrderListPage() {
                     {customerName}
                   </p>
                   {customerPhone && (
-                    <p className="text-admin-400 text-xs font-admin mt-0.5">{customerPhone}</p>
+                    <p className="text-admin-500 text-xs font-admin mt-0.5">{customerPhone}</p>
                   )}
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-2">
                       <PaymentBadge status={order.paymentStatus} />
-                      <span className="text-admin-400 text-xs font-admin">
+                      <span className="text-admin-500 text-xs font-admin">
                         {timeAgo(order.createdAt)}
                       </span>
                     </div>
@@ -554,7 +554,7 @@ export default function OrderListPage() {
                   <td colSpan={8} className="px-4 py-16 text-center">
                     <Package size={28} className="text-admin-300 mx-auto mb-2" />
                     <p className="text-admin-500 font-admin font-medium">No orders found</p>
-                    <p className="text-admin-400 text-xs mt-1">
+                    <p className="text-admin-500 text-xs mt-1">
                       {hasFilters ? 'Try adjusting your filters' : 'Orders will appear here when customers place them'}
                     </p>
                     {hasFilters && (
@@ -590,7 +590,7 @@ export default function OrderListPage() {
                         <p className="font-admin font-bold text-admin-800 tracking-wide">
                           {order.orderRef}
                         </p>
-                        <p className="text-admin-400 text-xs mt-0.5">
+                        <p className="text-admin-500 text-xs mt-0.5">
                           {order.orderItems?.length || 0} item{order.orderItems?.length !== 1 ? 's' : ''}
                         </p>
                       </td>
@@ -598,7 +598,7 @@ export default function OrderListPage() {
                       <td className="px-4 py-3.5">
                         <p className="text-admin-700 font-admin font-medium">{customerName}</p>
                         {customerPhone && (
-                          <p className="text-admin-400 text-xs mt-0.5">{customerPhone}</p>
+                          <p className="text-admin-500 text-xs mt-0.5">{customerPhone}</p>
                         )}
                       </td>
 
@@ -617,7 +617,7 @@ export default function OrderListPage() {
                       </td>
 
                       <td className="px-4 py-3.5 hidden xl:table-cell">
-                        <span className="text-admin-400 text-xs font-admin">
+                        <span className="text-admin-500 text-xs font-admin">
                           {timeAgo(order.createdAt)}
                         </span>
                       </td>
@@ -641,7 +641,7 @@ export default function OrderListPage() {
         {!loading && orders.length > 0 && (
           <div className="px-4 py-3 border-t border-admin-100 flex items-center
             justify-between bg-admin-50/40">
-            <p className="text-xs font-admin text-admin-400 hidden sm:block">
+            <p className="text-xs font-admin text-admin-500 hidden sm:block">
               {((page - 1) * 20) + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total}
             </p>
             {pagination.pages > 1 && (
@@ -685,7 +685,7 @@ export default function OrderListPage() {
                 <h3 className="font-admin font-bold text-admin-900">
                   Reject {selected.length} Order{selected.length !== 1 ? 's' : ''}
                 </h3>
-                <p className="text-admin-400 text-xs mt-0.5">
+                <p className="text-admin-500 text-xs mt-0.5">
                   Customers will be notified with this reason
                 </p>
               </div>

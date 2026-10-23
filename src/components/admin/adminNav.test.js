@@ -26,6 +26,15 @@ describe('navGroupsFor', () => {
     expect(labels({ role: 'supervisor', customPermissions: ['manage_etims'] })).toContain('KRA eTIMS')
   })
 
+  it('puts coupons, promotions and broadcasts under Marketing', () => {
+    const groups = navGroupsFor({ role: 'admin' })
+    const marketing = groups.find(g => g.group === 'Marketing')
+    expect(marketing.items.map(i => i.label)).toEqual(['Coupons', 'Promotions', 'Broadcast'])
+    // a supervisor only gets the part they can use
+    const sup = navGroupsFor({ role: 'supervisor' }).find(g => g.group === 'Marketing')
+    expect(sup.items.map(i => i.label)).toEqual(['Coupons'])
+  })
+
   it('drops groups that end up empty', () => {
     const groups = navGroupsFor({ role: 'staff' })
     expect(groups.map(g => g.group)).toEqual(['Operations'])

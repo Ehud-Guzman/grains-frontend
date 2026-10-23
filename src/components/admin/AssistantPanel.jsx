@@ -24,7 +24,7 @@ export default function AssistantPanel({ userRole, onClose }) {
       <div className="flex items-center justify-between gap-3 px-4 py-3.5 border-b border-admin-100 flex-shrink-0">
         <div className="min-w-0">
           <h2 id={TITLE_ID} className="text-base font-admin font-bold text-admin-900">Help assistant</h2>
-          <p className="text-xs font-admin text-admin-400">Ask what the system can do. Answers match your role.</p>
+          <p className="text-xs font-admin text-admin-500">Ask what the system can do. Answers match your role.</p>
         </div>
         <button type="button" onClick={onClose} aria-label="Close help assistant"
           className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-admin-500

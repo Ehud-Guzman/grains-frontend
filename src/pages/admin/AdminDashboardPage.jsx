@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ShoppingCart, TrendingUp, AlertTriangle, Clock, ChevronRight, RefreshCw, CheckCircle,
-  ArrowUpRight, Banknote, Hourglass, Plus, PackageSearch,
+  ArrowUpRight, ArrowUp, ArrowDown, Banknote, Hourglass, Plus, PackageSearch,
 } from 'lucide-react'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { useAuth } from '../../context/AuthContext'
@@ -20,8 +20,9 @@ import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import { startVisiblePolling } from '../../utils/visiblePolling'
 
-// Chart ink = tailwind `shell-600`; recharts wants literals.
+// Chart inks = tailwind `shell-600` (revenue) and `brand-300` (orders); recharts wants literals.
 const CHART_INK = '#2E6649'
+const CHART_ORDERS = '#ECAD7A'
 const CHART_TICK = { fontSize: 11, fill: '#6B7280', fontFamily: 'Outfit' }
 
 function StatusBadge({ status, deliveryMethod }) {
@@ -68,7 +69,33 @@ const TILE_TONES = {
   red:   'bg-red-50 text-red-600',
 }
 
-function StatTile({ icon: Icon, label, value, sub, tone = 'calm', link }) {
+// "vs the same time yesterday". Renders nothing when the API did not send a comparison
+// (an older backend) so the tile just reads as before.
+function Delta({ now, before }) {
+  if (typeof before !== 'number') return null
+  if (before === 0) {
+    return now > 0
+      ? <p className="text-shell-700 text-xs font-admin font-semibold mt-1.5">Nothing yet at this time yesterday</p>
+      : null
+  }
+  // Math.round(-37.5) is -37 but Math.round(37.5) is 38; round the size and keep the sign so a
+  // fall and a rise of the same size read the same.
+  const change = ((now - before) / before) * 100
+  const pct = Math.sign(change) * Math.round(Math.abs(change))
+  if (pct === 0) return <p className="text-admin-500 text-xs font-admin font-medium mt-1.5">Same as this time yesterday</p>
+  const up = pct > 0
+  const Arrow = up ? ArrowUp : ArrowDown
+  return (
+    <p className={`flex items-center gap-1 text-xs font-admin font-semibold mt-1.5 ${up ? 'text-shell-700' : 'text-red-600'}`}>
+      <Arrow size={12} aria-hidden="true" />
+      <span>{Math.abs(pct)}%</span>
+      <span className="sr-only">{up ? 'up' : 'down'} {Math.abs(pct)}% compared with this time yesterday</span>
+      <span aria-hidden="true" className="text-admin-500 font-medium">vs yesterday</span>
+    </p>
+  )
+}
+
+function StatTile({ icon: Icon, label, value, sub, delta, tone = 'calm', link }) {
   const inner = (
     <div className={`h-full p-5 bg-white transition-colors ${link ? 'hover:bg-admin-50' : ''}`}>
       <div className="flex items-center justify-between mb-3">
@@ -80,6 +107,7 @@ function StatTile({ icon: Icon, label, value, sub, tone = 'calm', link }) {
       <p className="font-admin font-bold text-admin-900 text-2xl leading-tight tracking-tight break-words">{value}</p>
       <p className="text-admin-600 text-[13px] font-admin font-medium mt-1">{label}</p>
       {sub && <p className="text-admin-500 text-xs font-admin mt-0.5">{sub}</p>}
+      {delta}
     </div>
   )
   return link ? <Link to={link} className="block">{inner}</Link> : inner
@@ -220,9 +248,9 @@ function BusinessDashboardPage() {
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
   const [revenueData, setRevenueData]     = useState([])
   const [revPeriod, setRevPeriod]         = useState('month')
-  const [revLoading, setRevLoading]       = useState(true)
+  const [revLoading, setRevLoading]       = useState(canSeeKpis)
   const [trending, setTrending]           = useState([])
-  const [trendingLoading, setTrendingLoading] = useState(true)
+  const [trendingLoading, setTrendingLoading] = useState(canSeeKpis)
   const adminChecklist = getChecklist('admin').filter(item => {
     if (item.id === 'reports') return ['supervisor', 'admin'].includes(user?.role)
     if (item.id === 'settings') return user?.role === 'admin'
@@ -230,67 +258,67 @@ function BusinessDashboardPage() {
   })
   const showAdminChecklist = adminChecklist.length > 0 && adminChecklist.some(item => !item.done)
 
-  const fetchData = async (silent = false) => {
-    if (!silent) setLoading(true)
-    else setRefreshing(true)
-    try {
-      setError('')
-      if (canSeeKpis) {
-        const [kpiRes, stockRes] = await Promise.all([
-          adminReportService.getKPIs(),
-          adminStockService.getLowStock()
-        ])
-        setKpis(kpiRes.data.data)
-        setLowStock(stockRes.data.data?.slice(0, 8) || [])
-      } else {
-        // Staff: the order queue only.
-        const [recentRes, pendingRes] = await Promise.all([
+  // Every setState below happens after an await (or in an event handler), never synchronously
+  // inside an effect: the page starts in its loading state, so the first load has nothing to
+  // switch on, and a manual refresh switches `refreshing` on in the click handler.
+  const loadData = useCallback(() => {
+    const request = canSeeKpis
+      ? Promise.all([adminReportService.getKPIs(), adminStockService.getLowStock()])
+          .then(([kpiRes, stockRes]) => {
+            setKpis(kpiRes.data.data)
+            setLowStock(stockRes.data.data?.slice(0, 8) || [])
+          })
+      // Staff: the order queue only.
+      : Promise.all([
           adminOrderService.getAll({ limit: 10 }),
           adminOrderService.getAll({ status: 'pending', limit: 1 }),
-        ])
-        setKpis({
-          recentOrders: recentRes.data?.data || [],
-          pendingOrders: pendingRes.data?.pagination?.total || 0,
+        ]).then(([recentRes, pendingRes]) => {
+          setKpis({
+            recentOrders: recentRes.data?.data || [],
+            pendingOrders: pendingRes.data?.pagination?.total || 0,
+          })
         })
-      }
-      setLastRefreshed(new Date())
-    } catch {
-      setError('Could not load dashboard metrics right now. Try refreshing.')
-    }
-    finally { setLoading(false); setRefreshing(false) }
-  }
+    return request
+      .then(() => { setError(''); setLastRefreshed(new Date()) })
+      .catch(() => { setError('Could not load dashboard metrics right now. Try refreshing.') })
+      .finally(() => { setLoading(false); setRefreshing(false) })
+  }, [canSeeKpis])
 
-  const fetchRevenue = async (period) => {
-    setRevLoading(true)
-    try {
-      const res = await adminReportService.getSales({ period })
-      const raw = res.data?.data?.byDay || []
-      setRevenueData(raw.map(d => ({
-        date:    new Date(d.date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }),
-        revenue: Math.round(d.revenue),
-        orders:  d.orders,
-      })))
-    } catch { setRevenueData([]) }
-    finally { setRevLoading(false) }
-  }
+  const refresh = () => { setRefreshing(true); loadData() }
 
-  useEffect(() => {
-    fetchData()
-    return startVisiblePolling(() => fetchData(true), 60000)
-  }, [])
+  const loadRevenue = useCallback((period) => (
+    adminReportService.getSales({ period })
+      .then(res => {
+        const raw = res.data?.data?.byDay || []
+        setRevenueData(raw.map(d => ({
+          date:    new Date(d.date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }),
+          revenue: Math.round(d.revenue),
+          orders:  d.orders,
+        })))
+      })
+      .catch(() => { setRevenueData([]) })
+      .finally(() => { setRevLoading(false) })
+  ), [])
 
-  useEffect(() => { if (canSeeKpis) fetchRevenue(revPeriod) }, [revPeriod, canSeeKpis])
+  const pickPeriod = (period) => { setRevLoading(true); setRevPeriod(period) }
 
   useEffect(() => {
-    if (!canSeeKpis) { setTrendingLoading(false); return }
-    setTrendingLoading(true)
+    loadData()
+    return startVisiblePolling(() => { setRefreshing(true); loadData() }, 60000)
+  }, [loadData])
+
+  useEffect(() => { if (canSeeKpis) loadRevenue(revPeriod) }, [revPeriod, canSeeKpis, loadRevenue])
+
+  useEffect(() => {
+    if (!canSeeKpis) return
     adminReportService.getBestSellers({ period: 'week', limit: 5 })
       .then(res => setTrending(res.data?.data?.products || []))
       .catch(() => setTrending([]))
       .finally(() => setTrendingLoading(false))
-  }, [])
+  }, [canSeeKpis])
 
   const periodTotal = revenueData.reduce((n, d) => n + d.revenue, 0)
+  const periodOrders = revenueData.reduce((n, d) => n + (d.orders || 0), 0)
   const topSold = Math.max(1, ...trending.map(p => p.unitsSold || 0))
 
   return (
@@ -302,10 +330,16 @@ function BusinessDashboardPage() {
           <h1 className="text-2xl font-admin font-bold text-admin-900 tracking-tight">
             {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}
           </h1>
-          <p className="text-admin-500 text-[13px] font-admin mt-0.5">
-            {new Date().toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            <span className="mx-1.5 text-admin-300">·</span>
-            Updated {timeAgo(lastRefreshed)}
+          <p className="flex flex-wrap items-center gap-x-1.5 text-admin-500 text-[13px] font-admin mt-0.5">
+            <span>{new Date().toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span aria-hidden="true" className="text-admin-300">·</span>
+            <span className="inline-flex items-center gap-1.5" title="Refreshes by itself every minute while this tab is open">
+              <span aria-hidden="true" className="relative flex w-2 h-2">
+                {refreshing && <span className="absolute inline-flex h-full w-full rounded-full bg-shell-400 opacity-70 animate-ping" />}
+                <span className="relative inline-flex w-2 h-2 rounded-full bg-shell-500" />
+              </span>
+              Live · updated {timeAgo(lastRefreshed)}
+            </span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -323,7 +357,7 @@ function BusinessDashboardPage() {
               <Plus size={14} aria-hidden="true" /> Add product
             </Link>
           )}
-          <button type="button" onClick={() => fetchData(true)} disabled={refreshing} aria-label="Refresh dashboard"
+          <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh dashboard"
             className="flex items-center gap-2 px-3.5 py-2 min-h-[40px] bg-white border border-admin-200 rounded-xl
               text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden="true" />
@@ -365,12 +399,14 @@ function BusinessDashboardPage() {
           <>
             <StatTile icon={ShoppingCart} label="Orders Today"
               value={kpis?.ordersToday ?? 0} sub="Placed since midnight"
+              delta={<Delta now={kpis?.ordersToday ?? 0} before={kpis?.comparison?.ordersYesterday} />}
               link="/admin/orders" />
             <StatTile icon={Clock} label="Pending" tone={kpis?.pendingOrders > 0 ? 'amber' : 'calm'}
               value={kpis?.pendingOrders ?? 0} sub="Waiting for approval"
               link="/admin/orders?status=pending" />
             <StatTile icon={Banknote} label="Revenue Today (gross)"
-              value={formatKES(kpis?.revenueToday ?? 0)} sub="Before payment confirmation" />
+              value={formatKES(kpis?.revenueToday ?? 0)} sub="Before payment confirmation"
+              delta={<Delta now={kpis?.revenueToday ?? 0} before={kpis?.comparison?.revenueYesterday} />} />
             <StatTile icon={AlertTriangle} label="Low Stock Items" tone={kpis?.lowStockCount > 0 ? 'red' : 'calm'}
               value={kpis?.lowStockCount ?? 0} sub={kpis?.lowStockCount > 0 ? 'Needs restocking' : 'All stocked'}
               link="/admin/stock" />
@@ -385,12 +421,12 @@ function BusinessDashboardPage() {
             title="Revenue Trend"
             subtitle={revLoading || revenueData.length === 0
               ? 'Approved + completed orders'
-              : `${formatKES(periodTotal)} · approved + completed orders`}
+              : `${formatKES(periodTotal)} from ${periodOrders} order${periodOrders === 1 ? '' : 's'}`}
             action={
               <div className="flex items-center gap-0.5 bg-admin-100 rounded-lg p-0.5">
                 {[['week', '7D'], ['month', '30D']].map(([val, label]) => (
                   <button key={val} type="button" aria-pressed={revPeriod === val}
-                    onClick={() => setRevPeriod(val)}
+                    onClick={() => pickPeriod(val)}
                     className={`px-3 py-1.5 rounded-md text-xs font-admin font-semibold transition-all ${
                       revPeriod === val
                         ? 'bg-white text-admin-900 shadow-sm'
@@ -417,8 +453,13 @@ function BusinessDashboardPage() {
                   </Link>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <>
+                <ul aria-label="Chart key" className="flex items-center gap-4 mb-2 text-xs font-admin text-admin-600">
+                  <li className="flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-0.5 rounded-full" style={{ backgroundColor: CHART_INK }} /> Revenue</li>
+                  <li className="flex items-center gap-1.5"><span aria-hidden="true" className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CHART_ORDERS }} /> Orders</li>
+                </ul>
+                <ResponsiveContainer width="100%" height={204}>
+                  <ComposedChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="dashRevGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%"  stopColor={CHART_INK} stopOpacity={0.22} />
@@ -432,6 +473,8 @@ function BusinessDashboardPage() {
                       tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : `${v}`}
                       axisLine={false} tickLine={false} width={36}
                     />
+                    {/* Orders ride a hidden second axis, scaled so the bars stay in the lower third */}
+                    <YAxis yAxisId="orders" orientation="right" hide domain={[0, (max) => Math.max(3, max * 3)]} />
                     <Tooltip
                       formatter={(v, name) => [
                         name === 'revenue' ? formatKES(v) : v,
@@ -443,6 +486,7 @@ function BusinessDashboardPage() {
                         boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                       }}
                     />
+                    <Bar yAxisId="orders" dataKey="orders" fill={CHART_ORDERS} fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={14} />
                     <Area
                       type="monotone"
                       dataKey="revenue"
@@ -452,8 +496,9 @@ function BusinessDashboardPage() {
                       activeDot={{ r: 5, fill: CHART_INK, stroke: '#fff', strokeWidth: 2 }}
                       fill="url(#dashRevGrad)"
                     />
-                  </AreaChart>
+                  </ComposedChart>
                 </ResponsiveContainer>
+                </>
               )}
             </div>
           </Panel>
@@ -595,7 +640,7 @@ function BusinessDashboardPage() {
                 <ol className="p-5 space-y-3.5">
                   {trending.map((p, i) => (
                     <li key={i} className="flex items-center gap-3">
-                      <span className="w-5 text-xs font-admin font-bold text-admin-400 tabular-nums">{i + 1}</span>
+                      <span className="w-5 text-xs font-admin font-bold text-admin-500 tabular-nums">{i + 1}</span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <p className="text-admin-800 text-[13px] font-admin font-semibold truncate">{p.productName}</p>

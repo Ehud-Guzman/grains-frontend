@@ -54,16 +54,16 @@ function Modal({ modal, onClose, onSave }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              {modal.type === 'create' ? <Truck size={15} className="text-brand-600" />
-               : modal.type === 'password' ? <Key size={15} className="text-brand-600" />
-               : modal.type === 'vehicle' ? <Car size={15} className="text-brand-600" />
-               : <ShoppingCart size={15} className="text-brand-600" />}
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              {modal.type === 'create' ? <Truck size={15} className="text-shell-600" />
+               : modal.type === 'password' ? <Key size={15} className="text-shell-600" />
+               : modal.type === 'vehicle' ? <Car size={15} className="text-shell-600" />
+               : <ShoppingCart size={15} className="text-shell-600" />}
             </div>
             <h3 className="font-admin font-bold text-admin-900 text-sm">{titles[modal.type]}</h3>
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-600 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-600 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -99,7 +99,7 @@ function Modal({ modal, onClose, onSave }) {
                         value={form.password || ''} onChange={e => set('password', e.target.value)}
                         className={fieldClass + ' pr-10'} />
                       <button type="button" onClick={() => setShowPass(s => !s)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400 hover:text-admin-600 p-0.5">
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-500 hover:text-admin-600 p-0.5">
                         {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
@@ -140,7 +140,7 @@ function Modal({ modal, onClose, onSave }) {
                       value={form.password || ''} onChange={e => set('password', e.target.value)}
                       className={fieldClass + ' pr-10'} autoFocus />
                     <button type="button" onClick={() => setShowPass(s => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400 hover:text-admin-600 p-0.5">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-500 hover:text-admin-600 p-0.5">
                       {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -216,12 +216,12 @@ function DriverOrdersList({ driverId }) {
   return (
     <div className="p-5 max-h-[60vh] overflow-y-auto space-y-2">
       {orders.length === 0
-        ? <p className="text-center text-sm font-admin text-admin-400 py-6">No orders yet</p>
+        ? <p className="text-center text-sm font-admin text-admin-500 py-6">No orders yet</p>
         : orders.map(o => (
           <div key={o._id} className="flex items-center justify-between p-3 rounded-xl border border-admin-100 bg-admin-50/40">
             <div>
               <p className="text-sm font-admin font-semibold text-admin-800">{o.orderRef}</p>
-              <p className="text-xs font-admin text-admin-400 mt-0.5">{o.deliveryAddress || 'No address'}</p>
+              <p className="text-xs font-admin text-admin-500 mt-0.5">{o.deliveryAddress || 'No address'}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className={`text-xs font-admin font-semibold px-2 py-0.5 rounded-full border capitalize
@@ -271,7 +271,7 @@ function DriverCard({ driver, onLock, onUnlock, onResetPassword, onViewOrders, o
             <div>
               <p className="font-admin font-bold text-admin-900 text-sm">{driver.name}</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <Phone size={11} className="text-admin-400" />
+                <Phone size={11} className="text-admin-500" />
                 <span className="text-xs font-admin text-admin-500">{driver.phone}</span>
               </div>
             </div>
@@ -282,7 +282,7 @@ function DriverCard({ driver, onLock, onUnlock, onResetPassword, onViewOrders, o
         {/* Vehicle info */}
         {(driver.vehicleInfo?.type || driver.vehicleInfo?.plate) && (
           <div className="flex items-center gap-1.5 mb-3 px-2.5 py-1.5 bg-admin-50 rounded-lg">
-            <Car size={12} className="text-admin-400" />
+            <Car size={12} className="text-admin-500" />
             <span className="text-xs font-admin text-admin-600">
               {[driver.vehicleInfo.type, driver.vehicleInfo.plate].filter(Boolean).join(' · ')}
             </span>
@@ -409,7 +409,7 @@ export default function DriversPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-admin font-bold text-admin-900">Drivers</h1>
-          <p className="text-sm font-admin text-admin-400 mt-0.5">Manage delivery drivers for this branch</p>
+          <p className="text-sm font-admin text-admin-500 mt-0.5">Manage delivery drivers for this branch</p>
         </div>
         <button
           onClick={() => setModal({ type: 'create', form: {} })}
@@ -421,7 +421,7 @@ export default function DriversPage() {
 
       {/* Search */}
       <div className="relative max-w-xs">
-        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-400" />
+        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-500" />
         <input
           type="text"
           placeholder="Search drivers…"
@@ -442,7 +442,7 @@ export default function DriversPage() {
             <Truck size={24} className="text-admin-300" />
           </div>
           <p className="font-admin font-semibold text-admin-700">No drivers yet</p>
-          <p className="text-sm font-admin text-admin-400 mt-1">Add your first driver to get started</p>
+          <p className="text-sm font-admin text-admin-500 mt-1">Add your first driver to get started</p>
           <button
             onClick={() => setModal({ type: 'create', form: {} })}
             className="mt-4 px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-admin

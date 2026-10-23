@@ -29,10 +29,15 @@ export const BUSINESS_NAV = [
       { to: '/admin/products',   icon: Package,    label: 'Products',   roles: ['admin'] },
       { to: '/admin/drivers',    icon: Truck,      label: 'Drivers',    roles: ['supervisor', 'admin'] },
       { to: '/admin/customers',  icon: Users,      label: 'Customers',  roles: ['supervisor', 'admin'] },
+      { to: '/admin/reports',    icon: TrendingUp, label: 'Reports',    roles: ['supervisor', 'admin'] },
+    ],
+  },
+  {
+    group: 'Marketing',
+    items: [
       { to: '/admin/coupons',    icon: Tag,        label: 'Coupons',    roles: ['supervisor', 'admin'] },
       { to: '/admin/promotions', icon: Megaphone,  label: 'Promotions', roles: ['admin'] },
       { to: '/admin/broadcast',  icon: Send,       label: 'Broadcast',  roles: ['admin'] },
-      { to: '/admin/reports',    icon: TrendingUp, label: 'Reports',    roles: ['supervisor', 'admin'] },
     ],
   },
   {

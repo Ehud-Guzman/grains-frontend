@@ -62,7 +62,7 @@ export default function ControlCenterPage() {
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         {error
           ? <SectionError message={error} onRetry={load} />
-          : <div className="flex flex-col items-center gap-3 py-24 text-admin-400"><Spinner size="lg" /><p className="text-sm font-admin">Reading the whole system…</p></div>}
+          : <div className="flex flex-col items-center gap-3 py-24 text-admin-500"><Spinner size="lg" /><p className="text-sm font-admin">Reading the whole system…</p></div>}
       </div>
     )
   }
@@ -81,7 +81,7 @@ export default function ControlCenterPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-admin text-admin-400 hidden sm:inline">Updated {timeAgo(overview.generatedAt)}</span>
+          <span className="text-xs font-admin text-admin-500 hidden sm:inline">Updated {timeAgo(overview.generatedAt)}</span>
           <button type="button" onClick={load} disabled={refreshing}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-admin-200 rounded-lg text-sm font-admin text-admin-600 hover:bg-admin-50 shadow-admin disabled:opacity-60">
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> Refresh

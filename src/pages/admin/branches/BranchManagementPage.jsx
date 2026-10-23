@@ -109,15 +109,15 @@ function BranchModal({ branch, onClose, onSaved }) {
 
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
-              <GitBranch size={15} className="text-brand-600" />
+            <div className="w-8 h-8 bg-shell-50 rounded-lg flex items-center justify-center">
+              <GitBranch size={15} className="text-shell-600" />
             </div>
             <h3 className="font-admin font-bold text-admin-900 text-sm">
               {isEdit ? `Edit — ${branch.name}` : 'Create New Branch'}
             </h3>
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -134,11 +134,11 @@ function BranchModal({ branch, onClose, onSaved }) {
                 value={form.slug}
                 onChange={e => { set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')); setSlugManual(true) }}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-admin-400 font-admin">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-admin-500 font-admin">
                 auto
               </span>
             </div>
-            <p className="text-xs text-admin-400 font-admin mt-1">Unique identifier — lowercase, hyphens only</p>
+            <p className="text-xs text-admin-500 font-admin mt-1">Unique identifier — lowercase, hyphens only</p>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
@@ -175,7 +175,7 @@ function BranchModal({ branch, onClose, onSaved }) {
                 </div>
                 <div>
                   <p className="text-sm font-admin font-semibold text-admin-800">{label}</p>
-                  <p className="text-xs text-admin-400 font-admin mt-0.5">{desc}</p>
+                  <p className="text-xs text-admin-500 font-admin mt-0.5">{desc}</p>
                 </div>
               </label>
             ))}
@@ -258,11 +258,11 @@ function StaffModal({ branch, onClose }) {
             </div>
             <div>
               <h3 className="font-admin font-bold text-admin-900 text-sm">{branch.name} — Staff</h3>
-              <p className="text-admin-400 text-xs font-admin">{staff.length} assigned</p>
+              <p className="text-admin-500 text-xs font-admin">{staff.length} assigned</p>
             </div>
           </div>
           <button onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 transition-colors">
+            className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -302,7 +302,7 @@ function StaffModal({ branch, onClose }) {
           ) : staff.length === 0 ? (
             <div className="py-10 text-center">
               <Users size={24} className="text-admin-300 mx-auto mb-2" />
-              <p className="text-admin-400 text-sm font-admin">No staff assigned to this branch</p>
+              <p className="text-admin-500 text-sm font-admin">No staff assigned to this branch</p>
             </div>
           ) : (
             <div className="divide-y divide-admin-50">
@@ -313,7 +313,7 @@ function StaffModal({ branch, onClose }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-admin font-semibold text-admin-800 text-sm leading-tight">{u.name}</p>
-                    <p className="text-admin-400 text-xs font-admin">{u.phone}</p>
+                    <p className="text-admin-500 text-xs font-admin">{u.phone}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <RoleBadge role={u.role} />
@@ -390,13 +390,13 @@ export default function BranchManagementPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Branch Management</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">
+          <p className="text-admin-500 text-xs font-admin mt-0.5">
             {branches.filter(b => b.isActive).length} active · {branches.length} total
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={fetchBranches}
-            className="p-2 rounded-lg bg-white border border-admin-200 text-admin-400
+            className="p-2 rounded-lg bg-white border border-admin-200 text-admin-500
               hover:text-admin-700 hover:bg-admin-50 transition-colors shadow-admin">
             <RefreshCw size={15} />
           </button>
@@ -430,7 +430,7 @@ export default function BranchManagementPage() {
         <div className="bg-white rounded-xl border border-admin-200 shadow-admin py-16 text-center">
           <GitBranch size={32} className="text-admin-300 mx-auto mb-3" />
           <p className="text-admin-600 font-admin font-semibold mb-1">No branches yet</p>
-          <p className="text-admin-400 text-sm font-admin mb-4">Create your first branch to get started</p>
+          <p className="text-admin-500 text-sm font-admin mb-4">Create your first branch to get started</p>
           <button onClick={() => setModal({ type: 'create' })}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white
               rounded-xl text-sm font-admin font-semibold hover:bg-brand-600 transition-colors">
@@ -461,16 +461,16 @@ export default function BranchManagementPage() {
                   </div>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
                     {branch.location && (
-                      <span className="text-xs text-admin-400 font-admin flex items-center gap-1">
+                      <span className="text-xs text-admin-500 font-admin flex items-center gap-1">
                         <MapPin size={10} /> {branch.location}
                       </span>
                     )}
                     {branch.phone && (
-                      <span className="text-xs text-admin-400 font-admin flex items-center gap-1">
+                      <span className="text-xs text-admin-500 font-admin flex items-center gap-1">
                         <Phone size={10} /> {branch.phone}
                       </span>
                     )}
-                    <span className="text-xs text-admin-400 font-admin flex items-center gap-1">
+                    <span className="text-xs text-admin-500 font-admin flex items-center gap-1">
                       <Globe size={10} /> /{branch.slug}
                     </span>
                   </div>
@@ -487,7 +487,7 @@ export default function BranchManagementPage() {
                   </button>
                   <button
                     onClick={() => setModal({ type: 'edit', branch })}
-                    className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-400 hover:text-admin-700 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-admin-100 text-admin-500 hover:text-admin-700 transition-colors"
                     title="Edit branch">
                     <Edit size={15} />
                   </button>
@@ -511,7 +511,7 @@ export default function BranchManagementPage() {
                     ) : (
                       <button
                         onClick={() => setConfirmDeactivate(branch._id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-admin-400 hover:text-red-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-admin-500 hover:text-red-600 transition-colors"
                         title="Deactivate branch">
                         <Trash2 size={15} />
                       </button>
@@ -520,7 +520,7 @@ export default function BranchManagementPage() {
                   {!branch.isActive && (
                     <button
                       onClick={() => handleReactivate(branch)}
-                      className="p-1.5 rounded-lg hover:bg-green-50 text-admin-400 hover:text-green-600 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-green-50 text-admin-500 hover:text-green-600 transition-colors"
                       title="Reactivate branch">
                       <CheckCircle size={15} />
                     </button>

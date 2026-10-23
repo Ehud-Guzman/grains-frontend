@@ -36,7 +36,7 @@ function StatCard({ icon: Icon, label, value, sub, tone = 'brand', link }) {
       </div>
       <p className="font-admin font-bold text-admin-900 text-xl leading-tight truncate">{value}</p>
       <p className="text-admin-500 text-xs font-admin font-medium mt-1">{label}</p>
-      {sub && <p className="text-admin-400 text-xs font-admin mt-0.5 truncate">{sub}</p>}
+      {sub && <p className="text-admin-500 text-xs font-admin mt-0.5 truncate">{sub}</p>}
     </div>
   )
   return link ? <Link to={link} className="block">{inner}</Link> : inner
@@ -100,28 +100,32 @@ export default function SuperAdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchAll = useCallback(async (silent = false) => {
-    if (silent) setRefreshing(true)
-    const [ov, lg] = await Promise.allSettled([
+  const fetchAll = useCallback(() => (
+    Promise.allSettled([
       adminControlCenterService.overview(),
       adminLogService.getLogs({ page: 1, limit: 6 }),
-    ])
-    if (ov.status === 'fulfilled') {
-      setOverview(ov.value.data.data)
-      setError('')
-    } else {
-      setError(ov.reason?.response?.data?.message || 'Could not load the platform overview.')
-    }
-    if (lg.status === 'fulfilled') setLogs(lg.value.data?.data?.logs || lg.value.data?.data || [])
-    setLoading(false)
-    setRefreshing(false)
-  }, [])
+    ]).then(([ov, lg]) => {
+      if (ov.status === 'fulfilled') {
+        setOverview(ov.value.data.data)
+        setError('')
+      } else {
+        setError(ov.reason?.response?.data?.message || 'Could not load the platform overview.')
+      }
+      if (lg.status === 'fulfilled') setLogs(lg.value.data?.data?.logs || lg.value.data?.data || [])
+      setLoading(false)
+      setRefreshing(false)
+    })
+  ), [])
+
+  // `refreshing` is switched on here and in the timer, not inside fetchAll: the first load starts
+  // in its loading state already, and an effect must not set state synchronously.
+  const refresh = useCallback(() => { setRefreshing(true); fetchAll() }, [fetchAll])
 
   useEffect(() => {
     fetchAll()
-    const timer = setInterval(() => { if (!document.hidden) fetchAll(true) }, REFRESH_MS)
+    const timer = setInterval(() => { if (!document.hidden) refresh() }, REFRESH_MS)
     return () => clearInterval(timer)
-  }, [fetchAll])
+  }, [fetchAll, refresh])
 
   const branches = Array.isArray(overview?.branches) ? overview.branches : []
   const active = branches.filter(b => b.isActive)
@@ -146,7 +150,7 @@ export default function SuperAdminDashboardPage() {
             <span className="text-xs font-admin font-bold text-shell-700 uppercase tracking-widest">Superadmin</span>
           </div>
           <h1 className="text-2xl font-admin font-bold text-admin-900">Platform Overview</h1>
-          <p className="text-admin-400 text-xs font-admin mt-0.5">
+          <p className="text-admin-500 text-xs font-admin mt-0.5">
             All branches{overview ? ` · updated ${timeAgo(overview.generatedAt)}` : ''}
           </p>
         </div>
@@ -155,7 +159,7 @@ export default function SuperAdminDashboardPage() {
             className="flex items-center gap-2 px-3.5 py-2 min-h-[40px] bg-shell-800 text-white rounded-xl text-sm font-admin font-semibold hover:bg-shell-700 transition-colors shadow-admin">
             <Gauge size={14} aria-hidden="true" /> Control Center
           </Link>
-          <button type="button" onClick={() => fetchAll(true)} disabled={refreshing} aria-label="Refresh overview"
+          <button type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh overview"
             className="flex items-center gap-2 px-3 py-2 min-h-[40px] bg-white border border-admin-200 rounded-lg text-sm font-admin text-admin-600 hover:bg-admin-50 transition-colors shadow-admin">
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden="true" />
             <span className="hidden sm:inline">Refresh</span>
@@ -166,7 +170,7 @@ export default function SuperAdminDashboardPage() {
       {error && (
         <div role="alert" className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-admin text-red-700">
           <span>{error}{overview ? ' Showing the last good reading.' : ''}</span>
-          <button type="button" onClick={() => fetchAll(true)} className="font-semibold underline flex-shrink-0">Retry</button>
+          <button type="button" onClick={refresh} className="font-semibold underline flex-shrink-0">Retry</button>
         </div>
       )}
 
@@ -240,7 +244,7 @@ export default function SuperAdminDashboardPage() {
           <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
             <div>
               <h2 className="font-admin font-bold text-admin-900">Branches</h2>
-              <p className="text-admin-400 text-xs font-admin mt-0.5">{active.length} active of {branches.length} · live figures</p>
+              <p className="text-admin-500 text-xs font-admin mt-0.5">{active.length} active of {branches.length} · live figures</p>
             </div>
             <Link to="/admin/branches" className="flex items-center gap-1 text-brand-600 hover:text-brand-700 text-xs font-admin font-semibold">
               Manage <ArrowUpRight size={13} aria-hidden="true" />
@@ -271,15 +275,15 @@ export default function SuperAdminDashboardPage() {
                 return (
                   <li key={b.id} className="px-5 py-3.5">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-brand-100">
-                        <GitBranch size={16} className="text-brand-600" aria-hidden="true" />
+                      <div className="w-9 h-9 bg-shell-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-shell-100">
+                        <GitBranch size={16} className="text-shell-600" aria-hidden="true" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-admin font-semibold text-admin-800 text-sm leading-tight">
                           {b.name}
                           {b.isDefault && <span className="ml-2 text-[10px] font-bold uppercase text-brand-600">Default</span>}
                         </p>
-                        <p className="text-admin-400 text-xs font-admin truncate">{b.location || 'No location set'}</p>
+                        <p className="text-admin-500 text-xs font-admin truncate">{b.location || 'No location set'}</p>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {!b.isActive && <span className="text-[11px] font-admin font-semibold px-2 py-0.5 rounded-full bg-admin-100 text-admin-500 border border-admin-200">Inactive</span>}
@@ -295,7 +299,7 @@ export default function SuperAdminDashboardPage() {
                           ['Paid today', formatKES(f.paidRevenueToday), 'text-admin-800'],
                         ].map(([label, value, cls]) => (
                           <div key={label} className="min-w-0">
-                            <dt className="text-[11px] font-admin uppercase tracking-wide text-admin-400">{label}</dt>
+                            <dt className="text-[11px] font-admin uppercase tracking-wide text-admin-500">{label}</dt>
                             <dd className={`text-sm font-admin font-bold truncate ${cls}`}>{value}</dd>
                           </div>
                         ))}
@@ -319,7 +323,7 @@ export default function SuperAdminDashboardPage() {
           <ActionCard icon={Settings2} label="System Settings"  desc="Shop info, payments, maintenance" to="/admin/settings" color="green" />
 
           <div className="pt-2 border-t border-admin-100">
-            <p className="text-[10px] font-admin font-bold text-admin-400 uppercase tracking-widest px-1 mb-2">Observe (View Only)</p>
+            <p className="text-[10px] font-admin font-bold text-admin-500 uppercase tracking-widest px-1 mb-2">Observe (View Only)</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { icon: ShoppingCart, label: 'Orders',   to: '/admin/orders' },
@@ -330,7 +334,7 @@ export default function SuperAdminDashboardPage() {
                 <Link key={to} to={to}
                   className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl bg-white border border-admin-200 text-admin-600
                     hover:border-admin-300 hover:text-admin-800 text-xs font-admin font-medium transition-all shadow-admin">
-                  <Icon size={13} className="text-admin-400 flex-shrink-0" aria-hidden="true" />
+                  <Icon size={13} className="text-admin-500 flex-shrink-0" aria-hidden="true" />
                   {label}
                   <Eye size={11} className="text-admin-300 ml-auto flex-shrink-0" aria-label="view only" />
                 </Link>
@@ -370,7 +374,7 @@ export default function SuperAdminDashboardPage() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-admin-100">
           <div>
             <h2 className="font-admin font-bold text-admin-900">Recent Activity</h2>
-            <p className="text-admin-400 text-xs font-admin mt-0.5">System-wide audit trail</p>
+            <p className="text-admin-500 text-xs font-admin mt-0.5">System-wide audit trail</p>
           </div>
           <Link to="/admin/logs" className="flex items-center gap-1 text-brand-600 hover:text-brand-700 text-xs font-admin font-semibold">
             Full log <ArrowUpRight size={13} aria-hidden="true" />
@@ -389,7 +393,7 @@ export default function SuperAdminDashboardPage() {
         ) : logs.length === 0 ? (
           <div className="py-10 text-center">
             <Activity size={24} className="text-admin-300 mx-auto mb-2" aria-hidden="true" />
-            <p className="text-admin-400 text-sm font-admin">No activity yet</p>
+            <p className="text-admin-500 text-sm font-admin">No activity yet</p>
           </div>
         ) : (
           <ul className="divide-y divide-admin-50">
@@ -403,10 +407,10 @@ export default function SuperAdminDashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-admin-800 text-xs font-admin font-semibold leading-tight">
                       {actor}
-                      <span className="text-admin-400 font-normal ml-1.5">{(log.action || '').toLowerCase().replace(/_/g, ' ')}</span>
+                      <span className="text-admin-500 font-normal ml-1.5">{(log.action || '').toLowerCase().replace(/_/g, ' ')}</span>
                     </p>
                     {log.detail && typeof log.detail === 'string' && (
-                      <p className="text-admin-400 text-xs font-admin mt-0.5 truncate">{log.detail}</p>
+                      <p className="text-admin-500 text-xs font-admin mt-0.5 truncate">{log.detail}</p>
                     )}
                   </div>
                   <p className="text-admin-300 text-xs font-admin flex-shrink-0">{timeAgo(log.timestamp || log.createdAt)}</p>

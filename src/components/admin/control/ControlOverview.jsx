@@ -25,7 +25,7 @@ function AttentionItem({ item }) {
         </p>
         {item.detail && <p className={`text-xs font-admin mt-0.5 leading-relaxed ${s.sub}`}>{item.detail}</p>}
       </div>
-      {target && <ArrowUpRight size={14} className="text-admin-400 mt-0.5 flex-shrink-0" aria-hidden="true" />}
+      {target && <ArrowUpRight size={14} className="text-admin-500 mt-0.5 flex-shrink-0" aria-hidden="true" />}
     </div>
   )
   if (target?.to) return <Link to={target.to} className="block hover:opacity-90">{body}</Link>
@@ -39,12 +39,12 @@ function BranchCard({ branch }) {
     <div className="min-w-0 rounded-xl border border-admin-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 bg-brand-50 border border-brand-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <GitBranch size={16} className="text-brand-600" />
+          <div className="w-9 h-9 bg-shell-50 border border-shell-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <GitBranch size={16} className="text-shell-600" />
           </div>
           <div className="min-w-0">
             <p className="font-admin font-bold text-admin-900 text-sm leading-tight truncate">{branch.name}</p>
-            <p className="text-xs font-admin text-admin-400 truncate">{branch.location || 'No location set'}</p>
+            <p className="text-xs font-admin text-admin-500 truncate">{branch.location || 'No location set'}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-1">
@@ -113,15 +113,15 @@ export default function ControlOverview({ overview }) {
               <div className="mt-0.5"><StatusDot ok={check.ok || check.severity === 'info'} label={check.ok ? 'OK' : 'Needs attention'} /></div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-admin font-semibold text-admin-800">
-                  {check.label} <span className="font-normal text-admin-400">· {check.value}</span>
+                  {check.label} <span className="font-normal text-admin-500">· {check.value}</span>
                 </p>
-                <p className="text-xs font-admin text-admin-400 mt-0.5 leading-relaxed">{check.note}</p>
+                <p className="text-xs font-admin text-admin-500 mt-0.5 leading-relaxed">{check.note}</p>
               </div>
             </li>
           ))}
         </ul>
         {backups && !backups.error && backups.total > 0 && (
-          <p className="text-xs font-admin text-admin-400 mt-3">
+          <p className="text-xs font-admin text-admin-500 mt-3">
             {backups.total} backup{backups.total === 1 ? '' : 's'} on this server, {formatBytes(backups.totalSizeBytes)}{backups.encrypted ? ', encrypted' : ''}.
           </p>
         )}
@@ -131,7 +131,7 @@ export default function ControlOverview({ overview }) {
         actions={<Link to="/admin/branches" className="text-xs font-admin font-semibold text-brand-600 hover:text-brand-700">Manage branches →</Link>}>
         {branches?.error ? <SectionError message={branches.error} /> : (
           branches.length === 0
-            ? <p className="text-sm font-admin text-admin-400">No branches yet.</p>
+            ? <p className="text-sm font-admin text-admin-500">No branches yet.</p>
             : <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{branches.map(b => <BranchCard key={b.id} branch={b} />)}</div>
         )}
       </Section>
