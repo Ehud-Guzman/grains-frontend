@@ -10,9 +10,7 @@ describe('admin dark-mode stylesheet', () => {
     // Fails the first time someone adds, say, `bg-purple-50` to an admin page without a dark
     // counterpart. Fix: run `npm run gen:dark` and commit the result.
     // Normalise line endings: a Windows checkout with autocrlf turns the committed LF into CRLF.
-    const committed = fs.readFileSync(OUT, 'utf8').replace(/
-/g, '
-')
+    const committed = fs.readFileSync(OUT, 'utf8').replace(/\r\n/g, '\n')
     expect(committed, 'src/styles/admin-dark.generated.css is stale: run `npm run gen:dark`').toBe(generate())
   })
 
