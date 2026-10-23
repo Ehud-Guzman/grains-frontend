@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { X, LifeBuoy, CheckCircle2, ShoppingCart, Lightbulb, Package, Search, CreditCard, MapPin, Star, Compass } from 'lucide-react'
 import { useOnboarding } from '../../context/OnboardingContext'
+import { useAuth } from '../../context/AuthContext'
+import AssistantChat from '../assistant/AssistantChat'
+import { shopAssistantService, driverAssistantService } from '../../services/assistant.service'
 
 // ─── HelpCenter ─────────────────────────────────────────────────────────────
 
@@ -25,7 +28,16 @@ const TIPS = [
 
 function HelpCenter() {
   const { helpCenterOpen, openHelpCenter, closeHelpCenter, currentExperience, getChecklist } = useOnboarding()
-  const [tab, setTab] = useState('start')
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [pickedTab, setTab] = useState(null)
+
+  // "Ask" is the question box for shoppers (signed in or not) and drivers. Staff have their own
+  // in the admin top bar, so they do not get one here.
+  const assistantService = user?.role === 'driver'
+    ? driverAssistantService
+    : (!user || user.role === 'customer') ? shopAssistantService : null
+  const tab = pickedTab === 'ask' && !assistantService ? 'start' : (pickedTab || (assistantService ? 'ask' : 'start'))
   const [fabLift, setFabLift] = useState(0)
 
   useEffect(() => {
@@ -63,6 +75,7 @@ function HelpCenter() {
   const progress  = items.length ? Math.round((doneCount / items.length) * 100) : 0
 
   const tabs = [
+    ...(assistantService ? [{ id: 'ask', label: 'Ask' }] : []),
     { id: 'start', label: 'Get Started' },
     { id: 'buy',   label: 'How to Buy'  },
     { id: 'tips',  label: 'Tips'        },
@@ -126,6 +139,19 @@ function HelpCenter() {
                   </button>
                 ))}
               </div>
+
+              {/* ── Ask ── kept mounted (just hidden) so switching tabs does not lose the conversation */}
+              {assistantService && (
+                <div hidden={tab !== 'ask'}>
+                  <AssistantChat
+                    service={assistantService}
+                    theme="storefront"
+                    layout="flow"
+                    onNavigate={(path) => { closeHelpCenter(); navigate(path) }}
+                    placeholder={user?.role === 'driver' ? 'How do I…?' : 'Ask about ordering, paying, delivery…'}
+                  />
+                </div>
+              )}
 
               {/* ── Get Started ── */}
               {tab === 'start' && (

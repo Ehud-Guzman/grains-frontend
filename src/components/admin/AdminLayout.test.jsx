@@ -44,6 +44,7 @@ beforeEach(() => {
   mocks.get.mockImplementation((url) => {
     if (url.startsWith('/admin/orders')) return Promise.resolve({ data: { pagination: { total: 4 } } })
     if (url.startsWith('/admin/stock/low')) return Promise.resolve({ data: { data: [{}, {}] } })
+    if (url.startsWith('/admin/assistant/topics')) return Promise.resolve({ data: { data: { areas: [], notSupported: [], suggestions: [{ id: 'orders-view', title: 'View and search orders' }] } } })
     return Promise.reject(new Error(`unexpected ${url}`))
   })
   mocks.overview.mockResolvedValue({ data: { data: { attention: [] } } })
@@ -197,5 +198,20 @@ describe('AdminLayout — mobile drawer', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('link', { name: /orders/i }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByText('orders page')).toBeInTheDocument()
+  })
+})
+
+describe('AdminLayout — help assistant', () => {
+  it('opens the help assistant from the top bar and closes it again', async () => {
+    renderAt()
+    const user = userEvent.setup()
+    expect(screen.queryByRole('dialog', { name: 'Help assistant' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Ask the help assistant' }))
+    expect(await screen.findByRole('dialog', { name: 'Help assistant' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'View and search orders' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Close help assistant' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Help assistant' })).not.toBeInTheDocument())
   })
 })

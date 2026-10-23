@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, Menu, X, Eye, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { LogOut, Menu, X, Eye, ChevronsLeft, ChevronsRight, HelpCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import Modal from '../ui/Modal'
 import AlertsBell from './AlertsBell'
 import useAdminAlerts from './useAdminAlerts'
 import { navGroupsFor, titleForPath, sectionLabelFor } from './adminNav'
 import { safeStorage } from '../../utils/safeStorage'
+
+// Loaded on first open: most sessions never ask for help, so it stays out of the admin bundle.
+const AssistantPanel = lazy(() => import('./AssistantPanel'))
 
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const SIDEBAR_BG = '#0F172A'
@@ -199,6 +202,7 @@ export default function AdminLayout() {
   const mainRef = useRef(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readCollapsed)
+  const [helpOpen, setHelpOpen] = useState(false)
   const alerts = useAdminAlerts(user?.role)
 
   const groups = navGroupsFor(user)
@@ -271,6 +275,12 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <button type="button" onClick={() => setHelpOpen(true)}
+              aria-label="Ask the help assistant" aria-haspopup="dialog"
+              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl
+                hover:bg-admin-100 text-admin-500 hover:text-admin-800 transition-colors">
+              <HelpCircle size={19} />
+            </button>
             <AlertsBell role={user?.role} alerts={alerts} />
             <div className="w-px h-6 bg-admin-100 mx-1 hidden sm:block" />
             <div className="flex items-center gap-2.5">
@@ -287,6 +297,12 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {helpOpen && (
+        <Suspense fallback={null}>
+          <AssistantPanel userRole={user?.role} onClose={() => setHelpOpen(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }
