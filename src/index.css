@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── THEME TOKENS ─────────────────────────────────────────────────────────────
+   RGB triplets behind the `admin`, `earth`, `canvas` and `surface` colours in
+   tailwind.config.js. These are the LIGHT values — exactly what the greys were
+   before they became variables — so nothing changes until the admin turns dark
+   mode on, when src/styles/admin-dark.css swaps them under `html.dark`.
+   (`earth` reuses these: earth-50 = surface, 100 = admin-50, 200 = admin-100,
+   300 = admin-200, 400-900 = admin-400-900.) */
+:root {
+  --canvas: 244 246 243;
+  --surface: 255 255 255;
+  --admin-50: 249 250 251;
+  --admin-100: 243 244 246;
+  --admin-200: 229 231 235;
+  --admin-300: 209 213 219;
+  --admin-400: 156 163 175;
+  --admin-500: 107 114 128;
+  --admin-600: 75 85 99;
+  --admin-700: 55 65 81;
+  --admin-800: 31 41 55;
+  --admin-900: 17 24 39;
+}
+
 @keyframes marquee {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -141,12 +163,12 @@
 
   /* Cards */
   .card {
-    @apply bg-white rounded-xl shadow-warm border border-earth-100;
+    @apply bg-surface rounded-xl shadow-warm border border-earth-100;
   }
 
   /* Form inputs */
   .input {
-    @apply w-full bg-white border border-earth-200 rounded-lg px-4 py-3
+    @apply w-full bg-surface border border-earth-200 rounded-lg px-4 py-3
            font-body text-earth-900 placeholder-earth-400
            focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent
            transition-all duration-200 min-h-[44px];

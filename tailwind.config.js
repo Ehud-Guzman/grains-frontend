@@ -11,17 +11,19 @@ export default {
         // NOTE: `earth` below is NOT the same scale — it's white-based and
         // sits one step lighter (earth-100 = admin-50, and it has no
         // equivalent of admin-300 #D1D5DB). Don't try to merge them.
+        // The values live in CSS variables (src/index.css, :root) so the admin's dark mode can swap
+        // them (src/styles/admin-dark.css) without touching a single class in the pages.
         admin: {
-          50:  '#F9FAFB',
-          100: '#F3F4F6',
-          200: '#E5E7EB',
-          300: '#D1D5DB',
-          400: '#9CA3AF',
-          500: '#6B7280',
-          600: '#4B5563',
-          700: '#374151',
-          800: '#1F2937',
-          900: '#111827',
+          50:  'rgb(var(--admin-50) / <alpha-value>)',
+          100: 'rgb(var(--admin-100) / <alpha-value>)',
+          200: 'rgb(var(--admin-200) / <alpha-value>)',
+          300: 'rgb(var(--admin-300) / <alpha-value>)',
+          400: 'rgb(var(--admin-400) / <alpha-value>)',
+          500: 'rgb(var(--admin-500) / <alpha-value>)',
+          600: 'rgb(var(--admin-600) / <alpha-value>)',
+          700: 'rgb(var(--admin-700) / <alpha-value>)',
+          800: 'rgb(var(--admin-800) / <alpha-value>)',
+          900: 'rgb(var(--admin-900) / <alpha-value>)',
         },
         // Vittorios brand palette — terracotta/sienna earth tones
         brand: {
@@ -53,22 +55,24 @@ export default {
           950: '#0E2218',
         },
         // Admin page background: a barely-green off-white so white cards lift off it
-        canvas: '#F4F6F3',
+        canvas: 'rgb(var(--canvas) / <alpha-value>)',
         // Storefront neutral scale — white-based, one step lighter than `admin`
         earth: {
-          50:  '#FFFFFF',
-          100: '#F9FAFB',
-          200: '#F3F4F6',
-          300: '#E5E7EB',
-          400: '#9CA3AF',
-          500: '#6B7280',
-          600: '#4B5563',
-          700: '#374151',
-          800: '#1F2937',
-          900: '#111827',
+          50:  'rgb(var(--surface) / <alpha-value>)',
+          100: 'rgb(var(--admin-50) / <alpha-value>)',
+          200: 'rgb(var(--admin-100) / <alpha-value>)',
+          300: 'rgb(var(--admin-200) / <alpha-value>)',
+          400: 'rgb(var(--admin-400) / <alpha-value>)',
+          500: 'rgb(var(--admin-500) / <alpha-value>)',
+          600: 'rgb(var(--admin-600) / <alpha-value>)',
+          700: 'rgb(var(--admin-700) / <alpha-value>)',
+          800: 'rgb(var(--admin-800) / <alpha-value>)',
+          900: 'rgb(var(--admin-900) / <alpha-value>)',
         },
         // Alias for white kept for the 30+ existing bg-cream usages
-        cream: '#FFFFFF',
+        cream: 'rgb(var(--surface) / <alpha-value>)',
+        // Card / panel background: white in light mode, a raised dark green in dark mode
+        surface: 'rgb(var(--surface) / <alpha-value>)',
         // (`grain` removed 2026-07-17 — defined but never used anywhere)
       },
       fontFamily: {

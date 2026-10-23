@@ -15,15 +15,18 @@ import { adminReportService } from '../../services/admin/report.service'
 import { adminStockService } from '../../services/admin/stock.service'
 import { adminOrderService } from '../../services/admin/order.service'
 import { SEES_KPIS, getGreeting } from '../../components/admin/adminNav'
+import { useAdminTheme } from '../../components/admin/adminTheme'
 import { OnboardingChecklistCard } from '../../components/onboarding/OnboardingEnhancements'
 import { formatKES, timeAgo, getStatusLabel } from '../../utils/helpers'
 import { ORDER_STATUS_CONFIG as STATUS_CONFIG } from '../../utils/constants'
 import { startVisiblePolling } from '../../utils/visiblePolling'
 
-// Chart inks = tailwind `shell-600` (revenue) and `brand-300` (orders); recharts wants literals.
-const CHART_INK = '#2E6649'
-const CHART_ORDERS = '#ECAD7A'
-const CHART_TICK = { fontSize: 11, fill: '#6B7280', fontFamily: 'Outfit' }
+// Recharts draws SVG from literal colours (CSS variables and Tailwind classes cannot reach it),
+// so the chart keeps its own light and dark palettes, picked by the admin theme.
+const CHART_COLORS = {
+  light: { ink: '#2E6649', orders: '#ECAD7A', grid: '#E5E7EB', tick: '#6B7280', tipBg: '#FFFFFF', tipText: '#111827', dotRing: '#FFFFFF' },
+  dark:  { ink: '#5EC38B', orders: '#E08A4A', grid: '#26382F', tick: '#94A69A', tipBg: '#16221C', tipText: '#F1F5F2', dotRing: '#121C17' },
+}
 
 function StatusBadge({ status, deliveryMethod }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
@@ -240,6 +243,8 @@ function BusinessDashboardPage() {
   const canSeeKpis = SEES_KPIS.includes(user?.role)
   const isAdmin = user?.role === 'admin'
   const { getChecklist } = useOnboarding()
+  const C = CHART_COLORS[useAdminTheme().resolved]
+  const chartTick = { fontSize: 11, fill: C.tick, fontFamily: 'Outfit' }
   const [kpis, setKpis]             = useState(null)
   const [lowStock, setLowStock]     = useState([])
   const [loading, setLoading]       = useState(true)
@@ -455,21 +460,21 @@ function BusinessDashboardPage() {
               ) : (
                 <>
                 <ul aria-label="Chart key" className="flex items-center gap-4 mb-2 text-xs font-admin text-admin-600">
-                  <li className="flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-0.5 rounded-full" style={{ backgroundColor: CHART_INK }} /> Revenue</li>
-                  <li className="flex items-center gap-1.5"><span aria-hidden="true" className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CHART_ORDERS }} /> Orders</li>
+                  <li className="flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-0.5 rounded-full" style={{ backgroundColor: C.ink }} /> Revenue</li>
+                  <li className="flex items-center gap-1.5"><span aria-hidden="true" className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: C.orders }} /> Orders</li>
                 </ul>
                 <ResponsiveContainer width="100%" height={204}>
                   <ComposedChart data={revenueData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="dashRevGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor={CHART_INK} stopOpacity={0.22} />
-                        <stop offset="95%" stopColor={CHART_INK} stopOpacity={0}    />
+                        <stop offset="5%"  stopColor={C.ink} stopOpacity={0.22} />
+                        <stop offset="95%" stopColor={C.ink} stopOpacity={0}    />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                    <XAxis dataKey="date" tick={CHART_TICK} axisLine={false} tickLine={false} minTickGap={28} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
+                    <XAxis dataKey="date" tick={chartTick} axisLine={false} tickLine={false} minTickGap={28} />
                     <YAxis
-                      tick={CHART_TICK}
+                      tick={chartTick}
                       tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : `${v}`}
                       axisLine={false} tickLine={false} width={36}
                     />
@@ -482,18 +487,19 @@ function BusinessDashboardPage() {
                       ]}
                       contentStyle={{
                         fontFamily: 'Outfit', fontSize: 12,
-                        borderRadius: 10, border: '1px solid #E5E7EB',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                        borderRadius: 10, border: `1px solid ${C.grid}`,
+                        background: C.tipBg, color: C.tipText,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
                       }}
                     />
-                    <Bar yAxisId="orders" dataKey="orders" fill={CHART_ORDERS} fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={14} />
+                    <Bar yAxisId="orders" dataKey="orders" fill={C.orders} fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={14} />
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke={CHART_INK}
+                      stroke={C.ink}
                       strokeWidth={2}
-                      dot={revenueData.length > 14 ? false : { r: 3, fill: CHART_INK, strokeWidth: 0 }}
-                      activeDot={{ r: 5, fill: CHART_INK, stroke: '#fff', strokeWidth: 2 }}
+                      dot={revenueData.length > 14 ? false : { r: 3, fill: C.ink, strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: C.ink, stroke: C.dotRing, strokeWidth: 2 }}
                       fill="url(#dashRevGrad)"
                     />
                   </ComposedChart>

@@ -563,11 +563,10 @@ export default function PromotionsPage() {
 
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button onClick={() => handleToggle(p)}
-                  className="px-2.5 py-1 text-xs font-admin font-semibold rounded-lg border transition-colors
-                    hover:opacity-80"
-                  style={isLive(p)
-                    ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }
-                    : { background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0' }}>
+                  className={`px-2.5 py-1 text-xs font-admin font-semibold rounded-lg border transition-colors
+                    hover:opacity-80 ${isLive(p)
+                      ? 'bg-green-50 text-green-700 border-green-200'
+                      : 'bg-admin-50 text-admin-500 border-admin-200'}`}>
                   {p.isActive ? 'Deactivate' : 'Activate'}
                 </button>
                 <button onClick={() => setModal({ type: 'edit', promo: p })}

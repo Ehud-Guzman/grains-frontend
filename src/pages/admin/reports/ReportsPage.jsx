@@ -7,6 +7,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell
 } from 'recharts'
+import { useAdminTheme, runInLightTheme } from '../../../components/admin/adminTheme'
 import { adminReportService } from '../../../services/admin/report.service'
 import { formatKES } from '../../../utils/helpers'
 import { useShopInfo } from '../../../context/AppSettingsContext'
@@ -42,6 +43,13 @@ const PERIODS = [
 ]
 
 const BRAND = '#C8912A'
+
+// Chart grid and axis text are SVG literals, so they follow the admin theme through this hook.
+const useChartInk = () => (
+  useAdminTheme().resolved === 'dark'
+    ? { grid: '#26382F', tick: '#94A69A' }
+    : { grid: '#F1EDE6', tick: '#9E8E7A' }
+)
 
 const STATUS_COLORS = {
   pending:          '#F59E0B',
@@ -151,6 +159,7 @@ const ChartTooltip = ({ active, payload, label, valueFormatter }) => {
 
 // ── SALES LINE CHART ──────────────────────────────────────────────────────────
 const SalesLineChart = ({ data }) => {
+  const ink = useChartInk()
   if (!data?.length) return null
 
   const formatted = data.map(d => ({
@@ -164,14 +173,14 @@ const SalesLineChart = ({ data }) => {
       <h3 className="font-admin font-bold text-admin-900 mb-5">Revenue Over Time</h3>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={formatted} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1EDE6" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={ink.grid} vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
             axisLine={false} tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
             axisLine={false} tickLine={false}
             tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : `${v}`}
           />
@@ -192,6 +201,7 @@ const SalesLineChart = ({ data }) => {
 
 // ── TOP PRODUCTS HORIZONTAL BAR CHART ────────────────────────────────────────
 const TopProductsChart = ({ data }) => {
+  const ink = useChartInk()
   if (!data?.length) return null
 
   const top5 = data.slice(0, 5).map(p => ({
@@ -204,15 +214,15 @@ const TopProductsChart = ({ data }) => {
       <h3 className="font-admin font-bold text-admin-900 mb-5">Top 5 Products by Units Sold</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={top5} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1EDE6" horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={ink.grid} horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
             axisLine={false} tickLine={false}
           />
           <YAxis
             type="category" dataKey="name" width={148}
-            tick={{ fontSize: 10, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+            tick={{ fontSize: 10, fill: ink.tick, fontFamily: 'Outfit' }}
             axisLine={false} tickLine={false}
           />
           <Tooltip content={<ChartTooltip />} />
@@ -225,6 +235,7 @@ const TopProductsChart = ({ data }) => {
 
 // ── ORDERS STATUS BAR CHART ───────────────────────────────────────────────────
 const OrdersBarChart = ({ data }) => {
+  const ink = useChartInk()
   if (!data?.length) return null
 
   const formatted = data.map(d => ({
@@ -238,14 +249,14 @@ const OrdersBarChart = ({ data }) => {
       <h3 className="font-admin font-bold text-admin-900 mb-5">Orders by Status</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={formatted} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#F1EDE6" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={ink.grid} vertical={false} />
           <XAxis
             dataKey="status"
-            tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit', textTransform: 'capitalize' }}
+            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit', textTransform: 'capitalize' }}
             axisLine={false} tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 11, fill: '#9E8E7A', fontFamily: 'Outfit' }}
+            tick={{ fontSize: 11, fill: ink.tick, fontFamily: 'Outfit' }}
             axisLine={false} tickLine={false}
           />
           <Tooltip content={<ChartTooltip />} />
@@ -380,7 +391,8 @@ export default function ReportsPage() {
       const html2canvas = (await import('html2canvas')).default
       const { jsPDF }   = await import('jspdf')
 
-      const canvas = await html2canvas(el, {
+      // Captured in light colours whatever the screen theme: the sheet is white paper.
+      const canvas = await runInLightTheme(() => html2canvas(el, {
         scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
         // The letterhead and footer are .print-only, i.e. display:none on screen.
         // Force them on inside the clone so the PDF carries the same header and
@@ -388,7 +400,7 @@ export default function ReportsPage() {
         onclone: (doc) => {
           doc.querySelectorAll('.print-only').forEach(n => { n.style.display = 'block' })
         },
-      })
+      }))
 
       const PAGE_W = 210, PAGE_H = 297, MARGIN = 10
       const contentW = PAGE_W - MARGIN * 2

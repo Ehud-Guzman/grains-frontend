@@ -1,17 +1,25 @@
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, CornerDownLeft, ShoppingCart } from 'lucide-react'
+import { Search, CornerDownLeft, ShoppingCart, Sun, Moon, Monitor } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { navGroupsFor } from './adminNav'
+import { setThemePreference } from './adminTheme'
 
 // Jump-to for the admin panel (Ctrl/⌘ + K): every page this role can open, plus a shortcut
-// that searches orders by reference, customer name or phone. Pages come from the same nav
+// that searches orders by reference, customer name or phone, plus theme commands. Pages come from the same nav
 // data as the sidebar, so the palette can never offer a page the sidebar hides.
 
 const LIST_ID = 'command-palette-list'
 const TITLE_ID = 'command-palette-title'
 
 const optionId = (i) => `command-palette-option-${i}`
+
+// Commands (not pages): offered when the text mentions the theme, so "dark" flips it from the keyboard.
+const THEME_COMMANDS = [
+  { id: 'theme-dark',   icon: Moon,    label: 'Dark theme',          run: () => setThemePreference('dark') },
+  { id: 'theme-light',  icon: Sun,     label: 'Light theme',         run: () => setThemePreference('light') },
+  { id: 'theme-system', icon: Monitor, label: 'Match this device',   run: () => setThemePreference('system') },
+].map(c => ({ ...c, hint: 'Appearance', keywords: 'theme dark light mode appearance night auto system device' }))
 
 export default function CommandPalette({ user, onClose }) {
   const navigate = useNavigate()
@@ -29,13 +37,16 @@ export default function CommandPalette({ user, onClose }) {
       .map(item => ({
         id: item.to, icon: item.icon, label: item.label, hint: item.group, to: item.to,
       }))
+    const commands = needle.length >= 2
+      ? THEME_COMMANDS.filter(c => c.keywords.split(' ').some(k => k.startsWith(needle) || needle.startsWith(k)) || c.label.toLowerCase().includes(needle))
+      : []
     const orderSearch = q
       ? [{ id: 'search-orders', icon: ShoppingCart, label: `Search orders for “${q}”`,
           hint: 'Reference, customer or phone', to: `/admin/orders?search=${encodeURIComponent(q)}` }]
       : []
-    // Pages first when the text names one; otherwise the order search leads, since someone
-    // typing "NAI-2026-0140" wants that and not a page list that happens to be empty.
-    return pages.length > 0 ? [...pages, ...orderSearch] : orderSearch
+    // Pages first, then commands, then the order search as the catch-all: someone typing
+    // "NAI-2026-0140" matches no page, so the order search is simply what is left.
+    return [...pages, ...commands, ...orderSearch]
   }, [q, user])
 
   const current = Math.min(active, Math.max(results.length - 1, 0))
@@ -43,7 +54,8 @@ export default function CommandPalette({ user, onClose }) {
   const choose = (item) => {
     if (!item) return
     onClose()
-    navigate(item.to)
+    if (item.run) item.run()
+    else navigate(item.to)
   }
 
   const onKeyDown = (e) => {

@@ -1,0 +1,65 @@
+/* ── ADMIN DARK MODE ──────────────────────────────────────────────────────────
+   Loaded with the admin chunk only (imported by AdminLayout), so storefront visitors never
+   download it. `html.dark` is set by AdminLayout while the admin is open and removed when it
+   unmounts, so the storefront, login and driver portal always stay light.
+
+   How it works, in three layers:
+     1. The neutral greys (admin-*, earth-*, canvas, surface) are CSS variables — swapped below.
+     2. A few fixed colours that cannot be variables (plain `white`, solid dark buttons) get
+        explicit overrides here.
+     3. Every coloured tint the admin uses (bg-amber-50, text-red-700 …) is in
+        admin-dark.generated.css, rebuilt by `npm run gen:dark`.
+
+   All of it sits inside `@media screen`, so printing and PDF exports stay light-on-white no
+   matter which theme is on screen. */
+@media screen {
+  html.dark {
+    color-scheme: dark;   /* native scrollbars, date pickers, <select> menus, autofill */
+
+    --canvas: 11 18 15;     /* page */
+    --surface: 18 28 23;    /* cards, panels, inputs */
+    --admin-50: 22 34 28;   /* subtle fills: table heads, hovered rows */
+    --admin-100: 28 42 35;  /* fills, soft dividers */
+    --admin-200: 38 56 47;  /* borders */
+    --admin-300: 52 73 63;  /* stronger borders, disabled */
+    --admin-400: 118 138 126; /* icons, placeholders */
+    --admin-500: 148 166 154; /* secondary text */
+    --admin-600: 170 185 176;
+    --admin-700: 195 206 199;
+    --admin-800: 219 227 222;
+    --admin-900: 241 245 242; /* headings */
+  }
+
+  html.dark body {
+    background-color: rgb(var(--canvas));
+    color: rgb(var(--admin-800));
+  }
+
+  /* Plain white is a card surface. (bg-white/NN with NN >= 50 is generated; lower alphas are
+     translucent highlights on dark panels and stay white.) */
+  .dark .bg-white { background-color: rgb(var(--surface)); }
+  .dark .hover\:bg-white:hover { background-color: rgb(var(--surface)); }
+  .dark .focus\:bg-white:focus { background-color: rgb(var(--surface)); }
+
+  /* Solid dark buttons/chips (white text on admin-800/900, earth-800/900) would turn light when
+     the scale inverts, leaving white text on a pale button. Keep them a deep green. */
+  .dark .bg-admin-800,
+  .dark .bg-admin-900,
+  .dark .bg-earth-800,
+  .dark .bg-earth-900 { background-color: #1F4733; }
+  .dark .hover\:bg-admin-800:hover,
+  .dark .hover\:bg-admin-700:hover,
+  .dark .hover\:bg-earth-800:hover,
+  .dark .hover\:bg-earth-700:hover { background-color: #2A5C43; }
+
+  /* Shadows barely read on dark surfaces; a hairline does the lifting instead. */
+  .dark .shadow-admin,
+  .dark .shadow-admin-lg,
+  .dark .shadow-warm,
+  .dark .shadow-warm-lg { box-shadow: 0 0 0 1px rgb(255 255 255 / 0.03), 0 4px 16px rgb(0 0 0 / 0.35); }
+
+  /* Images keep their colours, just a touch less glaring against a dark page. */
+  .dark img:not([src$=".svg"]) { filter: brightness(0.92); }
+
+  .dark ::selection { background: rgb(94 156 125 / 0.45); color: #fff; }
+}

@@ -65,7 +65,7 @@ function Entry({ event }) {
         </span>
       </button>
       {open && (
-        <div className="mt-2 ml-7 rounded-lg bg-admin-900 text-admin-100 p-3 overflow-x-auto">
+        <div className="mt-2 ml-7 rounded-lg bg-shell-950 text-shell-100 p-3 overflow-x-auto">
           {busy ? <span className="text-xs font-admin">Loading…</span> : (
             <pre className="text-[11px] leading-relaxed whitespace-pre-wrap break-all">{JSON.stringify(raw, null, 2)}</pre>
           )}

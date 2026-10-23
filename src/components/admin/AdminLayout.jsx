@@ -7,6 +7,11 @@ import AlertsBell from './AlertsBell'
 import useAdminAlerts from './useAdminAlerts'
 import { navGroupsFor, titleForPath, sectionLabelFor, getGreeting } from './adminNav'
 import { safeStorage } from '../../utils/safeStorage'
+import ThemeSwitch from './ThemeSwitch'
+import { useApplyAdminTheme } from './adminTheme'
+// Dark-mode styles ship with the admin chunk only; they do nothing until `html.dark` is set.
+import '../../styles/admin-dark.css'
+import '../../styles/admin-dark.generated.css'
 
 // Loaded on first open: most sessions never ask for help, so it stays out of the admin bundle.
 const AssistantPanel = lazy(() => import('./AssistantPanel'))
@@ -186,6 +191,8 @@ function Sidebar({ user, branch, groups, alerts, collapsed, onNavigate, onLogout
           </button>
         )}
 
+        <ThemeSwitch collapsed={collapsed} />
+
         {onToggleCollapsed && (
           <button type="button" onClick={onToggleCollapsed}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -212,6 +219,7 @@ export default function AdminLayout() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const alerts = useAdminAlerts(user?.role)
+  useApplyAdminTheme()
 
   const groups = navGroupsFor(user)
   const pageTitle = titleForPath(location.pathname)
@@ -300,7 +308,7 @@ export default function AdminLayout() {
               className="flex items-center justify-center gap-2 p-2.5 min-w-[44px] min-h-[44px] rounded-xl text-admin-500
                 hover:bg-admin-100 hover:text-admin-800 transition-colors
                 md:h-10 md:min-h-0 md:min-w-0 md:pl-3 md:pr-2 md:mr-1 md:py-0 md:border md:border-admin-200 md:bg-admin-50
-                md:hover:bg-white md:hover:border-admin-300 text-sm font-admin">
+                md:hover:bg-surface md:hover:border-admin-300 text-sm font-admin">
               <Search size={19} className="md:w-[15px] md:h-[15px]" aria-hidden="true" />
               <span aria-hidden="true" className="hidden md:inline pr-6">Search…</span>
               <kbd aria-hidden="true" className="hidden md:inline text-[11px] font-medium border border-admin-200 bg-white rounded-md px-1.5 py-0.5">{SHORTCUT_HINT}</kbd>

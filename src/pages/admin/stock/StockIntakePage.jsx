@@ -812,7 +812,7 @@ export default function StockIntakePage() {
                 className={`px-3 py-1.5 rounded-full text-xs font-admin font-semibold
                   border transition-all ${
                     statusFilter === s
-                      ? s === '' ? 'bg-admin-800 text-white border-admin-800'
+                      ? s === '' ? 'bg-shell-800 text-white border-shell-800'
                         : s === 'pending' ? 'bg-amber-500 text-white border-amber-500'
                         : 'bg-green-500 text-white border-green-500'
                       : 'bg-white text-admin-500 border-admin-200 hover:border-admin-400'

@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
+import { _resetAdminThemeForTests } from './adminTheme'
 
 const mocks = vi.hoisted(() => ({
   user: { id: 'u1', name: 'Wanjiru Kamau', role: 'staff' },
@@ -40,6 +41,8 @@ const sidebarNav = () => screen.getAllByRole('navigation', { name: 'Admin' })[0]
 beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
+  document.documentElement.classList.remove('dark')
+  _resetAdminThemeForTests()
   mocks.user = { id: 'u1', name: 'Wanjiru Kamau', role: 'staff' }
   mocks.get.mockImplementation((url) => {
     if (url.startsWith('/admin/orders')) return Promise.resolve({ data: { pagination: { total: 4 } } })
@@ -238,6 +241,36 @@ describe('AdminLayout — search palette', () => {
     const options = within(dialog).getAllByRole('option')
     expect(options).toHaveLength(1)
     expect(options[0]).toHaveTextContent('Search orders for “NAI-2026-0140 & co”')
+  })
+})
+
+describe('AdminLayout — theme', () => {
+  it('stays light by default, switches to dark from the sidebar, and remembers it', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderAt()
+    expect(document.documentElement).not.toHaveClass('dark')
+    const group = within(screen.getAllByRole('group', { name: 'Colour theme' })[0])
+    await user.click(group.getByRole('button', { name: /dark/i }))
+    expect(document.documentElement).toHaveClass('dark')
+    expect(localStorage.getItem('admin.theme')).toBe('dark')
+
+    unmount()                                                   // leaving the admin…
+    expect(document.documentElement).not.toHaveClass('dark')    // …must leave the storefront light
+    renderAt()                                                  // coming back restores the choice
+    expect(document.documentElement).toHaveClass('dark')
+  })
+
+  it('can be switched from the keyboard palette', async () => {
+    const user = userEvent.setup()
+    renderAt()
+    await user.keyboard('{Control>}k{/Control}')
+    await screen.findByRole('dialog', { name: 'Search pages and orders' })
+    await user.keyboard('dark')
+    const option = screen.getByRole('option', { name: /dark theme/i })
+    expect(option).toBeInTheDocument()
+    await user.click(option)
+    expect(document.documentElement).toHaveClass('dark')
+    expect(screen.queryByRole('dialog', { name: 'Search pages and orders' })).not.toBeInTheDocument()
   })
 })
 

@@ -55,7 +55,11 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
       const { jsPDF }   = await import('jspdf')
       // scale 2 + JPEG keeps this a few hundred KB — PNG at higher scale
       // ballooned to 20MB+ (the embedded logo photo doesn't compress well as PNG).
-      const canvas  = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
+      // The receipt is paper: capture it in light colours even when the admin is in dark mode.
+      const canvas  = await html2canvas(el, {
+        scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+        onclone: (doc) => doc.documentElement.classList.remove('dark'),
+      })
       const imgData = canvas.toDataURL('image/jpeg', 0.92)
       // A4 width, and the page is cut to the receipt's own content height so a
       // short receipt doesn't leave a half-empty A4 sheet. The margin matters:
