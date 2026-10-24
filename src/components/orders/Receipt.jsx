@@ -180,6 +180,7 @@ export default function Receipt({ order, variant = 'customer', onClose }) {
 function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, shopInfo, kraPin, receiptFooterNote, cuSerialNumber }) {
   const hasDelivery = order.deliveryFee > 0
   const hasVat      = order.vatEnabled && order.vatAmount > 0
+  const rounding    = Number(order.roundingAdjustment) || 0
   const hasDiscount = order.couponDiscount > 0
   const invoiceNumber = order.etimsInvoiceNumber || order.orderRef
   const etimsConfirmed = order.etimsStatus === 'submitted' && order.etimsControlNumber
@@ -376,6 +377,7 @@ function ReceiptBody({ order, isAdmin, statusCfg, customerName, customerPhone, s
               ...(hasVat      ? [{ label: `VAT (${order.vatRate}%)`,                          value: formatKES(order.vatAmount) }] : []),
               ...(hasDelivery ? [{ label: 'Delivery Fee',                                     value: formatKES(order.deliveryFee) }] : []),
               ...(hasDiscount ? [{ label: `Discount (${order.couponCode})`, isDiscount: true, value: `−${formatKES(order.couponDiscount)}` }] : []),
+              ...(rounding > 0 ? [{ label: 'Rounding',                                       value: `+${formatKES(rounding)}` }] : []),
             ].map(row => (
               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0' }}>
                 <span style={{ color: row.isDiscount ? '#16a34a' : '#6B7280', fontSize: '12px' }}>{row.label}</span>

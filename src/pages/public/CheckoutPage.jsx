@@ -165,7 +165,11 @@ export default function CheckoutPage() {
   // Cent precision (round2), same as order.service.js — rounding to whole KES
   // here made the preview drift up to KES 0.50 from the charged total.
   const vatAmount      = vatEnabled ? Math.round(vatBase * vatRate / 100 * 100) / 100 : 0
-  const orderTotal     = Math.max(0, total + deliveryFee + vatAmount - couponDiscount)
+  const exactTotal     = Math.max(0, total + deliveryFee + vatAmount - couponDiscount)
+  // The charged total is a whole number of shillings, rounded up (toWholeShilling in order.service.js), so what is shown
+  // here, what M-Pesa asks for and what the order says are the same number.
+  const orderTotal     = Math.ceil(Math.round(exactTotal * 100) / 100)
+  const roundingAdjustment = Math.round((orderTotal - exactTotal) * 100) / 100
   const totalBags = items.reduce((sum, i) => sum + i.quantity, 0)
   const belowMinimumValue = orderSettings.minimumOrderValue > 0 && total < orderSettings.minimumOrderValue
   const belowMinimumQty   = orderSettings.minimumOrderQuantity > 0 && totalBags < orderSettings.minimumOrderQuantity
@@ -521,7 +525,7 @@ export default function CheckoutPage() {
         preferredDriverId:   (form.deliveryMethod === 'delivery' && form.preferredDriverId) || undefined,
         couponCode: couponData?.code || undefined,
         // What this screen is showing: the server refuses (409 PRICE_CHANGED) if a price moved meanwhile.
-        expectedTotal: Math.round(orderTotal * 100) / 100,
+        expectedTotal: orderTotal,
         deliveryCoordinates: deliveryCoordinates ?? undefined,
         orderItems: items.map(i => ({
           productId: i.productId,
@@ -1109,6 +1113,12 @@ export default function CheckoutPage() {
                       <div className="flex justify-between text-sm font-body">
                         <span className="text-green-600">Discount ({couponData.code})</span>
                         <span className="text-green-600">−{formatKES(couponDiscount)}</span>
+                      </div>
+                    )}
+                    {roundingAdjustment > 0 && (
+                      <div className="flex justify-between text-sm font-body">
+                        <span className="text-earth-600">Rounding</span>
+                        <span className="text-earth-700">+{formatKES(roundingAdjustment)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm font-body">

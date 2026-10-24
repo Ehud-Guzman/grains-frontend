@@ -60,11 +60,14 @@ export function SalesTab({ data }) {
           category table below is NET goods sales. This card bridges the two. */}
       {s.breakdown && (
         <Card title="How the total is made up">
-          <dl className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm font-admin">
+          <dl className={`grid grid-cols-2 ${s.breakdown.rounding > 0 ? 'md:grid-cols-6' : 'md:grid-cols-5'} gap-4 text-sm font-admin`}>
             <div><dt className="text-admin-500">Goods sold</dt><dd className="font-semibold text-admin-900">{money(s.breakdown.goodsSubtotal)}</dd></div>
             <div><dt className="text-admin-500">Coupon discounts</dt><dd className="font-semibold text-admin-900">− {money(s.breakdown.couponDiscounts)}</dd></div>
             <div><dt className="text-admin-500">Delivery fees</dt><dd className="font-semibold text-admin-900">+ {money(s.breakdown.deliveryFees)}</dd></div>
             <div><dt className="text-admin-500">VAT collected</dt><dd className="font-semibold text-admin-900">+ {money(s.breakdown.vatCollected)}</dd></div>
+            {s.breakdown.rounding > 0 && (
+              <div><dt className="text-admin-500">Rounding</dt><dd className="font-semibold text-admin-900">+ {money(s.breakdown.rounding)}</dd></div>
+            )}
             <div><dt className="text-admin-500">= Total revenue</dt><dd className="font-bold text-brand-700">{money(s.totalRevenue)}</dd></div>
           </dl>
           <p className="mt-3 text-xs text-admin-500">

@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { RefundPanel, CreditNotePanel } from './OrderMoneyPanels'
 
 const m = vi.hoisted(() => ({
-  refund: vi.fn(), creditNote: vi.fn(),
+  refund: vi.fn(), creditNote: vi.fn(), sendCreditNote: vi.fn(),
   toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
 }))
 vi.mock('../../../services/admin/payment.service', () => ({ adminPaymentService: { recordRefundSent: m.refund } }))
-vi.mock('../../../services/admin/order.service', () => ({ adminOrderService: { recordCreditNote: m.creditNote } }))
+vi.mock('../../../services/admin/order.service', () => ({ adminOrderService: { recordCreditNote: m.creditNote, sendCreditNote: m.sendCreditNote } }))
 vi.mock('react-hot-toast', () => ({ default: m.toast }))
 
 const owedOrder = (over = {}, pay = {}) => ({
@@ -20,6 +20,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   m.refund.mockResolvedValue({})
   m.creditNote.mockResolvedValue({})
+  m.sendCreditNote.mockResolvedValue({})
 })
 
 describe('RefundPanel', () => {
@@ -124,6 +125,32 @@ describe('CreditNotePanel', () => {
     await user.click(save)
     await waitFor(() => expect(m.creditNote).toHaveBeenCalledWith('o9', 'CN-2026-0077'))
     await waitFor(() => expect(onDone).toHaveBeenCalled())
+  })
+
+  it('can send the credit note to KRA by itself, then asks the page to reload', async () => {
+    const onDone = vi.fn()
+    const user = userEvent.setup()
+    render(<CreditNotePanel order={order()} canRecord onDone={onDone} />)
+    await user.click(screen.getByRole('button', { name: /send to kra now/i }))
+    await waitFor(() => expect(m.sendCreditNote).toHaveBeenCalledWith('o9'))
+    await waitFor(() => expect(onDone).toHaveBeenCalled())
+    expect(m.toast.success).toHaveBeenCalledWith('Credit note sent to KRA')
+  })
+
+  it('shows why KRA turned it down, and still reloads so the order shows the last failure', async () => {
+    m.sendCreditNote.mockRejectedValueOnce({ response: { data: { message: 'eTIMS is not switched on' } } })
+    const onDone = vi.fn()
+    const user = userEvent.setup()
+    render(<CreditNotePanel order={order({ etimsCreditNoteError: 'Invalid invoice number (code 901)' })} canRecord onDone={onDone} />)
+    expect(screen.getByText(/last attempt failed: invalid invoice number/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /send to kra now/i }))
+    await waitFor(() => expect(m.toast.error).toHaveBeenCalledWith('eTIMS is not switched on'))
+    expect(onDone).toHaveBeenCalled()
+  })
+
+  it('offers no send button to anyone who cannot record it', () => {
+    render(<CreditNotePanel order={order()} canRecord={false} />)
+    expect(screen.queryByRole('button', { name: /send to kra now/i })).not.toBeInTheDocument()
   })
 
   it('shows the warning but no form to anyone who cannot record it', () => {

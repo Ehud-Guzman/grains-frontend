@@ -10,4 +10,6 @@ export const adminOrderService = {
   getPackingSlip: (id) => api.get(`/admin/orders/${id}/packing-slip`),
   // The credit note for an invoiced order that was cancelled has been filed with KRA.
   recordCreditNote: (id, reference) => api.post(`/admin/orders/${id}/etims/credit-note`, { reference }),
+  // No reference: the server sends the credit note to KRA itself (needs eTIMS switched on).
+  sendCreditNote: (id) => api.post(`/admin/orders/${id}/etims/credit-note`, {}),
 }

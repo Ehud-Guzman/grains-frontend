@@ -207,6 +207,14 @@ describe('Reports page: periods', () => {
     expect(await screen.findByText(/rolling stretch of days/i)).toBeInTheDocument()
   })
 
+  it('tells the accountant how many VAT orders eTIMS was never told about', async () => {
+    m.svc.getVat.mockImplementation(() => ok({ summary: { totalOrders: 5, totalExVat: 1000, totalVat: 160, totalInclVat: 1160, taxableSales: 800, exemptSales: 200, deliveryFees: 0, unfiledOrders: 2, unfiledVat: 64 }, rows: [] }))
+    renderPage()
+    await pickGroup('Money & tax')
+    await pickTab('VAT')
+    expect(await screen.findByText(/2 of these orders/)).toBeInTheDocument()
+  })
+
   it('hides the period choices on reports that are a snapshot, not a window', async () => {
     renderPage()
     await screen.findByText('Revenue by Category')

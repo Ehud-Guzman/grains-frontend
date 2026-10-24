@@ -445,6 +445,12 @@ export default function AdminOrderDetailPage() {
                     <span className="text-green-600">−{formatKES(order.couponDiscount)}</span>
                   </div>
                 )}
+                {order.roundingAdjustment > 0 && (
+                  <div className="flex justify-between text-sm font-admin">
+                    <span className="text-admin-500">Rounding to whole shilling</span>
+                    <span className="text-admin-700">+{formatKES(order.roundingAdjustment)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-1 border-t border-admin-100 mt-1">
                   <span className="font-admin font-bold text-admin-800">Total</span>
                   <span className="font-admin font-bold text-brand-600 text-xl">

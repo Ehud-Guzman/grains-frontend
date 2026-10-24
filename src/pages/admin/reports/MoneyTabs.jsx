@@ -83,6 +83,13 @@ export function VatTab({ data, rolling }) {
           For a VAT return, choose <strong>This month</strong> or <strong>Last month</strong> above.
         </Callout>
       )}
+      {s.unfiledOrders > 0 && (
+        <Callout tone="warn">
+          {s.unfiledOrders} of these orders (VAT {money(s.unfiledVat)}) have not been filed with KRA through eTIMS, for example a delivered
+          cash order that is still unpaid, or an invoice that failed. They are counted above because the goods were delivered; ask your
+          accountant whether they belong in the return for this period.
+        </Callout>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiTile label="Total Orders (VAT)" value={s.totalOrders || 0} />
         <KpiTile label="Ex-VAT Revenue" value={money(s.totalExVat)} />

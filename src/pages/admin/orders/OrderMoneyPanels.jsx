@@ -136,6 +136,18 @@ export function CreditNotePanel({ order, canRecord, onDone }) {
   }
   if (order.etimsCreditNoteStatus !== 'required') return null
 
+  const sendNow = async () => {
+    setBusy(true)
+    try {
+      await adminOrderService.sendCreditNote(order._id)
+      toast.success('Credit note sent to KRA')
+      onDone?.()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not send the credit note')
+      onDone?.()   // the order now shows why the attempt failed
+    } finally { setBusy(false) }
+  }
+
   const submit = async () => {
     if (reference.trim().length < 3) return toast.error('Enter the credit-note reference KRA gave')
     setBusy(true)
@@ -156,8 +168,18 @@ export function CreditNotePanel({ order, canRecord, onDone }) {
       </p>
       <p className="mt-1 text-xs font-admin text-amber-800 leading-relaxed">
         KRA holds invoice {order.etimsInvoiceNumber ? <span className="font-mono">{order.etimsInvoiceNumber}</span> : 'for this order'}, but the order was {order.status}.
-        File a credit note against it (KRA portal or your accountant), then record its reference.
+        The system sends the credit note to KRA by itself when eTIMS is on; you can send it now, or file it on the KRA portal
+        (or through your accountant) and record its reference.
       </p>
+      {order.etimsCreditNoteError && (
+        <p className="mt-1.5 text-xs font-admin text-red-700">Last attempt failed: {order.etimsCreditNoteError}</p>
+      )}
+      {canRecord && (
+        <button type="button" onClick={sendNow} disabled={busy}
+          className="mt-2.5 w-full py-2 rounded-lg border border-amber-300 bg-white text-amber-900 text-sm font-admin font-semibold hover:bg-amber-100 disabled:opacity-50 transition-colors">
+          {busy ? 'Working…' : 'Send to KRA now'}
+        </button>
+      )}
       {canRecord && (
         <div className="mt-2.5 flex gap-2">
           <input value={reference} onChange={(e) => setReference(e.target.value)} maxLength={60} aria-label="Credit note reference"
