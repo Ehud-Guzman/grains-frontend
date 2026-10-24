@@ -652,7 +652,7 @@ export default function ProductFormPage() {
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
 
   return (
-    <div className="p-6 max-w-4xl mx-auto pb-28">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto pb-28">
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">

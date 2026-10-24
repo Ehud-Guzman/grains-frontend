@@ -95,7 +95,7 @@ export default function StockPage() {
     focus:ring-brand-400 focus:border-transparent bg-admin-50 transition-all`
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
 
       {isSuperAdmin && <ViewOnlyBanner />}
 

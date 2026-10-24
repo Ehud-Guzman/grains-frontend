@@ -191,18 +191,22 @@ function Sidebar({ user, branch, groups, alerts, collapsed, onNavigate, onLogout
           </button>
         )}
 
-        <ThemeSwitch collapsed={collapsed} />
-
-        {onToggleCollapsed && (
-          <button type="button" onClick={onToggleCollapsed}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`hidden lg:flex items-center rounded-lg text-xs font-admin font-medium text-shell-300/60
-              hover:text-white hover:bg-white/[.06] w-full min-h-[36px] transition-colors
-              ${collapsed ? 'justify-center' : 'gap-2.5 px-3'}`}>
-            {collapsed ? <ChevronsRight size={15} /> : <><ChevronsLeft size={15} /> Collapse</>}
-          </button>
-        )}
+        {/* Expanded desktop: theme and collapse share one row, which buys back a row of nav height on short
+            screens. Collapsed: they stack in the narrow rail. The drawer has no collapse, so the theme switch
+            keeps its words there. */}
+        <div className={collapsed ? 'space-y-1.5' : 'flex items-center gap-1.5'}>
+          <ThemeSwitch collapsed={collapsed} compact={Boolean(onToggleCollapsed)} />
+          {onToggleCollapsed && (
+            <button type="button" onClick={onToggleCollapsed}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className={`hidden lg:flex items-center justify-center rounded-lg text-shell-300/60
+                hover:text-white hover:bg-white/[.06] min-h-[36px] transition-colors
+                ${collapsed ? 'w-full' : 'w-9 flex-shrink-0'}`}>
+              {collapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

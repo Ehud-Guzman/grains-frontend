@@ -40,7 +40,7 @@ export default function BroadcastPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-admin font-bold text-admin-900">SMS Broadcast</h1>
         <p className="text-admin-500 text-sm font-admin mt-1">

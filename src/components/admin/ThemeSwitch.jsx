@@ -11,7 +11,9 @@ const OPTIONS = [
   { value: 'system', label: 'Auto',  icon: Monitor },
 ]
 
-export default function ThemeSwitch({ collapsed }) {
+// `compact` drops the words and keeps the icons (the label stays as the accessible name and the tooltip), so the
+// switch can share a row with the collapse button on the desktop sidebar.
+export default function ThemeSwitch({ collapsed, compact = false }) {
   const { preference, resolved, setPreference } = useAdminTheme()
 
   if (collapsed) {
@@ -29,17 +31,17 @@ export default function ThemeSwitch({ collapsed }) {
 
   return (
     <div role="group" aria-label="Colour theme"
-      className="flex items-center rounded-lg bg-white/[.05] ring-1 ring-inset ring-white/[.06] p-0.5">
+      className="flex-1 min-w-0 flex items-center rounded-lg bg-white/[.05] ring-1 ring-inset ring-white/[.06] p-0.5">
       {OPTIONS.map(({ value, label, icon: Icon }) => {
         const on = preference === value
         return (
           <button key={value} type="button" onClick={() => setPreference(value)}
-            aria-pressed={on}
+            aria-pressed={on} aria-label={label}
             title={value === 'system' ? 'Follow this device' : `${label} theme`}
             className={`flex-1 flex items-center justify-center gap-1.5 min-h-[32px] rounded-md text-[11.5px] font-admin font-medium
               transition-colors ${on ? 'bg-shell-700 text-white shadow-sm' : 'text-shell-300/70 hover:text-white'}`}>
-            <Icon size={13} aria-hidden="true" />
-            <span>{label}</span>
+            <Icon size={compact ? 14 : 13} aria-hidden="true" />
+            {!compact && <span>{label}</span>}
           </button>
         )
       })}

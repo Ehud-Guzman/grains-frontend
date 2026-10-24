@@ -132,8 +132,8 @@ export default function DataTable({
                       <button type="button" onClick={() => toggleSort(h.label)} data-sort-button
                         className={`inline-flex items-center gap-1 uppercase tracking-wide font-semibold hover:text-admin-800 transition-colors ${sorted ? 'text-admin-800' : ''}`}>
                         {h.label}
-                        {sorted === 'asc' ? <ChevronUp size={12} aria-hidden="true" />
-                          : sorted === 'desc' ? <ChevronDown size={12} aria-hidden="true" />
+                        {sorted === 'asc' ? <ChevronUp size={12} aria-hidden="true" data-no-print />
+                          : sorted === 'desc' ? <ChevronDown size={12} aria-hidden="true" data-no-print />
                           : <ChevronsUpDown size={12} aria-hidden="true" className="opacity-40" data-no-print />}
                       </button>
                     ) : h.label}

@@ -304,7 +304,7 @@ export default function SettingsPage() {
   )
 
   return (
-    <div className="p-6 max-w-5xl mx-auto pb-28">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto pb-28">
 
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between mb-7 gap-4 flex-wrap">

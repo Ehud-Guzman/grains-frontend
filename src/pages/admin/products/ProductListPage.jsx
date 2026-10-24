@@ -433,7 +433,7 @@ export default function ProductListPage() {
   const inactiveCount = products.filter(p => !p.isActive).length
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
 
       {isSuperAdmin && <ViewOnlyBanner />}
 

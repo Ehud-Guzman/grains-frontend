@@ -61,7 +61,7 @@ export default function AdminAlertsPage() {
   const dormantTotal = (dormantCustomers?.d30 || 0) + (dormantCustomers?.d60 || 0) + (dormantCustomers?.d90 || 0)
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-xl font-admin font-bold text-admin-900">Alerts</h1>

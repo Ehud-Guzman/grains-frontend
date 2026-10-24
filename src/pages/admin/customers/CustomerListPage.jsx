@@ -30,7 +30,7 @@ export default function CustomerListPage() {
   }, [search, page])
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-admin font-bold text-admin-900">Customers</h1>
         <span className="text-admin-500 text-sm font-admin">{pagination.total} total</span>

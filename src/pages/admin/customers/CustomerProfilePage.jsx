@@ -167,7 +167,7 @@ export default function CustomerProfilePage() {
   if (!customer) return <div className="p-6 text-center text-admin-500">Customer not found</div>
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       {isSuperAdmin && <ViewOnlyBanner />}
 
       <Link to="/admin/customers" className="inline-flex items-center gap-1.5 text-admin-500 hover:text-admin-700 text-sm font-admin mb-5 transition-colors">

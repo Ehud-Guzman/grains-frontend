@@ -79,8 +79,11 @@ export default function CommandPalette({ user, onClose }) {
 
       <div className="flex items-center gap-3 px-4 border-b-2 border-admin-100 focus-within:border-shell-400 transition-colors flex-shrink-0">
         <Search size={17} className="text-admin-500 flex-shrink-0" aria-hidden="true" />
+        {/* autoFocus: the shared Modal only moves focus a frame after it opens, and someone who presses Ctrl+K and
+            starts typing straight away lost their first letters in that gap. */}
         <input
           ref={inputRef}
+          autoFocus
           type="text"
           role="combobox"
           aria-expanded="true"

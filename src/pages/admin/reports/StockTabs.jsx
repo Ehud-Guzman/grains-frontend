@@ -23,9 +23,9 @@ export function StockTab({ data }) {
       </div>
       {data.rowsMissingCostPrice > 0 && (
         <Callout tone="warn">
-          {data.rowsMissingCostPrice} line{data.rowsMissingCostPrice === 1 ? '' : 's'} have no cost price set
-          and fall back to selling price — those figures overstate true cost value. Set a cost price on
-          each packaging size for an accurate total.
+          {data.rowsMissingCostPrice} line{data.rowsMissingCostPrice === 1 ? ' has' : 's have'} no cost price set
+          and {data.rowsMissingCostPrice === 1 ? 'falls' : 'fall'} back to selling price — {data.rowsMissingCostPrice === 1 ? 'that figure overstates' : 'those figures overstate'} true
+          cost value. Set a cost price on each packaging size for an accurate total.
         </Callout>
       )}
       <DataTable

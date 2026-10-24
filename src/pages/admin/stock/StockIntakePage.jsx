@@ -730,7 +730,7 @@ export default function StockIntakePage() {
   const pendingCount = records.filter(r => r.status === 'pending').length
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
 
       {isSuperAdmin && <ViewOnlyBanner />}
 
