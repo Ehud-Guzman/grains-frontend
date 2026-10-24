@@ -386,7 +386,9 @@ export default function ReportsPage() {
                 {tab === 'slow-movers' && <SlowMoversTab data={data} days={slowDays} onDays={setSlowDays} />}
                 {tab === 'stock-movement' && <MovementTab data={data} />}
                 {tab === 'margins' && <MarginsTab data={data} />}
-                {tab === 'cash-up' && <CashUpTab data={data} />}
+                {tab === 'cash-up' && (
+                  <CashUpTab data={data} canClose={['supervisor', 'admin'].includes(user?.role)} onChanged={() => setReloads(n => n + 1)} />
+                )}
                 {tab === 'vat' && <VatTab data={data} rolling={isRolling(period)} />}
                 {tab === 'onboarding' && <OnboardingTab data={data} />}
               </div>

@@ -10,6 +10,7 @@ import { useAuth } from '../../../context/AuthContext'
 import { adminOrderService } from '../../../services/admin/order.service'
 import { adminDriverService } from '../../../services/admin/driver.service'
 import { adminPaymentService } from '../../../services/admin/payment.service'
+import { RefundPanel, CreditNotePanel } from './OrderMoneyPanels'
 import { globalSettingsService } from '../../../services/admin/globalSettings.service'
 import { useOnboarding } from '../../../context/OnboardingContext'
 import ViewOnlyBanner from '../../../components/admin/ViewOnlyBanner'
@@ -73,6 +74,8 @@ export default function AdminOrderDetailPage() {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'superadmin'
   const canConfirmPayment = ['supervisor', 'admin'].includes(user?.role)
+  // Money going OUT, and tax filings, are admin-only (the server enforces the same).
+  const canRecordRefund = user?.role === 'admin'
   const { markChecklistItem, markMilestone } = useOnboarding()
   const { id } = useParams()
   const shopInfo = useShopInfo()
@@ -747,17 +750,17 @@ export default function AdminOrderDetailPage() {
                         : order.paymentStatus === 'failed'
                           ? 'bg-red-50 text-red-700 border-red-200'
                           : order.paymentStatus === 'refunded'
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            ? (order.refundSettledAt ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-800 border-amber-300')
                             : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
                       order.paymentStatus === 'paid'     ? 'bg-green-400' :
                       order.paymentStatus === 'failed'   ? 'bg-red-400'   :
-                      order.paymentStatus === 'refunded' ? 'bg-blue-400'  : 'bg-amber-400'
+                      order.paymentStatus === 'refunded' ? (order.refundSettledAt ? 'bg-blue-400' : 'bg-amber-500') : 'bg-amber-400'
                     }`} />
                     {order.paymentStatus === 'paid'     ? 'Paid'     :
                      order.paymentStatus === 'failed'   ? 'Failed'   :
-                     order.paymentStatus === 'refunded' ? 'Refunded' : 'Pending'}
+                     order.paymentStatus === 'refunded' ? (order.refundSettledAt ? 'Refund sent' : 'Refund owed') : 'Pending'}
                   </span>
                 </div>
 
@@ -778,7 +781,7 @@ export default function AdminOrderDetailPage() {
                     ) : (
                       <div className="space-y-2">
                         <p className="text-xs font-admin text-admin-500">
-                          Amount received (KES) — leave blank if exact:
+                          Amount received (KES) — leave blank if it was exactly KES {Math.ceil(order.total)}:
                         </p>
                         <input
                           type="number"
@@ -786,14 +789,14 @@ export default function AdminOrderDetailPage() {
                           step="1"
                           value={cashReceivedAmount}
                           onChange={e => setCashReceivedAmount(e.target.value)}
-                          placeholder={String(order.total)}
+                          placeholder={String(Math.ceil(order.total))}
                           className="w-full border border-admin-200 rounded-lg px-3 py-2 text-sm
                             font-admin text-admin-800 focus:outline-none focus:ring-2
                             focus:ring-green-400 focus:border-transparent bg-admin-50"
                         />
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleConfirmPayment(cashReceivedAmount || order.total)}
+                            onClick={() => handleConfirmPayment(cashReceivedAmount || Math.ceil(order.total))}
                             disabled={confirmingPayment}
                             className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm
                               font-admin font-semibold hover:bg-green-700 disabled:opacity-50
@@ -855,7 +858,7 @@ export default function AdminOrderDetailPage() {
                           min="0"
                           value={mpesaAmount}
                           onChange={e => setMpesaAmount(e.target.value)}
-                          placeholder={`e.g. ${Math.round(order?.total || 0)}`}
+                          placeholder={`e.g. ${Math.ceil(order?.total || 0)}`}
                           className="w-full border border-admin-200 rounded-lg px-3 py-2 text-sm
                             text-admin-800 focus:outline-none focus:ring-2
                             focus:ring-green-400 focus:border-transparent bg-admin-50"
@@ -880,6 +883,9 @@ export default function AdminOrderDetailPage() {
                     )}
                   </div>
                 )}
+
+                <RefundPanel order={order} canRecord={canRecordRefund} onDone={fetchOrder} />
+                <CreditNotePanel order={order} canRecord={canRecordRefund} onDone={fetchOrder} />
               </div>
             </Card>
 

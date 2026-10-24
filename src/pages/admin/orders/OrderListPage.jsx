@@ -33,7 +33,7 @@ const PAYMENT_FILTERS = [
   { value: 'paid',     label: 'Paid'        },
   { value: 'unpaid',   label: 'Unpaid'      },
   { value: 'pending',  label: 'Processing'  },
-  { value: 'refunded', label: 'Refunded'    },
+  { value: 'refunded', label: 'Refunds'     },
 ]
 
 // ── SUB-COMPONENTS ────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ function StatusBadge({ status, deliveryMethod }) {
   )
 }
 
-function PaymentBadge({ status }) {
+function PaymentBadge({ status, refundSent = false }) {
   if (status === 'paid') return (
     <span className="inline-flex items-center gap-1 text-xs font-admin font-semibold
       px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
@@ -63,10 +63,16 @@ function PaymentBadge({ status }) {
   )
   // Refund recorded (order rejected/cancelled after payment) — money is owed
   // back to the customer until the M-Pesa reversal is actually done.
-  if (status === 'refunded') return (
+  // Owed (amber, it needs someone) until the refund is recorded as sent (calm purple).
+  if (status === 'refunded') return refundSent ? (
     <span className="inline-flex items-center gap-1 text-xs font-admin font-semibold
       px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-      Refunded
+      Refund sent
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 text-xs font-admin font-semibold
+      px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
+      Refund owed
     </span>
   )
   // Cash not yet confirmed — on a completed COD order this means the driver
@@ -478,7 +484,7 @@ export default function OrderListPage() {
                   )}
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-2">
-                      <PaymentBadge status={order.paymentStatus} />
+                      <PaymentBadge status={order.paymentStatus} refundSent={Boolean(order.refundSettledAt)} />
                       <span className="text-admin-500 text-xs font-admin">
                         {timeAgo(order.createdAt)}
                       </span>
@@ -603,7 +609,7 @@ export default function OrderListPage() {
                       </td>
 
                       <td className="px-4 py-3.5 hidden lg:table-cell">
-                        <PaymentBadge status={order.paymentStatus} />
+                        <PaymentBadge status={order.paymentStatus} refundSent={Boolean(order.refundSettledAt)} />
                       </td>
 
                       <td className="px-4 py-3.5">
